@@ -1388,8 +1388,11 @@
     "assets/faces/face-3.jpg",
     "assets/faces/face-4.jpg",
     "assets/faces/face-5.jpg",
+    "assets/faces/face-6.jpg",
+    "assets/faces/face-7.jpg",
+    "assets/faces/face-8.jpg",
+    "assets/faces/face-9.jpg",
   ].map(function (p) {
-    // 절대 경로 기준 (서브패스 배포 대비)
     try {
       var base = location.pathname.replace(/[^/]*$/, "");
       return base + p;
@@ -1397,14 +1400,34 @@
       return p;
     }
   });
+  // 세션 내 최근 쓴 얼굴 — 같은 장 반복 줄이기
+  var recentFaceIdx = [];
+
+  function pickFaceSrc() {
+    var avoid = recentFaceIdx.slice(-3);
+    var pool = [];
+    for (var i = 0; i < FACE_IMGS.length; i++) {
+      if (avoid.indexOf(i) === -1) pool.push(i);
+    }
+    if (!pool.length) pool = FACE_IMGS.map(function (_, i) {
+      return i;
+    });
+    var idx = pool[Math.floor(rng() * pool.length)];
+    recentFaceIdx.push(idx);
+    if (recentFaceIdx.length > 8) recentFaceIdx.shift();
+    return FACE_IMGS[idx];
+  }
 
   function buildHorrorFaceHtml(kind) {
-    var idx = ((kind || 1) - 1) % FACE_IMGS.length;
-    // kind 로 다른 에셋, 랜덤 오프셋
-    idx = Math.floor(rng() * FACE_IMGS.length);
-    var src = FACE_IMGS[idx];
+    var src = pickFaceSrc();
+    // 변형: 필터 클래스로 같은 사진도 다르게
+    var fx = ["", "acf-fx-cold", "acf-fx-hot", "acf-fx-static", "acf-fx-dim"][
+      Math.floor(rng() * 5)
+    ];
     return (
-      '<img class="acf-photo" src="' +
+      '<img class="acf-photo ' +
+      fx +
+      '" src="' +
       src +
       '" alt="" draggable="false" />' +
       '<span class="acf-vignette"></span>' +
@@ -1521,7 +1544,8 @@
     if (made) {
       try {
         var au = audio();
-        if (au && au.staticBurst) au.staticBurst(120);
+        if (au && au.codeLaugh && rng() > 0.45) au.codeLaugh({ vol: 0.02 });
+        else if (au && au.staticBurst) au.staticBurst(90);
         else if (au && au.whisper) au.whisper();
       } catch (e) {}
       maybeFlashAfter(0.04);
@@ -1584,14 +1608,14 @@
         } catch (e2) {}
       }
     }, 2500);
-    // 얼굴 1회
+    // 얼굴: 진입 직후 안 함 (너무 잦음) — 스케줄에만
     setTimeout(function () {
-      if (phase2Active() && !busy()) {
+      if (phase2Active() && !busy() && rng() > 0.65) {
         try {
-          runCardFaces({ ms: 2600 });
+          runCardFaces({ ms: 2400 });
         } catch (e3) {}
       }
-    }, 6000);
+    }, 14000);
     // 피: 진입 직후 아님 — 18초 뒤 1회만 (쿨다운 적용)
     setTimeout(function () {
       if (phase2Active() && !busy() && !document.body.classList.contains("diary-open")) {
@@ -1609,8 +1633,8 @@
 
   // 글자 피 흘림 + 손/얼굴(참조 이미지) — 2페이즈 필수 풀 포함
   (function ensureCoreAnomsInPool() {
-    // text_blood_wipe 제외 — 피는 전용 스케줄만 (랜덤 풀 스팸 방지)
-    var need = ["rising_hands", "card_faces", "card_claws"];
+    // 피·얼굴은 전용 스케줄만 — 랜덤 풀 강제 포함 제외
+    var need = ["rising_hands", "card_claws"];
     need.forEach(function (id) {
       var has = false;
       for (var i = 0; i < pool.length; i++) {
@@ -1806,28 +1830,63 @@
       setTimeout(handsLoop, gap);
     }, 12000);
 
+    // 얼굴: 첫 28s 이후 · 40~70s · 낮은 확률
     setTimeout(function facesLoop() {
       if (!phase2Active()) {
-        setTimeout(facesLoop, 2000);
+        setTimeout(facesLoop, 4000);
         return;
       }
-      if (!document.body.classList.contains("diary-open") && !busy()) {
-        if (rng() > 0.3) {
-          try {
-            runCardFaces();
-          } catch (e) {}
-        }
-        if (rng() > 0.55) {
-          try {
-            runCardClaws();
-          } catch (e2) {}
-        }
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        rng() > 0.5
+      ) {
+        try {
+          runCardFaces();
+        } catch (e) {}
       }
-      var d3 =
-        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
-      var gap = Math.max(14000, 18000 + rng() * 12000 - d3 * 1200);
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        rng() > 0.7
+      ) {
+        try {
+          runCardClaws();
+        } catch (e2) {}
+      }
+      var gap = 40000 + rng() * 30000;
       setTimeout(facesLoop, gap);
-    }, 10000);
+    }, 28000);
+
+    // 2페이즈: 프로그램 기계 웃음 (작게·가끔)
+    setTimeout(function laughLoop() {
+      if (!phase2Active()) {
+        setTimeout(laughLoop, 4000);
+        return;
+      }
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        !document.body.classList.contains("is-haunting") &&
+        rng() > 0.4
+      ) {
+        try {
+          var au = audio();
+          if (au && au.codeLaugh) au.codeLaugh({ vol: 0.024 + rng() * 0.02 });
+          else if (au && au.termBeep) {
+            au.termBeep(180 + rng() * 80);
+            setTimeout(function () {
+              if (au.termBeep) au.termBeep(220 + rng() * 60);
+            }, 90);
+            setTimeout(function () {
+              if (au.termBeep) au.termBeep(160 + rng() * 40);
+            }, 180);
+          }
+        } catch (e) {}
+      }
+      var gap = 12000 + rng() * 22000;
+      setTimeout(laughLoop, gap);
+    }, 9000);
 
     // 감시 실루엣 — 더 자주
     var watcherGap = 9000 + rng() * 8000;

@@ -26,6 +26,7 @@
       signalDrop: noop,
       dreadHit: noop,
       metal: noop,
+      codeLaugh: noop,
       stopAll: noop,
       setMaster: noop,
     };
@@ -619,6 +620,73 @@
     playNoise({ dur: 0.22, freq: 4500, filter: "highpass", vol: 0.06, q: 1.2 });
   }
 
+  /**
+   * 2페이즈: 프로그램/기계가 작게 웃는 소리
+   * - 비트 깨진 디지털 ha-ha-ha (사각파 + 노이즈)
+   * - 작게, 멀리서, 코드 실행되는 느낌
+   */
+  function codeLaugh(opts) {
+    opts = opts || {};
+    unlock();
+    var c = ensureCtx();
+    if (!c || !unlocked) return;
+    var t0 = now();
+    var vol = opts.vol != null ? opts.vol : 0.028;
+    // 웃음 박자: 짧-짧-길 또는 랜덤 3~5회
+    var bursts = 3 + Math.floor(Math.random() * 3);
+    var base = 280 + Math.random() * 120;
+    for (var i = 0; i < bursts; i++) {
+      (function (i) {
+        var t = t0 + i * (0.09 + Math.random() * 0.04);
+        var o = c.createOscillator();
+        var o2 = c.createOscillator();
+        var g = c.createGain();
+        var f = c.createBiquadFilter();
+        o.type = "square";
+        o2.type = "sawtooth";
+        // 올라갔다 떨어지는 기계 웃음 피치
+        var p0 = base * (1 + i * 0.08);
+        o.frequency.setValueAtTime(p0, t);
+        o.frequency.exponentialRampToValueAtTime(p0 * 1.35, t + 0.04);
+        o.frequency.exponentialRampToValueAtTime(p0 * 0.85, t + 0.1);
+        o2.frequency.setValueAtTime(p0 * 1.01, t);
+        f.type = "bandpass";
+        f.frequency.value = 900 + Math.random() * 600;
+        f.Q.value = 2.5;
+        var peak = v(vol * (0.7 + Math.random() * 0.4) * (1 - i * 0.08));
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1 + (i === bursts - 1 ? 0.06 : 0));
+        o.connect(f);
+        o2.connect(f);
+        f.connect(g);
+        g.connect(out());
+        o.start(t);
+        o2.start(t);
+        o.stop(t + 0.14);
+        o2.stop(t + 0.14);
+        // 짧은 디지털 글리치 클릭
+        playNoise({
+          delay: i * 0.09,
+          dur: 0.035,
+          freq: 2800 + Math.random() * 1200,
+          filter: "highpass",
+          vol: vol * 0.9,
+          q: 1.4,
+        });
+      })(i);
+    }
+    // 끝에 작은 정적 (코드 터미널 잔향)
+    playNoise({
+      delay: bursts * 0.1 + 0.02,
+      dur: 0.12,
+      freq: 1800,
+      filter: "bandpass",
+      vol: vol * 0.7,
+      q: 0.8,
+    });
+  }
+
   function stopAll() {
     level = 0;
     if (beatTimer) clearTimeout(beatTimer);
@@ -753,6 +821,7 @@
     signalDrop: signalDrop,
     dreadHit: dreadHit,
     metal: metal,
+    codeLaugh: codeLaugh,
     stopAll: stopAll,
     setMaster: setMaster,
   };
