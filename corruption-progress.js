@@ -520,6 +520,7 @@
   window.__hauntP2Decay = function () {
     return p2Decay;
   };
+  window.__hauntSetP2Decay = setP2Decay;
   window.__hauntP2Elapsed = function () {
     return p2Elapsed;
   };

@@ -447,9 +447,19 @@
     <p class="find-hint-text" id="p2HintText"></p>
     <button type="button" class="find-hint-x" id="p2HintClose" aria-label="닫기">×</button>
   </div>
-  <button type="button" id="p2MissionChip" class="p2-mission-chip" hidden title="이번 세션 탈출 힌트">
+  <button type="button" id="p2MissionChip" class="p2-mission-chip" hidden title="3페이즈 진입 조건">
     <span class="p2-chip-dot"></span>
-    <span class="p2-chip-label">탈출 조건</span>
+    <span class="p2-chip-label">다음 층</span>
+  </button>
+
+  <div id="p3HintToast" class="find-hint-toast p3-hint-toast" hidden aria-live="polite">
+    <span class="find-hint-tag p3">PHASE 3</span>
+    <p class="find-hint-text" id="p3HintText"></p>
+    <button type="button" class="find-hint-x" id="p3HintClose" aria-label="닫기">×</button>
+  </div>
+  <button type="button" id="p3MissionChip" class="p3-mission-chip" hidden title="클라이맥스 조건">
+    <span class="p3-chip-dot"></span>
+    <span class="p3-chip-label">최종 조건</span>
   </button>
 
   <script src="app.js"></script>
@@ -461,6 +471,7 @@
   <script src="dread-ambient.js"></script>
   <script src="anomalies.js"></script>
   <script src="climax-triggers.js"></script>
+  <script src="phase3-triggers.js"></script>
   <script src="climax-sequence.js"></script>
   <script src="ending.js"></script>
 </body>

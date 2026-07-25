@@ -3696,11 +3696,16 @@ body.is-ending .creator-pass {
 body.is-ending .find-hint-toast,
 body.is-ending .p2-mission-chip,
 body.is-haunting .p2-mission-chip,
-body.is-haunting .p2-hint-toast {
+body.is-haunting .p2-hint-toast,
+body.is-ending .p3-mission-chip,
+body.is-haunting .p3-mission-chip,
+body.is-haunting .p3-hint-toast,
+body.phase-3-active .p2-mission-chip,
+body.phase-3-active .p2-hint-toast {
   display: none !important;
 }
 
-/* 2페이즈 미션 힌트 */
+/* 2페이즈 미션 힌트 (→ 3페이즈 게이트) */
 .find-hint-toast.p2-hint-toast {
   border-color: rgba(255, 80, 120, 0.35);
   background: rgba(22, 8, 12, 0.94);
@@ -3748,9 +3753,155 @@ body.is-haunting .p2-hint-toast {
 @keyframes p2dot {
   50% { opacity: 0.35; transform: scale(0.85); }
 }
-body.stage-clean .p2-mission-chip,
-body.stage-uneasy .p2-mission-chip {
-  /* stage2 전엔 숨김 유지 — JS hidden */
+
+/* 3페이즈 미션 힌트 (→ 클라이맥스, 진입 5분 후) */
+.find-hint-toast.p3-hint-toast {
+  border-color: rgba(180, 60, 255, 0.4);
+  background: rgba(14, 6, 22, 0.95);
+}
+.find-hint-tag.p3 {
+  background: #a855f7;
+  color: #1a0520;
+}
+.p3-mission-chip {
+  position: fixed;
+  right: 0.75rem;
+  bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 63;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  appearance: none;
+  border: 1px solid rgba(180, 80, 255, 0.4);
+  background: rgba(16, 6, 24, 0.9);
+  color: #e8d0f8;
+  font: inherit;
+  font-size: 0.72rem;
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(40, 0, 60, 0.35);
+  letter-spacing: 0.04em;
+}
+.p3-mission-chip[hidden] {
+  display: none !important;
+}
+.p3-mission-chip:hover {
+  border-color: rgba(210, 120, 255, 0.6);
+  background: rgba(30, 10, 45, 0.95);
+}
+.p3-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c084fc;
+  box-shadow: 0 0 8px rgba(180, 80, 255, 0.85);
+  animation: p2dot 1.2s ease-in-out infinite;
+}
+
+/* 3페이즈 진입 연출 */
+body.phase3-enter {
+  animation: phase3EnterFlash 1.5s ease-out;
+}
+@keyframes phase3EnterFlash {
+  0% { filter: brightness(1.4) contrast(1.3) hue-rotate(-12deg); }
+  30% { filter: brightness(0.55) contrast(1.4) saturate(1.4); }
+  100% { filter: none; }
+}
+body.phase3-climax-arm {
+  animation: phase3Arm 0.28s ease-in;
+}
+@keyframes phase3Arm {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(0.2) contrast(1.6); }
+  100% { filter: brightness(1.1); }
+}
+
+/* 3페이즈 지속 비주얼 — 더 짙은 보라/피 */
+body.phase-3-active.stage-dread,
+body.phase-3-active.stage-corrupt {
+  --p3-veil: 1;
+}
+body.phase-3-active #bloodVeil {
+  opacity: 0.72 !important;
+}
+body.phase-3-active #vignette {
+  opacity: 0.85 !important;
+  box-shadow:
+    inset 0 0 140px rgba(40, 0, 30, 0.65),
+    inset 0 0 80px rgba(80, 0, 40, 0.35);
+}
+body.phase-3-active #staticLayer {
+  opacity: 0.16 !important;
+}
+body.phase-3-active::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 110%, rgba(60, 0, 30, 0.35), transparent 55%),
+    radial-gradient(ellipse 40% 60% at 0% 50%, rgba(20, 0, 25, 0.2), transparent 70%),
+    radial-gradient(ellipse 40% 60% at 100% 50%, rgba(20, 0, 25, 0.2), transparent 70%);
+  animation: p3Pulse 6s ease-in-out infinite;
+}
+@keyframes p3Pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.p3-layer-toast {
+  position: fixed;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%) translateY(-8px);
+  z-index: 70;
+  min-width: min(320px, 88vw);
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(12, 4, 18, 0.94);
+  border: 1px solid rgba(180, 80, 255, 0.35);
+  color: #e8d8f5;
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+.p3-layer-toast.is-on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.p3-layer-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #1a0520;
+  background: #c084fc;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+}
+.p3-layer-toast p {
+  margin: 0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.p3-holding,
+.climax-holding {
+  outline: 1px solid rgba(200, 80, 255, 0.45) !important;
+  box-shadow: 0 0 16px rgba(160, 40, 200, 0.35) !important;
+}
+
+.creator-pass.creator-p3-climax {
+  top: auto;
+  bottom: 4.5rem;
+  right: 0.6rem;
+  font-size: 0.68rem;
 }
 
 /* ===== WakeAgain 찰나 섬광 (1~2프레임) ===== */

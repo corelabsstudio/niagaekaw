@@ -1,8 +1,9 @@
 /**
- * 2페이즈 → 3페이즈 클라이맥스 트리거
- * - 약 20종 풀, 세션마다 1개만 활성 (일기 찾기와 동일 패턴)
- * - phase2Ready: 일기 발견 + stage ≥ 2 (오늘 이후 부패)
- * - 제작자 프리패스: ?summon=1 · ?debug=1 · ?creator=1 · Shift+Alt+3
+ * 2페이즈 → 3페이즈 게이트 트리거
+ * - 약 20종 풀, 세션마다 1개만 활성
+ * - phase2Ready: 일기 발견 + stage ≥ 2
+ * - 발동 시 클라이맥스가 아니라 **3페이즈 진입** (클라이맥스는 phase3-triggers.js)
+ * - 제작자: ?summon=1 · ?debug=1 · ?creator=1 · Shift+Alt+3
  */
 (function () {
   "use strict";
@@ -26,6 +27,49 @@
     );
   }
 
+  function enterPhase3() {
+    if (window.__hauntPhase3Active) return true;
+    window.__hauntPhase3Active = true;
+    try {
+      sessionStorage.setItem("haunt_phase3", "1");
+    } catch (e) {}
+    document.body.classList.add("phase-3-active");
+    document.body.setAttribute("data-game-phase", "3");
+    // stage/mood 최대 끌어올림 — 3페이즈 비주얼
+    try {
+      if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+      if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
+      if (typeof window.__hauntSetP2Decay === "function") window.__hauntSetP2Decay(4);
+      else {
+        document.body.setAttribute("data-p2-decay", "4");
+        document.body.classList.add("p2-d4");
+      }
+    } catch (e2) {}
+    try {
+      document.dispatchEvent(
+        new CustomEvent("haunt-phase3", {
+          detail: { at: Date.now(), from: "p2-trigger", trigger: active && active.id },
+        })
+      );
+    } catch (e3) {}
+    // 짧은 진입 연출
+    document.body.classList.add("phase3-enter");
+    setTimeout(function () {
+      document.body.classList.remove("phase3-enter");
+    }, 1600);
+    try {
+      var au = window.__hauntAudio;
+      if (au) {
+        if (au.rumble) au.rumble(1.4);
+        if (au.sting) setTimeout(function () { au.sting("blood"); }, 200);
+      }
+    } catch (e4) {}
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[phase] entered phase 3 via", active && active.id);
+    }
+    return true;
+  }
+
   function summon() {
     if (typeof window.__hauntSummon === "function") {
       window.__hauntSummon();
@@ -35,32 +79,22 @@
   }
 
   function trySummon() {
+    // 하위 호환: 프리패스는 클라이맥스 직행 허용
     if (busy()) return;
-    if (!phase2Ready() && !window.__hauntCreatorPass) {
-      // 프리패스만 phase2 없이 허용
-      return;
-    }
-    if (!phase2Ready() && window.__hauntCreatorPass) {
-      // creator: force stage if needed
-      if (typeof window.__hauntSetStage === "function") {
-        try {
-          window.__hauntSetStage(3);
-        } catch (e) {}
-      }
-      if (typeof window.__hauntSetMood === "function") {
-        try {
-          window.__hauntSetMood(4);
-        } catch (e) {}
-      }
-    }
-    if (!phase2Ready() && !window.__hauntCreatorPass) return;
+    if (!window.__hauntCreatorPass) return;
+    window.__hauntDiaryDiscovered = true;
+    try {
+      if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+      if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
+    } catch (e) {}
     summon();
   }
 
-  function trySummonStrict() {
+  function tryEnterPhase3Strict() {
     if (busy()) return;
     if (!phase2Ready()) return;
-    summon();
+    if (window.__hauntPhase3Active) return;
+    enterPhase3();
   }
 
   // ---------- 20 triggers ----------
@@ -639,17 +673,19 @@
     hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 더블클릭.",
     readme_hold: "last edit 줄. 길게 눌러.",
   };
-  active.mission = MISSION[active.id] || active.hint || "이상 속에서 탈출 조건을 찾아라.";
+  active.mission = MISSION[active.id] || active.hint || "이상 속에서 다음 층으로 가는 조건을 찾아라.";
 
   function onDone() {
     if (fired || busy()) return;
     if (!phase2Ready()) return;
+    // 이미 3페이즈면 무시 (클라이맥스는 phase3-triggers)
+    if (window.__hauntPhase3Active) return;
     fired = true;
     hideP2Hint(true);
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[climax] trigger fired:", active.id);
+      console.log("[p2→p3] gate trigger fired:", active.id);
     }
-    trySummonStrict();
+    tryEnterPhase3Strict();
   }
 
   // 트리거 장착 (항상 리스너 등록, 발동은 phase2Ready 검사)
@@ -703,7 +739,7 @@
     markHinted();
     if (p2Text) {
       p2Text.textContent =
-        "이상 구간이다. 탈출 조건이 하나 있다. — " + active.mission;
+        "2페이즈. 다음 층(3페이즈)으로 가는 조건이 하나 있다. — " + active.mission;
     }
     if (p2Toast) {
       p2Toast.hidden = false;
@@ -738,9 +774,9 @@
   }
 
   function reShowHintFromChip() {
-    if (fired || busy()) return;
+    if (fired || busy() || window.__hauntPhase3Active) return;
     if (p2Text) {
-      p2Text.textContent = "탈출 조건 — " + active.mission;
+      p2Text.textContent = "3페이즈 진입 조건 — " + active.mission;
     }
     if (p2Toast) {
       p2Toast.hidden = false;
@@ -812,37 +848,48 @@
     var badge = document.createElement("div");
     badge.className = "creator-pass creator-p3";
     badge.innerHTML =
-      "<strong>P3 PASS</strong> trigger: <code>" +
+      "<strong>P2→P3</strong> gate: <code>" +
       active.id +
-      "</code><br/><button type='button' class='p3-go'>▶ 클라이맥스</button>";
+      "</code><br/>" +
+      "<button type='button' class='p3-enter'>▶ 3페이즈</button> " +
+      "<button type='button' class='p3-go'>▶ 클라이맥스</button>";
     badge.title = "제작자 프리패스";
     document.body.appendChild(badge);
+    var enterBtn = badge.querySelector(".p3-enter");
     var go = badge.querySelector(".p3-go");
+    if (enterBtn) {
+      enterBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        window.__hauntCreatorPass = true;
+        window.__hauntDiaryDiscovered = true;
+        if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+        if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
+        fired = true;
+        hideP2Hint(true);
+        enterPhase3();
+      });
+    }
     if (go) {
       go.addEventListener("click", function (e) {
         e.stopPropagation();
-        fired = false;
         window.__hauntCreatorPass = true;
         if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
         if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
-        // diary flag for gate
         window.__hauntDiaryDiscovered = true;
+        if (!window.__hauntPhase3Active) enterPhase3();
         summon();
       });
     }
-    badge.addEventListener("click", function (e) {
-      if (e.target && e.target.classList && e.target.classList.contains("p3-go")) return;
-      // click badge body: show hint only
-    });
   }
 
-  // Shift+Alt+3 = freepass summon
+  // Shift+Alt+3 = freepass climax (skip)
   document.addEventListener("keydown", function (e) {
     if (e.shiftKey && e.altKey && (e.key === "3" || e.code === "Digit3")) {
       e.preventDefault();
       window.__hauntCreatorPass = true;
       window.__hauntDiaryDiscovered = true;
       if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+      if (!window.__hauntPhase3Active) enterPhase3();
       summon();
     }
   });
@@ -852,9 +899,21 @@
       window.__hauntCreatorPass = true;
       window.__hauntDiaryDiscovered = true;
       if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+      if (!window.__hauntPhase3Active) enterPhase3();
       summon();
     }, 500);
   }
+
+  // 새로고침 시 이미 3페이즈였으면 복구
+  try {
+    if (sessionStorage.getItem("haunt_phase3") === "1" && window.__hauntDiaryDiscovered) {
+      window.__hauntPhase3Active = true;
+      document.body.classList.add("phase-3-active");
+      document.body.setAttribute("data-game-phase", "3");
+      fired = true;
+      hideP2Hint(true);
+    }
+  } catch (eRestore) {}
 
   if (window.console && /[?&]debug=1/.test(location.search || "")) {
     var usedNow = readUsed();
@@ -881,6 +940,7 @@
     id: active.id,
     hint: active.hint,
     mission: active.mission,
+    role: "p2-to-p3-gate",
     all: TRIGGERS.map(function (t) {
       return { id: t.id, hint: t.hint, mission: MISSION[t.id] || t.hint };
     }),
@@ -899,12 +959,16 @@
       } catch (e) {}
     },
     showHint: showP2Hint,
+    enterPhase3: enterPhase3,
     summon: function () {
       window.__hauntCreatorPass = true;
       window.__hauntDiaryDiscovered = true;
       if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
+      if (!window.__hauntPhase3Active) enterPhase3();
       summon();
     },
     phase2Ready: phase2Ready,
   };
+
+  window.__hauntEnterPhase3 = enterPhase3;
 })();

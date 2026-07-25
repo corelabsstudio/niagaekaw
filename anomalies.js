@@ -47,6 +47,14 @@
     return true;
   }
 
+  /** 3페이즈: 이상현상 더 자주 */
+  function phase3Boost() {
+    return !!(
+      window.__hauntPhase3Active ||
+      document.body.classList.contains("phase-3-active")
+    );
+  }
+
   function stageReady() {
     return phase2Active();
   }
@@ -1828,12 +1836,17 @@
       return;
     }
     // 기본 여유 + 2페이즈 decay 올라갈수록 점점 자주 (괴기 가속)
+    // 3페이즈: 더 짧음
     var min = mobile ? 9000 : 7500;
     var span = mobile ? 12000 : 14000;
     var m = mood();
     if (m >= 4) {
       min *= 0.82;
       span *= 0.82;
+    }
+    if (phase3Boost()) {
+      min *= 0.55;
+      span *= 0.55;
     } else if (m >= 3) {
       min *= 0.92;
       span *= 0.92;
