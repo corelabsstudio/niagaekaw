@@ -350,25 +350,55 @@
   }
 
   /** body 에 걸린 filter/transform 이상현상 — fixed 일기 패널 붕괴 원인 */
-  var BODY_LAYOUT_HAZARDS = [
-    "anom-red-flash",
-    "anom-shake",
-    "anom-invert",
-    "anom-gray",
-    "anom-skew",
-    "anom-zoom",
-    "anom-dead-gray",
-    "anom-refresh-deep",
-    "page-tick",
-  ];
-
   function clearBodyLayoutHazards() {
     var b = document.body;
-    for (var i = 0; i < BODY_LAYOUT_HAZARDS.length; i++) {
-      b.classList.remove(BODY_LAYOUT_HAZARDS[i]);
+    // anom-* / page-tick 전부 제거 (목록 누락 방지)
+    var drop = [];
+    for (var i = 0; i < b.classList.length; i++) {
+      var c = b.classList[i];
+      if (c === "page-tick" || c.indexOf("anom-") === 0) drop.push(c);
     }
-    b.style.filter = "";
-    b.style.transform = "";
+    for (var j = 0; j < drop.length; j++) b.classList.remove(drop[j]);
+    // CSS 애니메이션이 filter 를 잡고 있으면 !important 규칙보다 우선함 → 강제 취소
+    try {
+      if (typeof b.getAnimations === "function") {
+        b.getAnimations().forEach(function (a) {
+          try {
+            a.cancel();
+          } catch (e1) {}
+        });
+      }
+      if (document.documentElement && document.documentElement.getAnimations) {
+        document.documentElement.getAnimations().forEach(function (a) {
+          try {
+            a.cancel();
+          } catch (e2) {}
+        });
+      }
+    } catch (e3) {}
+    // 애니메이션 중간 filter 보간값까지 즉시 차단
+    try {
+      b.style.setProperty("filter", "none", "important");
+      b.style.setProperty("transform", "none", "important");
+      b.style.setProperty("animation", "none", "important");
+      b.style.removeProperty("--anom-hue");
+    } catch (e) {
+      b.style.filter = "none";
+      b.style.transform = "none";
+    }
+  }
+
+  function releaseBodyLayoutLock() {
+    var b = document.body;
+    try {
+      b.style.removeProperty("filter");
+      b.style.removeProperty("transform");
+      b.style.removeProperty("animation");
+    } catch (e) {
+      b.style.filter = "";
+      b.style.transform = "";
+      b.style.animation = "";
+    }
   }
 
   function openDiary() {
@@ -422,6 +452,7 @@
     panel.hidden = true;
     panel.setAttribute("aria-hidden", "true");
     document.body.classList.remove("diary-open", "diary-typing");
+    releaseBodyLayoutLock();
     if (sheet) sheet.classList.remove("is-terminal");
     setBoost();
   }

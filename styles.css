@@ -2626,6 +2626,9 @@ body.anom-invert:not(.diary-open) {
 body.anom-gray:not(.diary-open) {
   filter: grayscale(1) contrast(1.15);
 }
+body.anom-hue-spike:not(.diary-open) {
+  filter: hue-rotate(var(--anom-hue, 90deg)) contrast(1.28) saturate(1.55);
+}
 body.anom-skew:not(.diary-open) {
   transform: skewX(-2.5deg) scaleY(1.02);
   transform-origin: center top;
@@ -3640,7 +3643,9 @@ body.anom-refresh-deep:not(.diary-open) {
   100% { filter: none; }
 }
 
-/* 파일 후반 규칙이 body.diary-open 을 덮어쓰지 못하게 최종 고정 */
+/* 파일 후반 규칙이 body.diary-open 을 덮어쓰지 못하게 최종 고정
+   html body 로 특이도 상향 — 이상현상 !important 와 경쟁 시 확실히 승리 */
+html body.diary-open,
 body.diary-open {
   filter: none !important;
   transform: none !important;

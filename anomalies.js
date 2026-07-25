@@ -12,7 +12,23 @@
   var reduced =
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduced) return;
+  // reduced-motion: 무거운 연출 스킵하되 API 스텁은 남겨 다른 모듈 TypeError 방지
+  if (reduced) {
+    window.__hauntAnomalies = {
+      pool: [],
+      all: [],
+      fire: function () {},
+      flash: function () {
+        return false;
+      },
+      phase2Active: function () {
+        return false;
+      },
+      disabled: true,
+      reason: "prefers-reduced-motion",
+    };
+    return;
+  }
 
   function stage() {
     var s = window.__hauntStage ? window.__hauntStage() : 0;
@@ -255,12 +271,14 @@
     {
       id: "hue_spike",
       run: function () {
+        // body.style.filter 인라인 금지 → fixed UI 붕괴 + diary-open 덮어쓰기 위험
+        // CSS 변수 + 클래스로 처리
         var deg = 50 + Math.floor(rng() * 140);
+        document.body.style.setProperty("--anom-hue", deg + "deg");
         runMs(
           function (on) {
-            document.body.style.filter = on
-              ? "hue-rotate(" + deg + "deg) contrast(1.28) saturate(1.55)"
-              : "";
+            document.body.classList.toggle("anom-hue-spike", on);
+            if (!on) document.body.style.removeProperty("--anom-hue");
           },
           140 + rng() * 160
         );
@@ -922,8 +940,9 @@
       id: "button_dodge",
       run: function () {
         if (busy() || mobile) return;
+        // .diary-next 제외 — 일기 UI 조작을 방해하면 진행 버그로 느껴짐
         var btns = document.querySelectorAll(
-          ".stasis-cta, .plan-btn.is-on, .diary-next, .btn.ghost"
+          ".stasis-cta, .plan-btn.is-on, .btn.ghost:not(.diary-next):not(.diary-close)"
         );
         if (!btns.length) return;
         var btn = btns[Math.floor(rng() * btns.length)];
@@ -1299,9 +1318,9 @@
       } catch (err) {}
     });
 
-    // F5 / Ctrl+R → 새로고침 대신 오염 점프
+    // F5 / Ctrl+R → 새로고침 대신 오염 점프 (일기 연 중·엔딩 제외)
     document.addEventListener("keydown", function (e) {
-      if (!phase2Active()) return;
+      if (!phase2Active() || busy()) return;
       var isRefresh =
         e.key === "F5" ||
         ((e.ctrlKey || e.metaKey) && (e.key === "r" || e.key === "R"));

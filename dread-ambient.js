@@ -143,6 +143,8 @@
 
   setInterval(function () {
     if (document.body.classList.contains("is-haunting")) return;
+    if (document.body.classList.contains("is-ending")) return;
+    if (document.body.classList.contains("diary-open")) return;
     if (!stageOk(2)) return;
     if (Math.random() > 0.12) return;
     document.body.classList.add("page-tick");

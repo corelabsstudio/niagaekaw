@@ -137,6 +137,10 @@
   var polluteTimer = null;
   var hintTimer = null;
   var hintIndex = 0;
+  // replaceState 가 path 만 쓰면 ?path= ?p3= ?debug= ?summon= 이 증발함
+  // → 이후 로드되는 climax-triggers / ending 등이 쿼리를 못 읽음
+  var preservedSearch = location.search || "";
+  var preservedHash = location.hash || "";
 
   function log() {
     if (debug && window.console) {
@@ -181,6 +185,8 @@
         next = base.replace(/index\.html$/, "") + path.replace(/^\//, "");
         if (next.slice(-1) === "/" && path === "/") next = base;
       }
+      // 쿼리/해시 유지 — 제작·디버그·트리거 강제 파라미터가 사라지지 않게
+      next = next + preservedSearch + preservedHash;
       history.replaceState({ hauntPath: path, stage: currentStage }, "", next);
       lastPushed = path;
       log("path", next);

@@ -18,7 +18,12 @@
   }
 
   function busy() {
-    return document.body.classList.contains("is-haunting");
+    return (
+      document.body.classList.contains("is-haunting") ||
+      document.body.classList.contains("is-ending") ||
+      /* 일기 읽는 중 클라이맥스 끼어들기 방지 */
+      document.body.classList.contains("diary-open")
+    );
   }
 
   function summon() {
@@ -610,6 +615,13 @@
   function showP2Hint() {
     if (fired || busy()) return;
     if (!phase2Ready()) return;
+    // 일기 연 중에는 미루기 — 닫힌 뒤 다시 시도
+    if (document.body.classList.contains("diary-open")) {
+      setTimeout(function () {
+        if (!fired && phase2Ready() && !busy()) showP2Hint();
+      }, 1200);
+      return;
+    }
     if (alreadyHintedThisSession()) {
       // 이미 봤으면 칩만
       if (p2Chip) p2Chip.hidden = false;

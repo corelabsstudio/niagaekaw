@@ -440,11 +440,20 @@
 
   setInterval(function () {
     if (hauntActive || reduced || !armedForHit) return;
+    if (document.body.classList.contains("diary-open")) return;
+    if (document.body.classList.contains("is-ending")) return;
     if (Math.random() > SPEC.microGlitchChance) return;
-    document.body.style.filter =
-      "hue-rotate(" + (30 + Math.random() * 50) + "deg) contrast(1.12)";
+    // 인라인 body filter 금지 (fixed UI 붕괴) — 클래스만
+    document.body.classList.add("anom-hue-spike");
+    document.body.style.setProperty(
+      "--anom-hue",
+      30 + Math.random() * 50 + "deg"
+    );
     setTimeout(function () {
-      if (!hauntActive) document.body.style.filter = "";
+      if (!hauntActive) {
+        document.body.classList.remove("anom-hue-spike");
+        document.body.style.removeProperty("--anom-hue");
+      }
     }, 70 + Math.random() * 100);
   }, 5000);
 
