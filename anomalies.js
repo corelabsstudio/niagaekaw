@@ -329,6 +329,122 @@
     });
     return made > 0;
 
+    /** 유기적 핏줄기 SVG — 막대기 말고 걸쭉한 실사 톤 */
+    function makeDripSvg(kind, uid) {
+      uid = uid || "d" + Math.floor(rng() * 1e7);
+      var w = kind === "thick" ? 28 + rng() * 18 : kind === "thin" ? 10 + rng() * 6 : 16 + rng() * 12;
+      var h = kind === "thick" ? 160 + rng() * 120 : kind === "thin" ? 70 + rng() * 50 : 110 + rng() * 80;
+      // 불규칙 좌우 곡선 줄기 + 하단 방울
+      var mid = w / 2;
+      var wobble = function (t) {
+        return (rng() * 0.35 - 0.12) * w * t;
+      };
+      var l1 = mid - w * 0.22 + wobble(0.2);
+      var l2 = mid - w * 0.28 + wobble(0.5);
+      var l3 = mid - w * 0.18 + wobble(0.8);
+      var r1 = mid + w * 0.22 + wobble(0.2);
+      var r2 = mid + w * 0.3 + wobble(0.5);
+      var r3 = mid + w * 0.2 + wobble(0.8);
+      var dropR = kind === "thick" ? w * 0.42 : w * 0.38;
+      var path =
+        "M " +
+        (mid - w * 0.12).toFixed(1) +
+        " 0 " +
+        "C " +
+        l1.toFixed(1) +
+        " " +
+        (h * 0.18).toFixed(1) +
+        " " +
+        l2.toFixed(1) +
+        " " +
+        (h * 0.45).toFixed(1) +
+        " " +
+        l3.toFixed(1) +
+        " " +
+        (h * 0.78).toFixed(1) +
+        " " +
+        "Q " +
+        (mid - dropR).toFixed(1) +
+        " " +
+        (h * 0.92).toFixed(1) +
+        " " +
+        mid.toFixed(1) +
+        " " +
+        h.toFixed(1) +
+        " " +
+        "Q " +
+        (mid + dropR).toFixed(1) +
+        " " +
+        (h * 0.92).toFixed(1) +
+        " " +
+        r3.toFixed(1) +
+        " " +
+        (h * 0.78).toFixed(1) +
+        " " +
+        "C " +
+        r2.toFixed(1) +
+        " " +
+        (h * 0.45).toFixed(1) +
+        " " +
+        r1.toFixed(1) +
+        " " +
+        (h * 0.18).toFixed(1) +
+        " " +
+        (mid + w * 0.12).toFixed(1) +
+        " 0 Z";
+      var gId = "bg" + uid;
+      var gId2 = "bgh" + uid;
+      return (
+        '<svg class="abd-svg" viewBox="0 0 ' +
+        w.toFixed(0) +
+        " " +
+        h.toFixed(0) +
+        '" width="' +
+        w.toFixed(0) +
+        '" height="100%" preserveAspectRatio="none" aria-hidden="true">' +
+        "<defs>" +
+        '<linearGradient id="' +
+        gId +
+        '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#3a0508"/>' +
+        '<stop offset="12%" stop-color="#6b0a12"/>' +
+        '<stop offset="35%" stop-color="#8f1018"/>' +
+        '<stop offset="55%" stop-color="#5c080e"/>' +
+        '<stop offset="82%" stop-color="#2a0406"/>' +
+        '<stop offset="100%" stop-color="#1a0204"/>' +
+        "</linearGradient>" +
+        '<linearGradient id="' +
+        gId2 +
+        '" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0%" stop-color="#000" stop-opacity="0.45"/>' +
+        '<stop offset="40%" stop-color="#fff" stop-opacity="0.12"/>' +
+        '<stop offset="100%" stop-color="#000" stop-opacity="0.5"/>' +
+        "</linearGradient>" +
+        "</defs>" +
+        '<path d="' +
+        path +
+        '" fill="url(#' +
+        gId +
+        ')" opacity="0.96"/>' +
+        '<path d="' +
+        path +
+        '" fill="url(#' +
+        gId2 +
+        ')" opacity="0.55"/>' +
+        // 하이라이트 얇은 줄
+        '<path d="M ' +
+        (mid - 1).toFixed(1) +
+        " 2 L " +
+        (mid - w * 0.04).toFixed(1) +
+        " " +
+        (h * 0.55).toFixed(1) +
+        '" stroke="rgba(180,40,50,0.35)" stroke-width="' +
+        (kind === "thick" ? 2.2 : 1.2) +
+        '" fill="none" stroke-linecap="round"/>' +
+        "</svg>"
+      );
+    }
+
     function bleedOne(el, isHero) {
       el.dataset.bleeding = "1";
       el.classList.add("anom-bleeding");
@@ -342,77 +458,83 @@
       }
 
       var layer = document.createElement("div");
-      layer.className = "anom-blood-layer anom-blood-slow" + (isHero ? " is-hero" : "");
+      layer.className = "anom-blood-layer" + (isHero ? " is-hero" : "");
       layer.setAttribute("aria-hidden", "true");
       layer.style.position = "fixed";
-      layer.style.left = Math.max(0, rect0.left - 8) + "px";
-      layer.style.top = Math.max(0, rect0.top - 4) + "px";
-      layer.style.width = rect0.width + 16 + "px";
-      // 참조처럼 글자 아래 길게 흘러내림
+      layer.style.left = Math.max(0, rect0.left - 12) + "px";
+      layer.style.top = Math.max(0, rect0.top - 6) + "px";
+      layer.style.width = rect0.width + 24 + "px";
       var dropH = isHero
-        ? Math.min(window.innerHeight * 0.55, Math.max(rect0.height + 220, 280))
-        : Math.min(rect0.height + 160, Math.max(rect0.height * 2.4, 140));
+        ? Math.min(window.innerHeight * 0.62, Math.max(rect0.height + 280, 340))
+        : Math.min(rect0.height + 200, Math.max(rect0.height * 2.8, 180));
       layer.style.height = dropH + "px";
       layer.style.pointerEvents = "none";
       layer.style.zIndex = isHero ? "60" : "58";
       layer.style.overflow = "visible";
 
+      // 글자 위 걸쭉한 피 막 (상단 스미어)
+      var smear = document.createElement("div");
+      smear.className = "anom-blood-smear-top";
+      layer.appendChild(smear);
+
       var veil = document.createElement("div");
       veil.className = "anom-blood-veil";
       layer.appendChild(veil);
 
-      var streakN = mobile ? (isHero ? 7 : 4) : isHero ? 14 : 8;
-      for (var s = 0; s < streakN; s++) {
-        var st = document.createElement("span");
-        st.className = "anom-blood-streak";
-        st.style.left = 4 + rng() * 90 + "%";
-        st.style.animationDelay = 0.05 + s * 0.08 + "s";
-        layer.appendChild(st);
+      // 상단 가로 흘러내림 덩어리들
+      var clotN = mobile ? (isHero ? 5 : 3) : isHero ? 9 : 5;
+      for (var c = 0; c < clotN; c++) {
+        var clot = document.createElement("span");
+        clot.className = "anom-blood-clot";
+        clot.style.left = 3 + rng() * 90 + "%";
+        clot.style.width = 14 + rng() * 36 + "px";
+        clot.style.height = 8 + rng() * 18 + "px";
+        clot.style.animationDelay = 0.05 + c * 0.07 + "s";
+        layer.appendChild(clot);
       }
 
       function syncLayer() {
         if (!layer.parentNode) return;
         var rect = el.getBoundingClientRect();
-        layer.style.left = Math.max(0, rect.left - 8) + "px";
-        layer.style.top = Math.max(0, rect.top - 4) + "px";
-        layer.style.width = rect.width + 16 + "px";
+        layer.style.left = Math.max(0, rect.left - 12) + "px";
+        layer.style.top = Math.max(0, rect.top - 6) + "px";
+        layer.style.width = rect.width + 24 + "px";
         layer.style.height =
           (isHero
-            ? Math.min(window.innerHeight * 0.55, Math.max(rect.height + 220, 280))
-            : Math.min(rect.height + 160, Math.max(rect.height * 2.4, 140))) + "px";
+            ? Math.min(window.innerHeight * 0.62, Math.max(rect.height + 280, 340))
+            : Math.min(rect.height + 200, Math.max(rect.height * 2.8, 180))) + "px";
       }
 
       function addDrip(kind) {
         if (!layer.parentNode || busy()) return;
         syncLayer();
-        var d = document.createElement("span");
-        d.className = "anom-blood-drip" + (kind ? " " + kind : "");
-        d.style.left = 2 + rng() * 94 + "%";
-        d.style.animationDuration = 3.6 + rng() * 4.2 + "s";
-        var baseH = kind === "thick" ? 110 : kind === "thin" ? 48 : 72;
-        d.style.height = baseH + rng() * (isHero ? 140 : 90) + "px";
-        if (kind === "thick") d.style.width = 7 + rng() * 6 + "px";
-        layer.appendChild(d);
+        var wrap = document.createElement("span");
+        wrap.className = "anom-blood-drip" + (kind ? " " + kind : "");
+        wrap.style.left = 1 + rng() * 93 + "%";
+        wrap.style.animationDuration = 4.5 + rng() * 3.5 + "s";
+        var baseH = kind === "thick" ? 130 : kind === "thin" ? 60 : 90;
+        wrap.style.height = baseH + rng() * (isHero ? 160 : 100) + "px";
+        wrap.style.width = (kind === "thick" ? 22 : kind === "thin" ? 12 : 16) + rng() * 14 + "px";
+        wrap.innerHTML = makeDripSvg(kind || "mid", "d" + Math.floor(rng() * 1e8));
+        layer.appendChild(wrap);
       }
 
       document.body.appendChild(layer);
 
-      var dripCount = mobile ? (isHero ? 14 : 8) : isHero ? 26 : 14;
+      var dripCount = mobile ? (isHero ? 10 : 6) : isHero ? 18 : 10;
       for (var i = 0; i < dripCount; i++) {
         (function (idx) {
           setTimeout(function () {
-            var k = rng() > 0.4 ? "thick" : rng() > 0.35 ? "" : "thin";
+            var k = rng() > 0.38 ? "thick" : rng() > 0.4 ? "" : "thin";
             addDrip(k);
-          }, 40 + idx * (isHero ? 90 : 160));
+          }, 30 + idx * (isHero ? 110 : 180));
         })(i);
       }
-      // 추가 파동 — 참조 이미지처럼 계속 흐름
-      [1800, 3600, 5500, 7800].forEach(function (ms) {
+      [2000, 4200, 7000].forEach(function (ms) {
         setTimeout(function () {
           if (!layer.parentNode || busy()) return;
           addDrip("thick");
-          addDrip("thick");
-          addDrip("");
+          addDrip(rng() > 0.5 ? "thick" : "");
           addDrip("thin");
         }, ms);
       });
@@ -438,8 +560,8 @@
         }, 400);
       }
 
-      var dripMs = isHero ? 14000 + rng() * 2000 : 9000 + rng() * 1500;
-      var wipeMs = 2600;
+      var dripMs = isHero ? 15000 + rng() * 2500 : 10000 + rng() * 1800;
+      var wipeMs = 2800;
       var afterMs = 1600;
 
       function onScrollOrResize() {
