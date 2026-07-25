@@ -9,8 +9,9 @@
   --red-blood: #5c0618;
   --green: #2ee66a;
   --line: rgba(255, 60, 80, 0.12);
-  --font: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
-  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --font: "IBM Plex Sans", "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: "Syne", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
   --wrap-pad-x: 1.25rem;
   --wrap-pad-y: 2.5rem;
   --h1-size: clamp(1.75rem, 5vw, 2.4rem);
@@ -106,6 +107,68 @@ body {
   font-size: 13px;
   line-height: 1;
   color: #555;
+}
+.url-lock {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  opacity: 0.7;
+}
+.url-lock::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 8px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: #5a5a5a;
+}
+.url-lock::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 5px;
+  height: 5px;
+  border: 1.5px solid #5a5a5a;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  box-sizing: border-box;
+}
+.url-lock.is-broken {
+  opacity: 0.9;
+}
+.url-lock.is-broken::before {
+  background: #c04040;
+}
+.url-lock.is-broken::after {
+  border-color: #c04040;
+  transform: rotate(-18deg);
+  left: 2px;
+}
+.wip-file-icon {
+  width: 10px;
+  height: 12px;
+  display: inline-block;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  opacity: 0.45;
+  position: relative;
+  vertical-align: -1px;
+  margin-right: 0.15rem;
+}
+.wip-file-icon::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  border: 3px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  opacity: 0.7;
 }
 .fake-chrome-url {
   flex: 1;
@@ -1742,26 +1805,148 @@ body.stage-corrupt .card-horror {
   border-color: rgba(255, 50, 70, 0.15);
 }
 
-/* ===== STAGE 3: 풀 음산 (현재 느낌) ===== */
+/* ===== STAGE 3: 풀 음산 ===== */
 body.stage-dread {
-  --text: #e4dce8;
-  --muted: #7a7088;
-  --bg: #040208;
-  --bg2: #0a0610;
+  --text: #e8dce4;
+  --muted: #8a7888;
+  --bg: #030106;
+  --bg2: #0a040c;
   color: var(--text);
   cursor: crosshair;
   background:
-    radial-gradient(900px 500px at 50% -5%, rgba(90, 10, 30, 0.45) 0%, transparent 55%),
-    radial-gradient(600px 400px at 80% 80%, rgba(40, 0, 20, 0.5) 0%, transparent 50%),
-    radial-gradient(ellipse at center, #120810 0%, var(--bg) 70%);
+    radial-gradient(1000px 560px at 50% -8%, rgba(110, 8, 28, 0.55) 0%, transparent 58%),
+    radial-gradient(700px 480px at 85% 90%, rgba(50, 0, 24, 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse at 40% 60%, #160a12 0%, var(--bg) 72%);
 }
 body.stage-dread .fx-layer {
   visibility: visible;
 }
 body.stage-dread #bloodVeil { opacity: 1; }
-body.stage-dread #staticLayer { opacity: 0.07; }
-body.stage-dread #scanlines { opacity: 0.45; }
+body.stage-dread #staticLayer { opacity: 0.09; }
+body.stage-dread #scanlines { opacity: 0.42; }
 body.stage-dread #vignette { opacity: 1; }
+
+/* 다크 스테이지: 라이트 WIP 잔재 숨기고 공포 톤으로 고정 */
+body.stage-corrupt .wip-banner,
+body.stage-dread .wip-banner,
+body.stage-corrupt .wip-cursor-line,
+body.stage-dread .wip-cursor-line,
+body.stage-corrupt .wip-inline-note,
+body.stage-dread .wip-inline-note,
+body.stage-corrupt .wip-skeleton,
+body.stage-dread .wip-skeleton,
+body.stage-corrupt .wip-slot-grid,
+body.stage-dread .wip-slot-grid,
+body.stage-corrupt .wip-card-meta,
+body.stage-dread .wip-card-meta {
+  display: none !important;
+}
+body.stage-corrupt .stasis-h1.title-horror,
+body.stage-dread .stasis-h1.title-horror {
+  color: #f2e6ea;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  text-shadow:
+    0 0 28px rgba(255, 20, 50, 0.35),
+    2px 0 rgba(255, 30, 60, 0.45),
+    -2px 0 rgba(0, 220, 200, 0.25);
+}
+body.stage-corrupt .title-bleed,
+body.stage-dread .title-bleed {
+  color: #ff3a58;
+  animation: bleedShift 3.2s ease-in-out infinite;
+}
+body.stage-corrupt .stasis-lede,
+body.stage-dread .stasis-lede {
+  color: #c8b0b8;
+  max-width: 36rem;
+}
+body.stage-corrupt .stasis-lede em,
+body.stage-dread .stasis-lede em {
+  color: #ff6a7a;
+  font-style: normal;
+  text-shadow: 0 0 12px rgba(255, 40, 60, 0.4);
+}
+body.stage-corrupt .stasis-badge.eyebrow,
+body.stage-dread .stasis-badge.eyebrow {
+  background: rgba(80, 0, 20, 0.65);
+  color: #ff8a9a !important;
+  border: 1px solid rgba(255, 60, 80, 0.35);
+  box-shadow: 0 0 16px rgba(255, 20, 40, 0.2);
+  animation: none;
+}
+body.stage-corrupt .stasis-plan-row .btn,
+body.stage-dread .stasis-plan-row .btn,
+body.stage-corrupt .plan-btn,
+body.stage-dread .plan-btn {
+  background: rgba(30, 4, 12, 0.75) !important;
+  border: 1px solid rgba(255, 70, 90, 0.35) !important;
+  color: #f0d4d8 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 20, 40, 0.12);
+  border-radius: 999px;
+}
+body.stage-corrupt .plan-btn.is-on,
+body.stage-dread .plan-btn.is-on {
+  background: rgba(90, 8, 24, 0.9) !important;
+  border-color: rgba(255, 60, 80, 0.55) !important;
+  color: #fff !important;
+}
+body.stage-corrupt .plan-btn.danger-btn,
+body.stage-dread .plan-btn.danger-btn {
+  border-color: rgba(255, 40, 60, 0.65) !important;
+  color: #ffb0b8 !important;
+}
+body.stage-corrupt .btn-note,
+body.stage-dread .btn-note {
+  opacity: 0.55;
+  font-weight: 500;
+}
+body.stage-corrupt .card-horror,
+body.stage-dread .card-horror {
+  background: linear-gradient(165deg, rgba(255, 30, 50, 0.06), transparent 50%), rgba(12, 4, 10, 0.92);
+  border: 1px solid rgba(255, 50, 70, 0.18);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 80, 100, 0.06);
+  border-radius: 14px;
+}
+body.stage-corrupt .card-horror h2,
+body.stage-dread .card-horror h2 {
+  color: #ff6a7a;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 12px rgba(255, 30, 50, 0.25);
+}
+body.stage-corrupt .stasis-nav.top,
+body.stage-dread .stasis-nav.top {
+  background: rgba(8, 2, 6, 0.88);
+  border-bottom: 1px solid rgba(255, 40, 60, 0.18);
+  backdrop-filter: blur(10px);
+}
+body.stage-corrupt .stasis-logo,
+body.stage-dread .stasis-logo {
+  color: #ff4058;
+  text-shadow: 0 0 12px rgba(255, 20, 40, 0.45);
+}
+body.stage-corrupt .stasis-pills,
+body.stage-dread .stasis-pills {
+  background: rgba(20, 4, 10, 0.7);
+  border: 1px solid rgba(255, 60, 80, 0.15);
+}
+body.stage-corrupt .pill-link,
+body.stage-dread .pill-link {
+  color: #b09098 !important;
+}
+body.stage-corrupt .stasis-cta,
+body.stage-dread .stasis-cta {
+  background: #5a0818 !important;
+  color: #ffd0d8 !important;
+  border: 1px solid rgba(255, 60, 80, 0.4) !important;
+  box-shadow: 0 0 20px rgba(255, 20, 40, 0.25);
+}
+body.stage-dread .whisper {
+  color: #ff7080;
+  opacity: 0.9;
+  letter-spacing: 0.02em;
+}
 
 /* morph flash when text swaps */
 .morphing {
@@ -2383,29 +2568,35 @@ html.is-mobile .haunt-hit.is-hot {
 }
 .haunt-face {
   position: absolute;
-  width: 48px;
-  height: 60px;
-  border-radius: 40% 40% 45% 45%;
-  background: rgba(20, 0, 8, 0.85);
-  box-shadow: inset 0 0 20px rgba(255, 0, 40, 0.25);
-  animation: facePulse 0.8s ease-in-out infinite alternate;
-  opacity: 0.55;
+  width: 56px;
+  height: 72px;
+  border-radius: 42% 42% 48% 48%;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(60, 10, 20, 0.9), transparent 70%),
+    rgba(12, 0, 6, 0.92);
+  box-shadow:
+    inset 0 0 24px rgba(255, 0, 40, 0.3),
+    0 0 20px rgba(255, 0, 40, 0.15);
+  animation: facePulse 1.4s ease-in-out infinite alternate;
+  opacity: 0.45;
+  filter: blur(0.3px);
 }
 .haunt-face::before,
 .haunt-face::after {
   content: "";
   position: absolute;
-  top: 38%;
-  width: 6px;
-  height: 3px;
-  background: rgba(255, 40, 60, 0.7);
+  top: 36%;
+  width: 7px;
+  height: 2px;
+  background: rgba(255, 50, 70, 0.85);
   border-radius: 1px;
+  box-shadow: 0 0 6px rgba(255, 30, 50, 0.8);
 }
-.haunt-face::before { left: 28%; }
-.haunt-face::after { right: 28%; }
+.haunt-face::before { left: 26%; transform: rotate(-8deg); }
+.haunt-face::after { right: 26%; transform: rotate(8deg); }
 @keyframes facePulse {
-  from { opacity: 0.25; transform: scale(0.95); }
-  to { opacity: 0.7; transform: scale(1.05); }
+  from { opacity: 0.2; transform: scale(0.96) translateY(2px); }
+  to { opacity: 0.65; transform: scale(1.04) translateY(-2px); }
 }
 .haunt-rain {
   position: absolute;
@@ -2451,17 +2642,25 @@ html.is-mobile .haunt-hit.is-hot {
   text-shadow: 0 0 24px #00e0ff, 3px 0 #ff2060, -2px 0 #00ffff;
 }
 
-/* phase panels */
+/* phase panels — 전 구간 무한 흔들림 제거 (싸구려 느낌) */
 .haunt-phase {
   position: relative;
   z-index: 5;
   text-align: center;
-  padding: 1.5rem;
-  max-width: min(92vw, 32rem);
-  animation: shake 0.4s linear infinite;
+  padding: 1.75rem 1.5rem;
+  max-width: min(92vw, 34rem);
+  animation: phaseIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .haunt-phase[hidden] { display: none !important; }
 .haunt-phase.is-on { display: block; }
+@keyframes phaseIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+/* p3 만 짧은 흔들림 */
+.haunt.climax-p3 .haunt-phase.is-on {
+  animation: phaseIn 0.2s ease both, shake 0.35s linear 4;
+}
 @keyframes shake {
   0%, 100% { transform: translate(0, 0); }
   25% { transform: translate(-2px, 1px); }
@@ -2470,56 +2669,128 @@ html.is-mobile .haunt-hit.is-hot {
 }
 .hp-mono {
   font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--green);
-  margin: 0 0 0.75rem;
-  text-shadow: 0 0 8px rgba(46, 230, 106, 0.35);
+  margin: 0 0 0.85rem;
+  text-shadow: 0 0 10px rgba(46, 230, 106, 0.4);
 }
-.hp-mono.dim { opacity: 0.55; color: #8a7080; text-shadow: none; }
-.hp-mono.red { color: var(--red); text-shadow: 0 0 10px rgba(255, 0, 40, 0.5); }
-.hp-mono.hp-blink { animation: hpBlink 0.5s steps(1) infinite; }
+.hp-mono.dim { opacity: 0.55; color: #8a7080; text-shadow: none; letter-spacing: 0.14em; }
+.hp-mono.red { color: var(--red); text-shadow: 0 0 12px rgba(255, 0, 40, 0.55); }
+.hp-mono.hp-blink { animation: hpBlink 0.7s steps(1) infinite; }
 @keyframes hpBlink {
-  50% { opacity: 0.25; }
+  50% { opacity: 0.2; }
 }
 .hp-big {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.35rem, 5vw, 1.9rem);
-  line-height: 1.35;
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.45rem, 5.2vw, 2.05rem);
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   color: #fff;
-  text-shadow: 2px 0 var(--red), -2px 0 cyan;
+  text-shadow:
+    0 0 24px rgba(255, 30, 50, 0.35),
+    2px 0 rgba(255, 30, 50, 0.55),
+    -2px 0 rgba(0, 230, 220, 0.35);
 }
 .hp-big.glitch-title {
-  animation: gt 0.15s steps(2) infinite;
+  animation: gt 0.18s steps(2) infinite;
 }
 .hp-brand {
   margin: 0 0 1rem;
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: clamp(2.2rem, 12vw, 4.5rem);
+  font-family: var(--font-display), Impact, "Arial Black", sans-serif;
+  font-size: clamp(2.6rem, 13vw, 5rem);
   font-weight: 900;
   color: #ff2040;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-shadow:
-    0 0 20px rgba(255, 0, 40, 0.8),
+    0 0 28px rgba(255, 0, 40, 0.85),
     3px 0 #00e8ff,
     -3px 0 #ff0040;
+  animation: brandPulse 1.2s ease-in-out infinite alternate;
 }
-.haunt.climax-p1 { background: #020408; }
-.haunt.climax-p2 { background: #050208; }
+@keyframes brandPulse {
+  from { filter: brightness(1); transform: scale(1); }
+  to { filter: brightness(1.12); transform: scale(1.02); }
+}
+.haunt.climax-p1 {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0, 40, 60, 0.35), transparent 60%),
+    #020408;
+}
+.haunt.climax-p2 {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0, 30, 20, 0.4), transparent 65%),
+    #040a06;
+}
+.haunt.climax-p2 .haunt-phase {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(46, 230, 106, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 40, 20, 0.25);
+  padding: 1.5rem 1.75rem 1.35rem;
+  max-width: min(94vw, 36rem);
+  text-align: left;
+}
+.haunt.climax-p2 .hp-mono { text-align: center; }
+.haunt.climax-p2 .haunt-sub { text-align: center; }
 .haunt.climax-p3 {
   background: #120008;
-  animation: hauntIn 0.08s steps(2) both, climaxShake 0.12s linear infinite;
+  animation: hauntIn 0.08s steps(2) both;
+}
+.haunt.climax-p3.climax-shake-on {
+  animation: climaxShake 0.1s linear infinite;
 }
 @keyframes climaxShake {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-3px, 2px); }
-  50% { transform: translate(3px, -2px); }
-  75% { transform: translate(-2px, -1px); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, -1px); }
 }
-.haunt.climax-p4 { background: #0a0208; }
-.haunt.climax-p5 { background: #050208; }
+.haunt.climax-p4 {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(80, 0, 20, 0.5), transparent 70%),
+    #0a0208;
+}
+.haunt.climax-p5 {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 40%, rgba(40, 0, 15, 0.45), transparent 65%),
+    #050208;
+}
 .haunt.climax-invert {
   filter: invert(1) hue-rotate(180deg);
+}
+.haunt-list {
+  list-style: none;
+  margin: 0.5rem 0 0.85rem;
+  padding: 0;
+  max-height: min(42vh, 280px);
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: rgba(180, 255, 200, 0.85);
+  text-shadow: 0 0 6px rgba(46, 230, 106, 0.25);
+}
+.haunt-list li {
+  padding: 0.15rem 0;
+  border-bottom: 1px solid rgba(46, 230, 106, 0.08);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: listIn 0.25s ease both;
+}
+@keyframes listIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: none; }
+}
+.haunt-sub {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: rgba(46, 230, 106, 0.75);
+  margin: 0.35rem 0 0;
+  letter-spacing: 0.06em;
 }
 
 .haunt-tag {
@@ -2528,40 +2799,20 @@ html.is-mobile .haunt-hit.is-hot {
   letter-spacing: 0.2em;
   color: var(--red);
   margin: 0 0 1rem;
+  text-shadow: 0 0 12px rgba(255, 20, 40, 0.45);
 }
 .haunt-title {
   margin: 0 0 0.75rem;
-  font-size: clamp(1.5rem, 5vw, 2rem);
-  line-height: 1.3;
+  font-family: var(--font-display), var(--font);
+  font-size: clamp(1.55rem, 5.2vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
   color: #fff;
-  text-shadow: 2px 0 var(--red), -2px 0 cyan;
-}
-.haunt-sub {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--green);
-  margin: 0.75rem 0 0;
-}
-.haunt-list {
-  list-style: none;
-  margin: 0.5rem auto 0;
-  padding: 0;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  color: #c4b8d4;
-  text-align: left;
-  max-height: 42vh;
-  overflow: hidden;
-  max-width: 22rem;
-}
-.haunt-list li {
-  padding: 0.22rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  animation: liIn 0.15s ease both;
-}
-@keyframes liIn {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: none; }
+  text-shadow:
+    0 0 28px rgba(255, 30, 50, 0.35),
+    2px 0 var(--red),
+    -2px 0 cyan;
 }
 .haunt-exit {
   font-family: var(--mono);

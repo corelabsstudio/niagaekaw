@@ -258,16 +258,22 @@
       var ut = document.getElementById("fakeUrlText");
       if (ut) ut.textContent = "about:viewport-corrupt";
     } catch (e) {}
+    // 짧은 구간만 화면 흔들림 (전 구간 무한 흔들림 = 허접)
+    if (haunt) haunt.classList.add("climax-shake-on");
+    later(reduced ? 500 : 900, function () {
+      if (haunt) haunt.classList.remove("climax-shake-on");
+    });
     var n = 0;
-    every(reduced ? 280 : 140, function () {
+    every(reduced ? 320 : 180, function () {
       if (phase !== 3) return;
       n++;
-      haunt.classList.toggle("climax-invert", n % 5 === 0);
+      if (n % 7 === 0) haunt.classList.toggle("climax-invert", true);
+      if (n % 7 === 1) haunt.classList.toggle("climax-invert", false);
       if (n % 6 === 0 && a && a.pulse) a.pulse("heavy");
       if (n % 11 === 0 && a && a.hddScratch) a.hddScratch();
     });
-    later(reduced ? 1800 : 4200, function () {
-      haunt.classList.remove("climax-invert");
+    later(reduced ? 2000 : 4600, function () {
+      haunt.classList.remove("climax-invert", "climax-shake-on");
       next();
     });
   }

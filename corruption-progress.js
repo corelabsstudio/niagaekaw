@@ -71,8 +71,7 @@
     }
 
     if (n >= 1) ensureMorphLoop();
-    if (n >= 3) revealHorrorChrome();
-    else if (n >= 2) {
+    if (n >= 2) {
       var t1 = document.getElementById("terminalLine");
       if (t1) t1.hidden = false;
       // 부패 구간: Pro 버튼 활성화 (트리거·의식용)
@@ -82,6 +81,14 @@
         pro.classList.remove("is-disabled");
         pro.title = "";
       }
+      // 핵심: 다크만 씌운 라이트 카피 금지 — stage2 진입 즉시 본문 전면 부패
+      remorphAll("horror", true);
+      burstCorrupt(reduced ? 12 : 8, reduced ? 40 : 120);
+    }
+    if (n >= 3) {
+      revealHorrorChrome();
+      remorphAll("horror", true);
+      burstCorrupt(reduced ? 24 : 16, reduced ? 30 : 90);
     }
   }
 
@@ -145,21 +152,37 @@
     document.querySelectorAll("[data-clean]").forEach(function (el) {
       morphQueue.push(el);
     });
+    // 히어로·내비 우선 (뒤에 두면 수 분 뒤에도 clean 카피 남음 → 허접)
+    var priorityIds = [
+      "titleL1",
+      "titleL2",
+      "eyebrow",
+      "topRec",
+      "navCta",
+      "whisper",
+      "corruptPath",
+    ];
+    var head = [];
+    var rest = [];
+    morphQueue.forEach(function (el) {
+      if (priorityIds.indexOf(el.id) !== -1) head.push(el);
+      else if (el.classList && (el.classList.contains("morph") || el.closest(".stasis-lede")))
+        head.push(el);
+      else rest.push(el);
+    });
+    // priority 중복 제거
+    var seen = {};
+    morphQueue = head.concat(rest).filter(function (el) {
+      if (seen[el.id || el] && el.id) return false;
+      if (el.id) seen[el.id] = true;
+      return true;
+    });
   }
 
-  function corruptOne() {
-    if (stage < 1) return false;
-    if (morphIndex >= morphQueue.length) return false;
-    var el = morphQueue[morphIndex++];
-    if (!el) return corruptOne();
-
-    // mood 1–2: mid 텍스트만 · mood 3+: horror
-    var key = "mid";
-    if (mood >= 3 || stage >= 2) key = "horror";
-    else if (stage === 1) key = el.getAttribute("data-mid") != null ? "mid" : "clean";
-
+  function applyMorphToEl(el, key, instant) {
+    if (!el) return;
     el.classList.add("morphing");
-    setTimeout(function () {
+    function apply() {
       if (el.classList.contains("morph") || el.classList.contains("morph-li")) {
         var html = el.getAttribute("data-" + key);
         if (html == null) html = el.getAttribute("data-mid") || el.getAttribute("data-clean") || "";
@@ -184,19 +207,76 @@
       ) {
         var t = el.getAttribute("data-" + key);
         if (t == null) t = el.getAttribute("data-clean") || el.textContent;
-        el.textContent = t.replace(/<[^>]+>/g, "");
+        el.textContent = String(t).replace(/<[^>]+>/g, "");
       } else if (el.id === "titleL1" || el.id === "titleL2") {
-        el.textContent = (el.getAttribute("data-" + key) || el.getAttribute("data-clean") || "").replace(/<[^>]+>/g, "");
-      } else if (el.id === "h2log" || el.id === "h2notes" || el.id === "h2warn" || el.id === "h2res") {
-        el.textContent = (el.getAttribute("data-" + key) || el.getAttribute("data-clean") || "").replace(/<[^>]+>/g, "");
+        el.textContent = (
+          el.getAttribute("data-" + key) ||
+          el.getAttribute("data-clean") ||
+          ""
+        ).replace(/<[^>]+>/g, "");
+      } else if (
+        el.id === "h2log" ||
+        el.id === "h2notes" ||
+        el.id === "h2warn" ||
+        el.id === "h2res"
+      ) {
+        el.textContent = (
+          el.getAttribute("data-" + key) ||
+          el.getAttribute("data-clean") ||
+          ""
+        ).replace(/<[^>]+>/g, "");
       } else {
         var h = el.getAttribute("data-" + key);
         if (h != null) el.innerHTML = h;
       }
       el.classList.remove("morphing");
       el.classList.add("morphed");
-    }, reduced ? 0 : 280);
+      el.setAttribute("data-morph-key", key);
+    }
+    if (instant || reduced) apply();
+    else setTimeout(apply, 180 + Math.random() * 160);
+  }
+
+  function morphKeyNow() {
+    if (mood >= 3 || stage >= 2) return "horror";
+    if (stage === 1 || mood >= 1) return "mid";
+    return "clean";
+  }
+
+  function corruptOne() {
+    if (stage < 1) return false;
+    if (morphIndex >= morphQueue.length) return false;
+    var el = morphQueue[morphIndex++];
+    if (!el) return corruptOne();
+    applyMorphToEl(el, morphKeyNow(), false);
     return true;
+  }
+
+  /** mid로 굳은 카피를 horror로 재적용 + 미처리 전부 */
+  function remorphAll(key, instant) {
+    key = key || morphKeyNow();
+    if (!morphQueue.length) collectMorphs();
+    morphQueue.forEach(function (el) {
+      applyMorphToEl(el, key, !!instant);
+    });
+    morphIndex = morphQueue.length;
+  }
+
+  function burstCorrupt(count, gapMs) {
+    var n = count || 6;
+    var gap = gapMs != null ? gapMs : 100;
+    var i = 0;
+    function step() {
+      if (i >= n) return;
+      if (!corruptOne()) {
+        // 큐 소진 시 전체 remorph 한 번
+        if (stage >= 2) remorphAll("horror", true);
+        return;
+      }
+      i++;
+      setTimeout(step, gap);
+    }
+    step();
   }
 
   function revealHorrorChrome() {

@@ -154,17 +154,11 @@
     document.title = title;
     chrome.setAttribute("data-chrome-stage", String(stageKey === "climax" ? 4 : stageKey));
     if (urlLock) {
-      if (stageKey === 0) {
-        urlLock.textContent = "🔒";
+      // 이모지 대신 CSS 자물쇠 (허접 톤 제거)
+      urlLock.textContent = "";
+      if (stageKey === 0 || stageKey === 1) {
         urlLock.classList.remove("is-broken");
-      } else if (stageKey === 1) {
-        urlLock.textContent = "🔒";
-        urlLock.classList.remove("is-broken");
-      } else if (stageKey === 2) {
-        urlLock.textContent = "⚠";
-        urlLock.classList.add("is-broken");
       } else {
-        urlLock.textContent = "💀";
         urlLock.classList.add("is-broken");
       }
     }

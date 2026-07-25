@@ -1417,15 +1417,16 @@
       setTimeout(scheduleLoop, 1500);
       return;
     }
-    var min = mobile ? 7000 : 5500;
-    var span = mobile ? 10000 : 11000;
+    // 너무 자주 터지면 글리치 파티처럼 허접해짐 → 간격 여유
+    var min = mobile ? 9000 : 7500;
+    var span = mobile ? 12000 : 14000;
     var m = mood();
     if (m >= 4) {
-      min *= 0.75;
-      span *= 0.75;
+      min *= 0.82;
+      span *= 0.82;
     } else if (m >= 3) {
-      min *= 0.88;
-      span *= 0.88;
+      min *= 0.92;
+      span *= 0.92;
     }
     var next = min + rng() * span;
     setTimeout(function () {

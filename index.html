@@ -8,6 +8,9 @@
   <title>Stasis — WIP (local)</title>
   <meta name="robots" content="noindex,nofollow" />
   <meta name="description" content="Stasis landing — draft. Not ready. Do not ship." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="stage-clean" data-stage="0">
@@ -24,7 +27,7 @@
       <span class="nav-btn">↻</span>
     </div>
     <div class="fake-chrome-url find-hot" id="fakeUrlBar" data-find="fakeurl">
-      <span class="url-lock" id="fakeUrlLock">🔒</span>
+      <span class="url-lock" id="fakeUrlLock" aria-hidden="true"></span>
       <span class="url-text" id="fakeUrlText">http://localhost:4173/find-the-diary</span>
     </div>
     <div class="fake-chrome-tabs" aria-hidden="true">
@@ -115,7 +118,7 @@
       <p class="wip-inline-note find-hot" data-find="fixme">// FIXME: CTA 연결 안 됨 · onClick 비움 · 결제 붙이기 전</p>
       <!-- 세션 경로 chip 일 때만 활성 (평소엔 위장 주석처럼) -->
       <button type="button" class="wip-file-chip find-hot" id="diaryFileChip" data-find="chip" title="">
-        <span class="wip-file-icon">📄</span>
+        <span class="wip-file-icon" aria-hidden="true"></span>
         <span class="wip-file-name">dev_journal.txt</span>
         <span class="wip-file-meta">modified 47d ago · 안 지웠네</span>
       </button>
