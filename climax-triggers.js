@@ -512,25 +512,78 @@
     },
   ];
 
+  var USED_KEY = "haunt_climax_used";
+  var CURRENT_KEY = "haunt_climax_trigger"; // 이번 로드 전용 (새로고침 시 재사용 안 함)
+
+  function readUsed() {
+    try {
+      var raw = localStorage.getItem(USED_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeUsed(arr) {
+    try {
+      localStorage.setItem(USED_KEY, JSON.stringify(arr));
+    } catch (e) {}
+  }
+
+  function markUsed(id) {
+    var used = readUsed();
+    if (used.indexOf(id) === -1) {
+      used.push(id);
+      writeUsed(used);
+    }
+    return used;
+  }
+
+  function unusedPool() {
+    var used = readUsed();
+    var pool = TRIGGERS.filter(function (t) {
+      return used.indexOf(t.id) === -1;
+    });
+    // 20개 다 쓰면 리셋 후 다시 전체
+    if (!pool.length) {
+      writeUsed([]);
+      return TRIGGERS.slice();
+    }
+    return pool;
+  }
+
+  /**
+   * 1) 새로고침마다 새로 뽑음 (session sticky 제거)
+   * 2) 이미 뽑힌 트리거는 localStorage 로 제외, 전부 소진 시 리셋
+   */
   function pickTrigger() {
     try {
+      // 이전 세션 고정값 제거 — 새로고침 = 새 뽑기
+      try {
+        sessionStorage.removeItem(CURRENT_KEY);
+      } catch (e0) {}
+
       var forced = /[?&]p3=([a-z0-9_]+)/.exec(location.search || "");
       if (forced) {
         for (var i = 0; i < TRIGGERS.length; i++) {
           if (TRIGGERS[i].id === forced[1]) {
-            sessionStorage.setItem("haunt_climax_trigger", forced[1]);
+            markUsed(forced[1]);
+            try {
+              sessionStorage.setItem(CURRENT_KEY, forced[1]);
+            } catch (e1) {}
             return TRIGGERS[i];
           }
         }
       }
-      var saved = sessionStorage.getItem("haunt_climax_trigger");
-      if (saved) {
-        for (var j = 0; j < TRIGGERS.length; j++) {
-          if (TRIGGERS[j].id === saved) return TRIGGERS[j];
-        }
-      }
-      var pick = TRIGGERS[(Math.random() * TRIGGERS.length) | 0];
-      sessionStorage.setItem("haunt_climax_trigger", pick.id);
+
+      var pool = unusedPool();
+      var pick = pool[(Math.random() * pool.length) | 0];
+      markUsed(pick.id);
+      try {
+        sessionStorage.setItem(CURRENT_KEY, pick.id);
+      } catch (e2) {}
       return pick;
     } catch (e) {
       return TRIGGERS[(Math.random() * TRIGGERS.length) | 0];
@@ -541,6 +594,20 @@
   var fired = false;
   window.__hauntClimaxTrigger = active.id;
   document.body.setAttribute("data-p3-trigger", active.id);
+  document.body.setAttribute(
+    "data-p3-remaining",
+    String(
+      Math.max(
+        0,
+        TRIGGERS.length -
+          readUsed().filter(function (id) {
+            return TRIGGERS.some(function (t) {
+              return t.id === id;
+            });
+          }).length
+      )
+    )
+  );
 
   /** 유저용 미션 힌트 (세션당 1회 토스트) — 너무 노골적이지 않게 */
   var MISSION = {
@@ -784,12 +851,23 @@
   }
 
   if (window.console && /[?&]debug=1/.test(location.search || "")) {
+    var usedNow = readUsed();
     console.log(
-      "[climax] this session trigger:",
+      "[climax] this load trigger:",
       active.id,
       "—",
       active.hint,
-      "(" + TRIGGERS.length + " pool)"
+      "| used",
+      usedNow.length + "/" + TRIGGERS.length,
+      usedNow,
+      "| remaining after this pick",
+      unusedPool()
+        .filter(function (t) {
+          return t.id !== active.id;
+        })
+        .map(function (t) {
+          return t.id;
+        })
     );
   }
 
@@ -800,6 +878,20 @@
     all: TRIGGERS.map(function (t) {
       return { id: t.id, hint: t.hint, mission: MISSION[t.id] || t.hint };
     }),
+    used: function () {
+      return readUsed().slice();
+    },
+    remaining: function () {
+      return unusedPool().map(function (t) {
+        return t.id;
+      });
+    },
+    resetUsed: function () {
+      writeUsed([]);
+      try {
+        sessionStorage.removeItem(CURRENT_KEY);
+      } catch (e) {}
+    },
     showHint: showP2Hint,
     summon: function () {
       window.__hauntCreatorPass = true;
