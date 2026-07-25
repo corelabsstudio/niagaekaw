@@ -4264,21 +4264,25 @@ body[data-p2-decay="5"] .anom-rising-hands.is-on .arh-hand {
   mix-blend-mode: multiply;
   pointer-events: none;
 }
-/* 모니터/다크 카드 — 화면 안 유령처럼 */
+/* 모니터/다크 카드 — 화면 안 유령처럼 (blend 과하면 안 보임 → soft-light) */
 .stasis-card-dark .anom-card-face,
 .monitor-frame .anom-card-face,
 .stasis-monitor-card .anom-card-face {
-  mix-blend-mode: screen;
-  border-radius: 8%;
-  filter: contrast(1.25) brightness(1.05);
+  mix-blend-mode: normal;
+  border-radius: 10%;
+  opacity: 0.92;
+  filter: contrast(1.15) brightness(1.02);
 }
 .stasis-card-dark .anom-card-face .acf-photo,
 .monitor-frame .anom-card-face .acf-photo {
-  filter: contrast(1.35) saturate(0.45) brightness(1.05) hue-rotate(-8deg);
+  filter: contrast(1.25) saturate(0.55) brightness(0.95);
 }
 .stasis-card-dark .anom-card-face .acf-scan,
 .monitor-frame .anom-card-face .acf-scan {
-  opacity: 0.7;
+  opacity: 0.55;
+}
+.anom-card-face.kind-6 {
+  mix-blend-mode: normal !important;
 }
 .anom-card-face.is-on {
   opacity: 0.95;

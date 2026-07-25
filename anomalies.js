@@ -1408,7 +1408,15 @@
     "assets/faces/face-3.jpg",
     "assets/faces/face-4.jpg",
     "assets/faces/face-5.jpg",
-  ];
+  ].map(function (p) {
+    // 절대 경로 기준 (서브패스 배포 대비)
+    try {
+      var base = location.pathname.replace(/[^/]*$/, "");
+      return base + p;
+    } catch (e) {
+      return p;
+    }
+  });
 
   function buildHorrorFaceHtml(kind) {
     var idx = ((kind || 1) - 1) % FACE_IMGS.length;
