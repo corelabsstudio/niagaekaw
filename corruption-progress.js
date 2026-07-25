@@ -66,7 +66,7 @@
     if (themeMeta) {
       themeMeta.setAttribute(
         "content",
-        n === 0 ? "#FAF4F0" : n === 1 ? "#e4d8d0" : n === 2 ? "#2a1520" : "#050208"
+        n === 0 ? "#FAF4F0" : n === 1 ? "#e4d8d0" : n === 2 ? "#1a1230" : "#0a0614"
       );
     }
     document.dispatchEvent(
