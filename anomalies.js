@@ -276,300 +276,188 @@
   }
 
   /**
-   * 2페이즈 핵심: 글자에서 피 흘림 (참조 이미지 톤)
-   * 히어로 타이틀 우선 · 굵은 줄기 · 하단 웅덩이 · 느린 닦기
+   * 글자(메인 타이틀)에서만 피 흘림
+   * - 아무 UI 금지 · 문자 좌표에서만 시작
+   * - 쿨다운 50s · 동시 1레이어 · 줄기 3~5개
    */
+  var lastBloodAt = 0;
+  var BLOOD_COOLDOWN_MS = 50000;
+
+  function getLetterAnchors(root) {
+    var out = [];
+    if (!root) return out;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var node;
+    while ((node = walker.nextNode())) {
+      var text = node.textContent || "";
+      for (var i = 0; i < text.length; i++) {
+        var ch = text.charAt(i);
+        if (!ch || /\s/.test(ch)) continue;
+        try {
+          var range = document.createRange();
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          var r = range.getBoundingClientRect();
+          if (r.width < 1 || r.height < 1) continue;
+          out.push({
+            left: r.left,
+            top: r.top,
+            width: r.width,
+            height: r.height,
+            bottom: r.bottom,
+            midX: r.left + r.width / 2,
+          });
+        } catch (e) {}
+      }
+    }
+    return out;
+  }
+
+  function makeLetterDripSvg(uid) {
+    uid = "ld" + uid;
+    var w = 7 + rng() * 4;
+    var h = 90 + rng() * 70;
+    var mid = w / 2;
+    var path =
+      "M" +
+      (mid - 1.2).toFixed(1) +
+      " 0 C" +
+      (mid - 2.2).toFixed(1) +
+      " " +
+      (h * 0.35).toFixed(1) +
+      " " +
+      (mid - 2.8).toFixed(1) +
+      " " +
+      (h * 0.65).toFixed(1) +
+      " " +
+      (mid - 1.4).toFixed(1) +
+      " " +
+      (h * 0.88).toFixed(1) +
+      " Q" +
+      (mid - 2.5).toFixed(1) +
+      " " +
+      (h * 0.96).toFixed(1) +
+      " " +
+      mid.toFixed(1) +
+      " " +
+      h.toFixed(1) +
+      " Q" +
+      (mid + 2.5).toFixed(1) +
+      " " +
+      (h * 0.96).toFixed(1) +
+      " " +
+      (mid + 1.4).toFixed(1) +
+      " " +
+      (h * 0.88).toFixed(1) +
+      " C" +
+      (mid + 2.8).toFixed(1) +
+      " " +
+      (h * 0.65).toFixed(1) +
+      " " +
+      (mid + 2.2).toFixed(1) +
+      " " +
+      (h * 0.35).toFixed(1) +
+      " " +
+      (mid + 1.2).toFixed(1) +
+      " 0 Z";
+    return (
+      '<svg class="abd-svg" viewBox="0 0 ' +
+      Math.ceil(w + 2) +
+      " " +
+      Math.ceil(h) +
+      '" width="' +
+      Math.ceil(w + 2) +
+      '" height="' +
+      Math.ceil(h) +
+      '" aria-hidden="true">' +
+      "<defs><linearGradient id=\"" +
+      uid +
+      '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#3d0a0e"/><stop offset="40%" stop-color="#5c1218"/>' +
+      '<stop offset="100%" stop-color="#1a0406"/></linearGradient></defs>' +
+      '<path d="' +
+      path +
+      '" fill="url(#' +
+      uid +
+      ')" opacity="0.9"/></svg>'
+    );
+  }
+
   function runTextBlood(opts) {
     opts = opts || {};
     if (busy()) return false;
     if (!markPhase2Ui()) return false;
-    // 동시에 너무 많이 흐르면 싸구려 — 레이어 상한
-    if (document.querySelectorAll(".anom-blood-layer").length >= 2) return false;
+    if (document.querySelector(".anom-blood-layer")) return false;
+    if (!opts.force && Date.now() - lastBloodAt < BLOOD_COOLDOWN_MS) return false;
 
-    var prefer = opts.preferHero !== false;
-    // multi 기본 끔: 히어로(또는 1타깃)만. 명시 시에만 추가 1개
-    var forceMulti = opts.multi === true;
-    var nodes = [];
-    if (prefer) {
-      var hero = document.getElementById("mainTitle");
-      if (hero && (hero.textContent || "").trim()) nodes.push(hero);
-    }
-    if (!nodes.length || forceMulti) {
-      document
-        .querySelectorAll(".stasis-h1, .stasis-lede, .stasis-quote-text, .card-horror h2")
-        .forEach(function (n) {
-          if (nodes.indexOf(n) === -1) nodes.push(n);
-        });
-    }
-    if (!nodes.length) return false;
+    // ★ 오직 메인 타이틀 글자만
+    var el =
+      document.getElementById("mainTitle") ||
+      document.querySelector(".stasis-h1.title-horror") ||
+      document.querySelector("h1.stasis-h1");
+    if (!el || !(el.textContent || "").trim()) return false;
+    if (el.dataset.bleeding === "1") return false;
 
-    var targets = [];
-    if (prefer && nodes[0] && (nodes[0].id === "mainTitle" || nodes[0].classList.contains("stasis-h1"))) {
-      targets.push(nodes[0]);
-    } else {
-      targets.push(nodes[0]);
-    }
-    if (forceMulti && nodes.length > 1 && rng() > 0.45) {
-      var extra = nodes[1 + Math.floor(rng() * Math.min(2, nodes.length - 1))];
-      if (extra && targets.indexOf(extra) === -1) targets.push(extra);
-    }
+    var anchors = getLetterAnchors(el);
+    if (anchors.length < 2) return false;
 
-    var made = 0;
-    targets.forEach(function (el, ti) {
-      if (!el || el.dataset.bleeding === "1") return;
-      if (!(el.textContent || "").trim()) return;
-      if (bleedOne(el, ti === 0 || el.id === "mainTitle")) made++;
+    lastBloodAt = Date.now();
+    el.dataset.bleeding = "1";
+    el.classList.add("anom-bleeding", "anom-bleeding-hero");
+
+    // 글자 몇 개만 고름 (3~5)
+    var nDrip = mobile ? 3 : 3 + Math.floor(rng() * 3);
+    var picks = pickN(anchors, Math.min(nDrip, anchors.length));
+
+    var layer = document.createElement("div");
+    layer.className = "anom-blood-layer is-hero is-from-letters";
+    layer.setAttribute("aria-hidden", "true");
+    layer.style.cssText =
+      "position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:56;overflow:visible;";
+    document.body.appendChild(layer);
+
+    picks.forEach(function (a, idx) {
+      var wrap = document.createElement("span");
+      wrap.className = "anom-blood-drip from-letter";
+      // 글자 하단 중앙에서 시작 (fixed 좌표)
+      var dripW = 9 + rng() * 5;
+      wrap.style.left = a.midX - dripW / 2 + "px";
+      wrap.style.top = a.bottom - 2 + "px";
+      wrap.style.width = dripW + "px";
+      wrap.style.height = 70 + rng() * 90 + "px";
+      wrap.style.animationDelay = idx * 0.12 + "s";
+      wrap.style.animationDuration = 4.5 + rng() * 2 + "s";
+      wrap.innerHTML = makeLetterDripSvg(Math.floor(rng() * 1e8));
+      // 글자 위 작은 스며듦
+      var bead = document.createElement("span");
+      bead.className = "anom-blood-bead";
+      bead.style.left = a.midX - 3 + "px";
+      bead.style.top = a.top + a.height * 0.35 + "px";
+      layer.appendChild(bead);
+      layer.appendChild(wrap);
     });
-    return made > 0;
 
-    /** 가느다란 리블릿 — 소시지/막대 금지, 글자 사이 스며드는 줄기 */
-    function makeDripSvg(kind, uid) {
-      uid = uid || "d" + Math.floor(rng() * 1e7);
-      // 폭 좁게: thick도 최대 ~14px 느낌
-      var w = kind === "thick" ? 11 + rng() * 7 : kind === "thin" ? 5 + rng() * 3 : 7 + rng() * 5;
-      var h = kind === "thick" ? 140 + rng() * 100 : kind === "thin" ? 70 + rng() * 50 : 100 + rng() * 70;
-      var mid = w / 2;
-      var taper = kind === "thick" ? 0.32 : 0.28;
-      var l1 = mid - w * taper * 0.9;
-      var l2 = mid - w * taper * 1.05;
-      var l3 = mid - w * taper * 0.55;
-      var r1 = mid + w * taper * 0.9;
-      var r2 = mid + w * taper * 1.05;
-      var r3 = mid + w * taper * 0.55;
-      var dropR = w * 0.55;
-      var path =
-        "M " +
-        (mid - w * 0.18).toFixed(1) +
-        " 0 " +
-        "C " +
-        l1.toFixed(1) +
-        " " +
-        (h * 0.2).toFixed(1) +
-        " " +
-        l2.toFixed(1) +
-        " " +
-        (h * 0.5).toFixed(1) +
-        " " +
-        l3.toFixed(1) +
-        " " +
-        (h * 0.82).toFixed(1) +
-        " " +
-        "Q " +
-        (mid - dropR * 0.7).toFixed(1) +
-        " " +
-        (h * 0.93).toFixed(1) +
-        " " +
-        mid.toFixed(1) +
-        " " +
-        h.toFixed(1) +
-        " " +
-        "Q " +
-        (mid + dropR * 0.7).toFixed(1) +
-        " " +
-        (h * 0.93).toFixed(1) +
-        " " +
-        r3.toFixed(1) +
-        " " +
-        (h * 0.82).toFixed(1) +
-        " " +
-        "C " +
-        r2.toFixed(1) +
-        " " +
-        (h * 0.5).toFixed(1) +
-        " " +
-        r1.toFixed(1) +
-        " " +
-        (h * 0.2).toFixed(1) +
-        " " +
-        (mid + w * 0.18).toFixed(1) +
-        " 0 Z";
-      var gId = "bg" + uid;
-      return (
-        '<svg class="abd-svg" viewBox="0 0 ' +
-        Math.ceil(w) +
-        " " +
-        Math.ceil(h) +
-        '" width="100%" height="100%" preserveAspectRatio="none" aria-hidden="true">' +
-        "<defs>" +
-        '<linearGradient id="' +
-        gId +
-        '" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0%" stop-color="#2a0608"/>' +
-        '<stop offset="18%" stop-color="#5a1014"/>' +
-        '<stop offset="45%" stop-color="#4a0c10"/>' +
-        '<stop offset="75%" stop-color="#280508"/>' +
-        '<stop offset="100%" stop-color="#140204"/>' +
-        "</linearGradient>" +
-        "</defs>" +
-        '<path d="' +
-        path +
-        '" fill="url(#' +
-        gId +
-        ')" opacity="0.92"/>' +
-        '<path d="M ' +
-        mid.toFixed(1) +
-        " 1 L " +
-        (mid - 0.5).toFixed(1) +
-        " " +
-        (h * 0.5).toFixed(1) +
-        '" stroke="rgba(90,20,28,0.4)" stroke-width="0.8" fill="none"/>' +
-        "</svg>"
-      );
+    var a = audio();
+    if (a && a.pulse) a.pulse("soft");
+
+    var life = 9000 + rng() * 2000;
+    function cleanup() {
+      el.classList.remove("anom-bleeding", "anom-bleeding-hero", "anom-blood-smear");
+      delete el.dataset.bleeding;
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
     }
+    setTimeout(function () {
+      if (!layer.parentNode) return;
+      layer.classList.add("is-cleared");
+      el.classList.remove("anom-bleeding", "anom-bleeding-hero");
+      el.classList.add("anom-blood-smear");
+      setTimeout(cleanup, 1200);
+    }, life);
 
-    function bleedOne(el, isHero) {
-      el.dataset.bleeding = "1";
-      el.classList.add("anom-bleeding");
-      if (isHero) el.classList.add("anom-bleeding-hero");
-
-      var rect0 = el.getBoundingClientRect();
-      if (rect0.width < 8 || rect0.height < 4) {
-        el.classList.remove("anom-bleeding", "anom-bleeding-hero");
-        delete el.dataset.bleeding;
-        return false;
-      }
-
-      var layer = document.createElement("div");
-      layer.className = "anom-blood-layer" + (isHero ? " is-hero" : "");
-      layer.setAttribute("aria-hidden", "true");
-      layer.style.position = "fixed";
-      layer.style.left = Math.max(0, rect0.left - 12) + "px";
-      layer.style.top = Math.max(0, rect0.top - 6) + "px";
-      layer.style.width = rect0.width + 24 + "px";
-      var dropH = isHero
-        ? Math.min(window.innerHeight * 0.42, Math.max(rect0.height + 160, 220))
-        : Math.min(rect0.height + 120, Math.max(rect0.height * 2.1, 140));
-      layer.style.height = dropH + "px";
-      layer.style.pointerEvents = "none";
-      layer.style.zIndex = isHero ? "56" : "54";
-      layer.style.overflow = "visible";
-
-      // 얇은 상단 스미어만 (두꺼운 덮개 금지)
-      var smear = document.createElement("div");
-      smear.className = "anom-blood-smear-top";
-      layer.appendChild(smear);
-
-      var veil = document.createElement("div");
-      veil.className = "anom-blood-veil";
-      layer.appendChild(veil);
-
-      // 작은 상단 점 몇 개만
-      var clotN = mobile ? 2 : isHero ? 4 : 2;
-      for (var c = 0; c < clotN; c++) {
-        var clot = document.createElement("span");
-        clot.className = "anom-blood-clot";
-        clot.style.left = 8 + rng() * 80 + "%";
-        clot.style.width = 6 + rng() * 12 + "px";
-        clot.style.height = 4 + rng() * 8 + "px";
-        clot.style.animationDelay = 0.08 + c * 0.1 + "s";
-        layer.appendChild(clot);
-      }
-
-      function syncLayer() {
-        if (!layer.parentNode) return;
-        var rect = el.getBoundingClientRect();
-        layer.style.left = Math.max(0, rect.left - 12) + "px";
-        layer.style.top = Math.max(0, rect.top - 6) + "px";
-        layer.style.width = rect.width + 24 + "px";
-        layer.style.height =
-          (isHero
-            ? Math.min(window.innerHeight * 0.42, Math.max(rect.height + 160, 220))
-            : Math.min(rect.height + 120, Math.max(rect.height * 2.1, 140))) + "px";
-      }
-
-      function addDrip(kind) {
-        if (!layer.parentNode || busy()) return;
-        if (layer.querySelectorAll(".anom-blood-drip").length >= (isHero ? 12 : 7)) return;
-        syncLayer();
-        var wrap = document.createElement("span");
-        wrap.className = "anom-blood-drip" + (kind ? " " + kind : "");
-        // 글자 폭 안쪽에 고르게
-        wrap.style.left = 6 + rng() * 86 + "%";
-        wrap.style.animationDuration = 5 + rng() * 3 + "s";
-        var baseH = kind === "thick" ? 100 : kind === "thin" ? 55 : 75;
-        wrap.style.height = baseH + rng() * (isHero ? 90 : 60) + "px";
-        wrap.style.width = (kind === "thick" ? 10 : kind === "thin" ? 6 : 8) + rng() * 5 + "px";
-        wrap.innerHTML = makeDripSvg(kind || "mid", "d" + Math.floor(rng() * 1e8));
-        layer.appendChild(wrap);
-      }
-
-      document.body.appendChild(layer);
-
-      // 절제: 히어로 7~9, 기타 4~5
-      var dripCount = mobile ? (isHero ? 6 : 4) : isHero ? 9 : 5;
-      for (var i = 0; i < dripCount; i++) {
-        (function (idx) {
-          setTimeout(function () {
-            var k = rng() > 0.5 ? "thick" : rng() > 0.45 ? "" : "thin";
-            addDrip(k);
-          }, 80 + idx * (isHero ? 160 : 220));
-        })(i);
-      }
-      // 추가 파동 1회만
-      setTimeout(function () {
-        if (!layer.parentNode || busy()) return;
-        addDrip("thick");
-        addDrip("thin");
-      }, 3200);
-
-      var pool = document.createElement("div");
-      pool.className = "anom-blood-pool";
-      layer.appendChild(pool);
-
-      var hand = document.createElement("div");
-      hand.className = "anom-blood-hand";
-      hand.classList.add(rng() > 0.5 ? "wipe-ltr" : "wipe-rtl");
-      layer.appendChild(hand);
-
-      var a = audio();
-      if (a && isHero) {
-        if (a.pulse) a.pulse("mid");
-        setTimeout(function () {
-          if (a.hddScratch) a.hddScratch();
-        }, 400);
-      }
-
-      var dripMs = isHero ? 15000 + rng() * 2500 : 10000 + rng() * 1800;
-      var wipeMs = 2800;
-      var afterMs = 1600;
-
-      function onScrollOrResize() {
-        syncLayer();
-      }
-      window.addEventListener("scroll", onScrollOrResize, { passive: true });
-      window.addEventListener("resize", onScrollOrResize);
-
-      function cleanup() {
-        window.removeEventListener("scroll", onScrollOrResize);
-        window.removeEventListener("resize", onScrollOrResize);
-        el.classList.remove("anom-bleeding", "anom-bleeding-hero", "anom-blood-smear");
-        delete el.dataset.bleeding;
-        if (layer.parentNode) layer.parentNode.removeChild(layer);
-      }
-
-      setTimeout(function () {
-        if (busy() || !layer.parentNode) {
-          cleanup();
-          return;
-        }
-        layer.classList.add("is-wiping");
-        hand.classList.add("is-wiping");
-        if (a && a.hddScratch) a.hddScratch();
-
-        setTimeout(function () {
-          layer.classList.add("is-cleared");
-          el.classList.remove("anom-bleeding", "anom-bleeding-hero");
-          el.classList.add("anom-blood-smear");
-        }, wipeMs * 0.5);
-
-        setTimeout(cleanup, wipeMs + afterMs);
-      }, dripMs);
-
-      if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[blood-text]", el.id || el.className, "hero", isHero, "drips", dripCount);
-      }
-      return true;
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[blood] from letters", picks.length, "of", anchors.length);
     }
+    return true;
   }
 
   // ---------- 기존 + 신규 이상현상 ----------
@@ -872,7 +760,8 @@
     {
       id: "text_blood_wipe",
       run: function () {
-        runTextBlood({ preferHero: true });
+        // 쿨다운 존중 — 강제 아님
+        runTextBlood({});
       },
     },
     {
@@ -1683,42 +1572,34 @@
     return true;
   }
 
-  /** 2페이즈 진입 — 과밀 금지, 순차·절제 */
+  /** 2페이즈 진입 — 피는 늦게·드물게, 트리거 방해 최소화 */
   function burstCoreHorror() {
     if (!markPhase2Ui() || busy()) return;
     if (document.body.classList.contains("diary-open")) return;
-    // 피만 먼저 (히어로 단독)
+    // 손 (약하게)
     setTimeout(function () {
       if (phase2Active() && !busy()) {
         try {
-          runTextBlood({ preferHero: true, multi: false });
-        } catch (e) {}
-      }
-    }, 400);
-    // 손 — 조금 뒤
-    setTimeout(function () {
-      if (phase2Active() && !busy()) {
-        try {
-          runRisingHands({ ms: 3600 });
+          runRisingHands({ ms: 3200 });
         } catch (e2) {}
       }
-    }, 2800);
+    }, 2500);
     // 얼굴 1회
     setTimeout(function () {
       if (phase2Active() && !busy()) {
         try {
-          runCardFaces({ ms: 2800 });
+          runCardFaces({ ms: 2600 });
         } catch (e3) {}
       }
-    }, 5000);
-    // 할퀴는 가끔
+    }, 6000);
+    // 피: 진입 직후 아님 — 18초 뒤 1회만 (쿨다운 적용)
     setTimeout(function () {
-      if (phase2Active() && !busy() && rng() > 0.4) {
+      if (phase2Active() && !busy() && !document.body.classList.contains("diary-open")) {
         try {
-          runCardClaws({ ms: 2600 });
-        } catch (e4) {}
+          runTextBlood({ force: false });
+        } catch (e) {}
       }
-    }, 7000);
+    }, 18000);
   }
 
   // 방문마다 더 많이 뽑음 (강도↑)
@@ -1728,7 +1609,8 @@
 
   // 글자 피 흘림 + 손/얼굴(참조 이미지) — 2페이즈 필수 풀 포함
   (function ensureCoreAnomsInPool() {
-    var need = ["text_blood_wipe", "rising_hands", "card_faces", "card_claws"];
+    // text_blood_wipe 제외 — 피는 전용 스케줄만 (랜덤 풀 스팸 방지)
+    var need = ["rising_hands", "card_faces", "card_claws"];
     need.forEach(function (id) {
       var has = false;
       for (var i = 0; i < pool.length; i++) {
@@ -1885,26 +1767,24 @@
       }, 9000);
     }
 
-    // ===== 코어 FX: 여유 간격 + 확률 (과밀 방지) =====
+    // 피: 첫 22s 이후 · 55~90s 간격 · 낮은 확률 — 트리거 가리지 않음
     setTimeout(function bloodLoop() {
       if (!phase2Active()) {
-        setTimeout(bloodLoop, 2000);
+        setTimeout(bloodLoop, 4000);
         return;
       }
       if (
         !document.body.classList.contains("diary-open") &&
         !busy() &&
-        rng() > 0.25
+        rng() > 0.55
       ) {
         try {
-          runTextBlood({ preferHero: true, multi: false });
+          runTextBlood({});
         } catch (e) {}
       }
-      var d =
-        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
-      var gap = Math.max(14000, 18000 + rng() * 12000 - d * 1500);
+      var gap = 55000 + rng() * 35000;
       setTimeout(bloodLoop, gap);
-    }, 8000);
+    }, 22000);
 
     setTimeout(function handsLoop() {
       if (!phase2Active()) {
@@ -1968,28 +1848,36 @@
       setTimeout(watchLoop, watcherGap);
     }, watcherGap);
 
-    // decay 레벨 변할 때마다 코어 버스트
+    // decay 시 전체 버스트 금지 — 손/얼굴만 가끔
     document.addEventListener("haunt-p2-decay", function (ev) {
       var lv = ev && ev.detail && ev.detail.level;
-      if (lv == null) return;
-      setTimeout(function () {
-        if (phase2Active() && !busy() && !document.body.classList.contains("diary-open")) {
-          burstCoreHorror();
-        }
-      }, 300);
+      if (lv == null || busy() || !phase2Active()) return;
+      if (document.body.classList.contains("diary-open")) return;
+      if (lv === 3 || lv === 5) {
+        setTimeout(function () {
+          if (rng() > 0.4) {
+            try {
+              runCardFaces({ ms: 2200 });
+            } catch (e) {}
+          }
+        }, 800);
+      }
     });
 
-    // stage/mood 진입 이벤트
+    // stage 2 첫 진입 1회만
+    var burstOnce = false;
     document.addEventListener("haunt-stage", function (ev) {
       var s = ev && ev.detail && ev.detail.stage;
-      if (s >= 2) {
-        setTimeout(burstCoreHorror, 400);
+      if (s >= 2 && !burstOnce) {
+        burstOnce = true;
+        setTimeout(burstCoreHorror, 600);
       }
     });
     document.addEventListener("haunt-mood", function (ev) {
       var m = ev && ev.detail && ev.detail.mood;
-      if (m >= 3) {
-        setTimeout(burstCoreHorror, 500);
+      if (m >= 3 && !burstOnce) {
+        burstOnce = true;
+        setTimeout(burstCoreHorror, 800);
       }
     });
 
@@ -2088,8 +1976,8 @@
     }),
     fire: fireRandom,
     flash: flashWakeAgain,
-    bloodText: function () {
-      return runTextBlood({ preferHero: true, multi: false });
+    bloodText: function (force) {
+      return runTextBlood({ force: !!force });
     },
     risingHands: runRisingHands,
     cardFaces: runCardFaces,

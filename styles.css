@@ -4686,18 +4686,20 @@ body.stage-corrupt .anom-blood-layer {
   from { opacity: 0; }
   to { opacity: 0.75; }
 }
-/* SVG 핏줄기 래퍼 — 네온 막대 금지 */
+/* 글자에서 흘러내리는 줄기 (fixed 좌표) */
 .anom-blood-drip {
   position: absolute;
-  top: 0;
-  min-height: 40px;
   transform-origin: top center;
-  animation: bloodDripGrow 5.2s cubic-bezier(0.18, 0.05, 0.2, 1) forwards;
+  animation: bloodDripGrow 5s cubic-bezier(0.2, 0.05, 0.2, 1) forwards;
   opacity: 0;
-  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
   background: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  pointer-events: none;
+}
+.anom-blood-drip.from-letter {
+  /* left/top/width/height set in JS from letter rects */
 }
 .anom-blood-drip::after {
   display: none !important;
@@ -4708,28 +4710,45 @@ body.stage-corrupt .anom-blood-layer {
   height: 100%;
   overflow: visible;
 }
-.anom-blood-drip.thick {
-  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.55));
-}
-.anom-blood-drip.thin {
+/* 글자 안 작은 스며든 점 */
+.anom-blood-bead {
+  position: absolute;
+  width: 6px;
+  height: 5px;
+  margin-left: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #5a1418, #1a0406 75%);
   opacity: 0;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
+  animation: bloodBeadIn 0.6s ease forwards;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+@keyframes bloodBeadIn {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 0.85; transform: scale(1); }
+}
+.anom-blood-layer.is-from-letters {
+  mix-blend-mode: normal;
+}
+.anom-blood-layer.is-from-letters.is-cleared {
+  opacity: 0;
+  transition: opacity 1s ease;
 }
 @keyframes bloodDripGrow {
   0% {
-    transform: scaleY(0.04);
+    transform: scaleY(0.06);
     opacity: 0;
   }
-  5% {
-    opacity: 1;
+  8% {
+    opacity: 0.95;
   }
-  45% {
+  55% {
     transform: scaleY(1);
-    opacity: 1;
+    opacity: 0.92;
   }
   100% {
-    transform: scaleY(1.04);
-    opacity: 0.94;
+    transform: scaleY(1.03);
+    opacity: 0.88;
   }
 }
 .anom-blood-splat {
