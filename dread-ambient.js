@@ -168,41 +168,63 @@
     });
   }, 900);
 
-  // stage3: 간헐적 속삭임·숨소리 (침묵 사이 공포)
+  function p2Decay() {
+    if (typeof window.__hauntP2Decay === "function") return window.__hauntP2Decay();
+    return parseInt(document.body.getAttribute("data-p2-decay") || "0", 10) || 0;
+  }
+
+  // stage2+ : decay 높을수록 속삭임·숨 더 자주
   setInterval(function () {
     if (document.body.classList.contains("is-haunting")) return;
     if (document.body.classList.contains("is-ending")) return;
     if (document.body.classList.contains("diary-open")) return;
-    if (!stageOk(3)) return;
-    if (Math.random() > 0.28) return;
+    if (!stageOk(2)) return;
+    var d = p2Decay();
+    if (d < 2 && !stageOk(3)) return;
+    var chance = d >= 5 ? 0.45 : d >= 3 ? 0.32 : 0.2;
+    if (Math.random() > chance) return;
     var a = audio();
     if (!a) return;
     if (Math.random() > 0.5 && a.whisper) a.whisper();
     else if (a.breath) a.breath();
-  }, 11000);
+  }, 9000);
 
-  // stage3: 아주 가끔 블랙아웃 플래시
+  // decay 3+: 블랙아웃 플래시 (높을수록 자주)
   setInterval(function () {
     if (document.body.classList.contains("is-haunting")) return;
     if (document.body.classList.contains("is-ending")) return;
     if (document.body.classList.contains("diary-open")) return;
-    if (!stageOk(3)) return;
-    if (Math.random() > 0.08) return;
+    if (!stageOk(2)) return;
+    var d = p2Decay();
+    if (d < 3) return;
+    if (Math.random() > (d >= 5 ? 0.22 : 0.1)) return;
     document.body.classList.add("horror-blackout");
     var a = audio();
     if (a && a.sting) a.sting("soft");
     setTimeout(function () {
       document.body.classList.remove("horror-blackout");
     }, 70 + Math.random() * 90);
-  }, 16000);
+  }, 12000);
 
-  // stage3: 화면 가장자리 맥박
+  // decay 2+: 가장자리 맥박
   setInterval(function () {
-    if (!stageOk(3) || document.body.classList.contains("is-haunting")) return;
+    if (!stageOk(2) || document.body.classList.contains("is-haunting")) return;
     if (document.body.classList.contains("diary-open")) return;
+    var d = p2Decay();
+    if (d < 2) return;
     document.body.classList.add("horror-pulse-edge");
     setTimeout(function () {
       document.body.classList.remove("horror-pulse-edge");
-    }, 600);
-  }, 8000);
+    }, 500 + d * 40);
+  }, 7000);
+
+  // decay 올라갈 때 float word 더 자주
+  setInterval(function () {
+    if (!stageOk(2) || document.body.classList.contains("is-haunting")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    var d = p2Decay();
+    if (d < 2) return;
+    if (Math.random() > 0.35 + d * 0.08) return;
+    spawnWord();
+  }, 2200);
 })();

@@ -27,6 +27,12 @@
   var dreadTimer = null;
   var corruptTimer = null;
 
+  // 2페이즈: 시간 경과에 따라 화면이 점점 괴기스러워짐 (0~5)
+  var p2Decay = 0;
+  var p2Elapsed = 0;
+  var p2LastTick = 0;
+  var p2TickTimer = null;
+
   var themeMeta = document.querySelector('meta[name="theme-color"]');
 
   function diaryDiscovered() {
@@ -84,11 +90,103 @@
       // 핵심: 다크만 씌운 라이트 카피 금지 — stage2 진입 즉시 본문 전면 부패
       remorphAll("horror", true);
       burstCorrupt(reduced ? 12 : 8, reduced ? 40 : 120);
+      startP2DecayClock();
     }
     if (n >= 3) {
       revealHorrorChrome();
       remorphAll("horror", true);
       burstCorrupt(reduced ? 24 : 16, reduced ? 30 : 90);
+      // dread 진입 시 최소 decay 2 보장 (이미 더 높으면 유지)
+      if (p2Decay < 2) setP2Decay(2);
+    }
+  }
+
+  /**
+   * 2페이즈 경과 시간 → data-p2-decay 0~5
+   * 일기 연 동안은 시간 정지 (읽기 방해 X)
+   *  ~12s:1  28s:2  50s:3  80s:4  120s:5
+   */
+  function startP2DecayClock() {
+    if (!p2LastTick) p2LastTick = Date.now();
+    body.setAttribute("data-p2-decay", String(p2Decay));
+    body.classList.add("p2-d" + p2Decay);
+    body.classList.add("phase-2-active");
+    if (p2TickTimer) return;
+    p2TickTimer = setInterval(tickP2Decay, reduced ? 900 : 1400);
+  }
+
+  function tickP2Decay() {
+    if (stage < 2) return;
+    if (body.classList.contains("is-haunting") || body.classList.contains("is-ending")) {
+      return;
+    }
+    var now = Date.now();
+    // 일기 열림 / 탭 숨김: 경과 일시정지
+    if (
+      body.classList.contains("diary-open") ||
+      document.hidden
+    ) {
+      p2LastTick = now;
+      return;
+    }
+    if (!p2LastTick) p2LastTick = now;
+    p2Elapsed += now - p2LastTick;
+    p2LastTick = now;
+
+    var next = 0;
+    if (p2Elapsed >= (reduced ? 45000 : 120000)) next = 5;
+    else if (p2Elapsed >= (reduced ? 32000 : 80000)) next = 4;
+    else if (p2Elapsed >= (reduced ? 22000 : 50000)) next = 3;
+    else if (p2Elapsed >= (reduced ? 12000 : 28000)) next = 2;
+    else if (p2Elapsed >= (reduced ? 5000 : 12000)) next = 1;
+
+    if (next > p2Decay) setP2Decay(next);
+  }
+
+  function setP2Decay(n) {
+    n = Math.max(0, Math.min(5, n | 0));
+    if (n < p2Decay) return;
+    var prev = p2Decay;
+    p2Decay = n;
+    body.setAttribute("data-p2-decay", String(n));
+    for (var i = 0; i <= 5; i++) body.classList.remove("p2-d" + i);
+    body.classList.add("p2-d" + n);
+
+    // 단계 진입 연출 (사운드 + 짧은 텍스트 부패)
+    try {
+      var a = window.__hauntAudio;
+      if (a && a.unlock) a.unlock();
+      if (n === 1 && a) {
+        if (a.pulse) a.pulse("soft");
+        if (a.whisper) setTimeout(function () { a.whisper(); }, 200);
+      } else if (n === 2 && a) {
+        if (a.staticBurst) a.staticBurst(140);
+        if (a.pulse) a.pulse("mid");
+      } else if (n === 3 && a) {
+        if (a.rumble) a.rumble(1.2);
+        if (a.breath) a.breath();
+        if (a.setLevel) a.setLevel(Math.max(2, n > 2 ? 3 : 2));
+      } else if (n === 4 && a) {
+        if (a.sting) a.sting("soft");
+        if (a.hddScratch) a.hddScratch();
+        if (a.setLevel) a.setLevel(3);
+      } else if (n === 5 && a) {
+        if (a.dreadHit) a.dreadHit();
+        else if (a.sting) a.sting("blood");
+        if (a.setLevel) a.setLevel(3);
+      }
+    } catch (e) {}
+
+    if (n >= 2 && n > prev) burstCorrupt(reduced ? 4 : 3, reduced ? 60 : 160);
+    if (n >= 4) revealHorrorChrome();
+
+    document.dispatchEvent(
+      new CustomEvent("haunt-p2-decay", {
+        detail: { level: n, prev: prev, elapsed: p2Elapsed },
+      })
+    );
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[p2-decay]", n, "elapsed", Math.round(p2Elapsed / 1000) + "s");
     }
   }
 
@@ -410,4 +508,10 @@
   };
   window.__hauntSetStage = setStage;
   window.__hauntSetMood = setMood;
+  window.__hauntP2Decay = function () {
+    return p2Decay;
+  };
+  window.__hauntP2Elapsed = function () {
+    return p2Elapsed;
+  };
 })();

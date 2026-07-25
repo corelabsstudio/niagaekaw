@@ -218,13 +218,19 @@
 
   /** 완전 독립 ambient — 긴 랜덤 간격, 이상현상 루프와 무관 */
   function scheduleSparseFlash() {
-    // 첫 섬광도 최소 25~70초 뒤에
+    // 첫 섬광도 최소 25~70초 뒤 — decay 높을수록 더 자주
+    var d =
+      typeof window.__hauntP2Decay === "function"
+        ? window.__hauntP2Decay()
+        : parseInt(document.body.getAttribute("data-p2-decay") || "0", 10) || 0;
     var wait = 25000 + rng() * 45000;
     if (flashCount === 0) wait = 35000 + rng() * 55000;
+    wait *= Math.max(0.35, 1 - d * 0.12);
     setTimeout(function () {
       if (stageReady() && !busy() && canFlash(false)) {
-        // 50% 확률로 스킵 → 다음 창으로 (불규칙)
-        if (rng() > 0.48) {
+        // decay 높을수록 스킵 적음
+        var skipThr = 0.48 - d * 0.06;
+        if (rng() > skipThr) {
           // 지직 없이 순수 섬광, 또는 아주 약한 static
           if (rng() > 0.6) {
             document.body.classList.add("anom-static");
@@ -1445,13 +1451,18 @@
   }
   waitThenLoop();
 
+  function p2DecayLevel() {
+    if (typeof window.__hauntP2Decay === "function") return window.__hauntP2Decay();
+    return parseInt(document.body.getAttribute("data-p2-decay") || "0", 10) || 0;
+  }
+
   function scheduleLoop() {
     if (!phase2Active()) {
       // 클라이맥스/엔딩/1페이즈면 대기 후 재시도
       setTimeout(scheduleLoop, 1500);
       return;
     }
-    // 너무 자주 터지면 글리치 파티처럼 허접해짐 → 간격 여유
+    // 기본 여유 + 2페이즈 decay 올라갈수록 점점 자주 (괴기 가속)
     var min = mobile ? 9000 : 7500;
     var span = mobile ? 12000 : 14000;
     var m = mood();
@@ -1462,6 +1473,11 @@
       min *= 0.92;
       span *= 0.92;
     }
+    var d = p2DecayLevel();
+    // decay 0→5 : 간격 100%→약 45%
+    var decayFactor = Math.max(0.42, 1 - d * 0.11);
+    min *= decayFactor;
+    span *= decayFactor;
     var next = min + rng() * span;
     setTimeout(function () {
       if (!phase2Active()) {
