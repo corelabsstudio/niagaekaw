@@ -1672,7 +1672,7 @@
     }, approachMs);
 
     // 정리
-    var total = approachMs + (opts.scareMs != null ? opts.scareMs : 650);
+    var total = approachMs + (opts.scareMs != null ? opts.scareMs : 900);
     setTimeout(function () {
       if (!root.parentNode) {
         ringBusy = false;
