@@ -283,164 +283,136 @@
     opts = opts || {};
     if (busy()) return false;
     if (!markPhase2Ui()) return false;
+    // 동시에 너무 많이 흐르면 싸구려 — 레이어 상한
+    if (document.querySelectorAll(".anom-blood-layer").length >= 2) return false;
 
     var prefer = opts.preferHero !== false;
-    var forceMulti = opts.multi !== false; // 히어로 + 플랜/카드 동시
+    // multi 기본 끔: 히어로(또는 1타깃)만. 명시 시에만 추가 1개
+    var forceMulti = opts.multi === true;
     var nodes = [];
     if (prefer) {
       var hero = document.getElementById("mainTitle");
       if (hero && (hero.textContent || "").trim()) nodes.push(hero);
-      var lede = document.querySelector(".stasis-lede");
-      if (lede && (lede.textContent || "").trim()) nodes.push(lede);
     }
-    document
-      .querySelectorAll(
-        ".stasis-h1, .plan-card, .plan-btn, .card-horror h2, .stasis-feat-list li, .eyebrow, .stasis-quote-text, .stasis-badge"
-      )
-      .forEach(function (n) {
-        if (nodes.indexOf(n) === -1) nodes.push(n);
-      });
+    if (!nodes.length || forceMulti) {
+      document
+        .querySelectorAll(".stasis-h1, .stasis-lede, .stasis-quote-text, .card-horror h2")
+        .forEach(function (n) {
+          if (nodes.indexOf(n) === -1) nodes.push(n);
+        });
+    }
     if (!nodes.length) return false;
 
-    // 히어로 필수 + 추가 1~2개
     var targets = [];
-    if (prefer && nodes[0] && nodes[0].id === "mainTitle") {
+    if (prefer && nodes[0] && (nodes[0].id === "mainTitle" || nodes[0].classList.contains("stasis-h1"))) {
+      targets.push(nodes[0]);
+    } else {
       targets.push(nodes[0]);
     }
-    if (forceMulti) {
-      var extras = nodes.filter(function (n) {
-        return targets.indexOf(n) === -1 && n.dataset.bleeding !== "1";
-      });
-      var extraN = mobile ? 1 : 1 + Math.floor(rng() * 2);
-      pickN(extras, Math.min(extraN, extras.length)).forEach(function (n) {
-        targets.push(n);
-      });
-    }
-    if (!targets.length) {
-      var el0 = nodes[Math.floor(rng() * Math.min(nodes.length, 4))];
-      if (el0) targets.push(el0);
+    if (forceMulti && nodes.length > 1 && rng() > 0.45) {
+      var extra = nodes[1 + Math.floor(rng() * Math.min(2, nodes.length - 1))];
+      if (extra && targets.indexOf(extra) === -1) targets.push(extra);
     }
 
     var made = 0;
     targets.forEach(function (el, ti) {
       if (!el || el.dataset.bleeding === "1") return;
       if (!(el.textContent || "").trim()) return;
-      if (bleedOne(el, ti === 0)) made++;
+      if (bleedOne(el, ti === 0 || el.id === "mainTitle")) made++;
     });
     return made > 0;
 
-    /** 유기적 핏줄기 SVG — 막대기 말고 걸쭉한 실사 톤 */
+    /** 가느다란 리블릿 — 소시지/막대 금지, 글자 사이 스며드는 줄기 */
     function makeDripSvg(kind, uid) {
       uid = uid || "d" + Math.floor(rng() * 1e7);
-      var w = kind === "thick" ? 28 + rng() * 18 : kind === "thin" ? 10 + rng() * 6 : 16 + rng() * 12;
-      var h = kind === "thick" ? 160 + rng() * 120 : kind === "thin" ? 70 + rng() * 50 : 110 + rng() * 80;
-      // 불규칙 좌우 곡선 줄기 + 하단 방울
+      // 폭 좁게: thick도 최대 ~14px 느낌
+      var w = kind === "thick" ? 11 + rng() * 7 : kind === "thin" ? 5 + rng() * 3 : 7 + rng() * 5;
+      var h = kind === "thick" ? 140 + rng() * 100 : kind === "thin" ? 70 + rng() * 50 : 100 + rng() * 70;
       var mid = w / 2;
-      var wobble = function (t) {
-        return (rng() * 0.35 - 0.12) * w * t;
-      };
-      var l1 = mid - w * 0.22 + wobble(0.2);
-      var l2 = mid - w * 0.28 + wobble(0.5);
-      var l3 = mid - w * 0.18 + wobble(0.8);
-      var r1 = mid + w * 0.22 + wobble(0.2);
-      var r2 = mid + w * 0.3 + wobble(0.5);
-      var r3 = mid + w * 0.2 + wobble(0.8);
-      var dropR = kind === "thick" ? w * 0.42 : w * 0.38;
+      var taper = kind === "thick" ? 0.32 : 0.28;
+      var l1 = mid - w * taper * 0.9;
+      var l2 = mid - w * taper * 1.05;
+      var l3 = mid - w * taper * 0.55;
+      var r1 = mid + w * taper * 0.9;
+      var r2 = mid + w * taper * 1.05;
+      var r3 = mid + w * taper * 0.55;
+      var dropR = w * 0.55;
       var path =
         "M " +
-        (mid - w * 0.12).toFixed(1) +
+        (mid - w * 0.18).toFixed(1) +
         " 0 " +
         "C " +
         l1.toFixed(1) +
         " " +
-        (h * 0.18).toFixed(1) +
+        (h * 0.2).toFixed(1) +
         " " +
         l2.toFixed(1) +
         " " +
-        (h * 0.45).toFixed(1) +
+        (h * 0.5).toFixed(1) +
         " " +
         l3.toFixed(1) +
         " " +
-        (h * 0.78).toFixed(1) +
+        (h * 0.82).toFixed(1) +
         " " +
         "Q " +
-        (mid - dropR).toFixed(1) +
+        (mid - dropR * 0.7).toFixed(1) +
         " " +
-        (h * 0.92).toFixed(1) +
+        (h * 0.93).toFixed(1) +
         " " +
         mid.toFixed(1) +
         " " +
         h.toFixed(1) +
         " " +
         "Q " +
-        (mid + dropR).toFixed(1) +
+        (mid + dropR * 0.7).toFixed(1) +
         " " +
-        (h * 0.92).toFixed(1) +
+        (h * 0.93).toFixed(1) +
         " " +
         r3.toFixed(1) +
         " " +
-        (h * 0.78).toFixed(1) +
+        (h * 0.82).toFixed(1) +
         " " +
         "C " +
         r2.toFixed(1) +
         " " +
-        (h * 0.45).toFixed(1) +
+        (h * 0.5).toFixed(1) +
         " " +
         r1.toFixed(1) +
         " " +
-        (h * 0.18).toFixed(1) +
+        (h * 0.2).toFixed(1) +
         " " +
-        (mid + w * 0.12).toFixed(1) +
+        (mid + w * 0.18).toFixed(1) +
         " 0 Z";
       var gId = "bg" + uid;
-      var gId2 = "bgh" + uid;
       return (
         '<svg class="abd-svg" viewBox="0 0 ' +
-        w.toFixed(0) +
+        Math.ceil(w) +
         " " +
-        h.toFixed(0) +
-        '" width="' +
-        w.toFixed(0) +
-        '" height="100%" preserveAspectRatio="none" aria-hidden="true">' +
+        Math.ceil(h) +
+        '" width="100%" height="100%" preserveAspectRatio="none" aria-hidden="true">' +
         "<defs>" +
         '<linearGradient id="' +
         gId +
         '" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0%" stop-color="#3a0508"/>' +
-        '<stop offset="12%" stop-color="#6b0a12"/>' +
-        '<stop offset="35%" stop-color="#8f1018"/>' +
-        '<stop offset="55%" stop-color="#5c080e"/>' +
-        '<stop offset="82%" stop-color="#2a0406"/>' +
-        '<stop offset="100%" stop-color="#1a0204"/>' +
-        "</linearGradient>" +
-        '<linearGradient id="' +
-        gId2 +
-        '" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0%" stop-color="#000" stop-opacity="0.45"/>' +
-        '<stop offset="40%" stop-color="#fff" stop-opacity="0.12"/>' +
-        '<stop offset="100%" stop-color="#000" stop-opacity="0.5"/>' +
+        '<stop offset="0%" stop-color="#2a0608"/>' +
+        '<stop offset="18%" stop-color="#5a1014"/>' +
+        '<stop offset="45%" stop-color="#4a0c10"/>' +
+        '<stop offset="75%" stop-color="#280508"/>' +
+        '<stop offset="100%" stop-color="#140204"/>' +
         "</linearGradient>" +
         "</defs>" +
         '<path d="' +
         path +
         '" fill="url(#' +
         gId +
-        ')" opacity="0.96"/>' +
-        '<path d="' +
-        path +
-        '" fill="url(#' +
-        gId2 +
-        ')" opacity="0.55"/>' +
-        // 하이라이트 얇은 줄
+        ')" opacity="0.92"/>' +
         '<path d="M ' +
-        (mid - 1).toFixed(1) +
-        " 2 L " +
-        (mid - w * 0.04).toFixed(1) +
+        mid.toFixed(1) +
+        " 1 L " +
+        (mid - 0.5).toFixed(1) +
         " " +
-        (h * 0.55).toFixed(1) +
-        '" stroke="rgba(180,40,50,0.35)" stroke-width="' +
-        (kind === "thick" ? 2.2 : 1.2) +
-        '" fill="none" stroke-linecap="round"/>' +
+        (h * 0.5).toFixed(1) +
+        '" stroke="rgba(90,20,28,0.4)" stroke-width="0.8" fill="none"/>' +
         "</svg>"
       );
     }
@@ -465,14 +437,14 @@
       layer.style.top = Math.max(0, rect0.top - 6) + "px";
       layer.style.width = rect0.width + 24 + "px";
       var dropH = isHero
-        ? Math.min(window.innerHeight * 0.62, Math.max(rect0.height + 280, 340))
-        : Math.min(rect0.height + 200, Math.max(rect0.height * 2.8, 180));
+        ? Math.min(window.innerHeight * 0.42, Math.max(rect0.height + 160, 220))
+        : Math.min(rect0.height + 120, Math.max(rect0.height * 2.1, 140));
       layer.style.height = dropH + "px";
       layer.style.pointerEvents = "none";
-      layer.style.zIndex = isHero ? "60" : "58";
+      layer.style.zIndex = isHero ? "56" : "54";
       layer.style.overflow = "visible";
 
-      // 글자 위 걸쭉한 피 막 (상단 스미어)
+      // 얇은 상단 스미어만 (두꺼운 덮개 금지)
       var smear = document.createElement("div");
       smear.className = "anom-blood-smear-top";
       layer.appendChild(smear);
@@ -481,15 +453,15 @@
       veil.className = "anom-blood-veil";
       layer.appendChild(veil);
 
-      // 상단 가로 흘러내림 덩어리들
-      var clotN = mobile ? (isHero ? 5 : 3) : isHero ? 9 : 5;
+      // 작은 상단 점 몇 개만
+      var clotN = mobile ? 2 : isHero ? 4 : 2;
       for (var c = 0; c < clotN; c++) {
         var clot = document.createElement("span");
         clot.className = "anom-blood-clot";
-        clot.style.left = 3 + rng() * 90 + "%";
-        clot.style.width = 14 + rng() * 36 + "px";
-        clot.style.height = 8 + rng() * 18 + "px";
-        clot.style.animationDelay = 0.05 + c * 0.07 + "s";
+        clot.style.left = 8 + rng() * 80 + "%";
+        clot.style.width = 6 + rng() * 12 + "px";
+        clot.style.height = 4 + rng() * 8 + "px";
+        clot.style.animationDelay = 0.08 + c * 0.1 + "s";
         layer.appendChild(clot);
       }
 
@@ -501,51 +473,48 @@
         layer.style.width = rect.width + 24 + "px";
         layer.style.height =
           (isHero
-            ? Math.min(window.innerHeight * 0.62, Math.max(rect.height + 280, 340))
-            : Math.min(rect.height + 200, Math.max(rect.height * 2.8, 180))) + "px";
+            ? Math.min(window.innerHeight * 0.42, Math.max(rect.height + 160, 220))
+            : Math.min(rect.height + 120, Math.max(rect.height * 2.1, 140))) + "px";
       }
 
       function addDrip(kind) {
         if (!layer.parentNode || busy()) return;
+        if (layer.querySelectorAll(".anom-blood-drip").length >= (isHero ? 12 : 7)) return;
         syncLayer();
         var wrap = document.createElement("span");
         wrap.className = "anom-blood-drip" + (kind ? " " + kind : "");
-        wrap.style.left = 1 + rng() * 93 + "%";
-        wrap.style.animationDuration = 4.5 + rng() * 3.5 + "s";
-        var baseH = kind === "thick" ? 130 : kind === "thin" ? 60 : 90;
-        wrap.style.height = baseH + rng() * (isHero ? 160 : 100) + "px";
-        wrap.style.width = (kind === "thick" ? 22 : kind === "thin" ? 12 : 16) + rng() * 14 + "px";
+        // 글자 폭 안쪽에 고르게
+        wrap.style.left = 6 + rng() * 86 + "%";
+        wrap.style.animationDuration = 5 + rng() * 3 + "s";
+        var baseH = kind === "thick" ? 100 : kind === "thin" ? 55 : 75;
+        wrap.style.height = baseH + rng() * (isHero ? 90 : 60) + "px";
+        wrap.style.width = (kind === "thick" ? 10 : kind === "thin" ? 6 : 8) + rng() * 5 + "px";
         wrap.innerHTML = makeDripSvg(kind || "mid", "d" + Math.floor(rng() * 1e8));
         layer.appendChild(wrap);
       }
 
       document.body.appendChild(layer);
 
-      var dripCount = mobile ? (isHero ? 10 : 6) : isHero ? 18 : 10;
+      // 절제: 히어로 7~9, 기타 4~5
+      var dripCount = mobile ? (isHero ? 6 : 4) : isHero ? 9 : 5;
       for (var i = 0; i < dripCount; i++) {
         (function (idx) {
           setTimeout(function () {
-            var k = rng() > 0.38 ? "thick" : rng() > 0.4 ? "" : "thin";
+            var k = rng() > 0.5 ? "thick" : rng() > 0.45 ? "" : "thin";
             addDrip(k);
-          }, 30 + idx * (isHero ? 110 : 180));
+          }, 80 + idx * (isHero ? 160 : 220));
         })(i);
       }
-      [2000, 4200, 7000].forEach(function (ms) {
-        setTimeout(function () {
-          if (!layer.parentNode || busy()) return;
-          addDrip("thick");
-          addDrip(rng() > 0.5 ? "thick" : "");
-          addDrip("thin");
-        }, ms);
-      });
+      // 추가 파동 1회만
+      setTimeout(function () {
+        if (!layer.parentNode || busy()) return;
+        addDrip("thick");
+        addDrip("thin");
+      }, 3200);
 
       var pool = document.createElement("div");
       pool.className = "anom-blood-pool";
       layer.appendChild(pool);
-
-      var splat = document.createElement("div");
-      splat.className = "anom-blood-splat";
-      layer.appendChild(splat);
 
       var hand = document.createElement("div");
       hand.className = "anom-blood-hand";
@@ -1451,7 +1420,7 @@
     layer.className = "anom-rising-hands";
     layer.setAttribute("aria-hidden", "true");
 
-    var count = mobile ? 2 : 4;
+    var count = mobile ? 2 : 2 + (rng() > 0.5 ? 1 : 0);
     var html = "";
     for (var i = 0; i < count; i++) {
       var side = i % 2 === 0 ? "left" : "right";
@@ -1608,10 +1577,16 @@
     });
     if (visible.length) hosts = visible;
 
-    var n = mobile ? 2 : 3 + Math.floor(rng() * 2);
+    // 절제: 카드 1~2곳 + 플로팅 1개
+    var n = mobile ? 1 : 1 + (rng() > 0.4 ? 1 : 0);
     var picks = pickN(hosts, Math.min(n, hosts.length));
     var made = 0;
-    var lifeBase = opts.ms != null ? opts.ms : 2800 + rng() * 2600;
+    var lifeBase = opts.ms != null ? opts.ms : 2400 + rng() * 1800;
+
+    // 기존 플로팅 과다 정리
+    document.querySelectorAll(".anom-card-face.is-float").forEach(function (f) {
+      if (f.parentNode) f.parentNode.removeChild(f);
+    });
 
     picks.forEach(function (host, idx) {
       if (!host) return;
@@ -1623,40 +1598,35 @@
       if (cs.position === "static") host.style.position = "relative";
       host.classList.add("anom-card-has-face");
 
-      var faceCount = 1 + (rng() > 0.45 ? 1 : 0);
-      for (var fi = 0; fi < faceCount; fi++) {
-        var kind = 1 + Math.floor(rng() * 6);
-        var face = spawnFaceEl(kind);
-        var left = 18 + rng() * 64;
-        var top = 18 + rng() * 55;
-        var scale = 0.9 + rng() * 0.85;
-        face.style.setProperty("--acf-x", left.toFixed(1) + "%");
-        face.style.setProperty("--acf-y", top.toFixed(1) + "%");
-        face.style.setProperty("--acf-scale", scale.toFixed(2));
-        face.style.setProperty(
-          "--acf-delay",
-          (idx * 0.05 + fi * 0.08).toFixed(2) + "s"
-        );
-        face.style.setProperty("--acf-rot", (rng() * 14 - 7).toFixed(1) + "deg");
-        host.appendChild(face);
-        made++;
-        armFaceLifecycle(face, host, lifeBase, idx + fi);
-      }
+      var kind = 1 + Math.floor(rng() * 6);
+      var face = spawnFaceEl(kind);
+      // 카드 구석 — 텍스트 덜 가림
+      var left = rng() > 0.5 ? 72 + rng() * 18 : 8 + rng() * 18;
+      var top = 12 + rng() * 40;
+      var scale = 0.55 + rng() * 0.35;
+      face.style.setProperty("--acf-x", left.toFixed(1) + "%");
+      face.style.setProperty("--acf-y", top.toFixed(1) + "%");
+      face.style.setProperty("--acf-scale", scale.toFixed(2));
+      face.style.setProperty("--acf-delay", (idx * 0.08).toFixed(2) + "s");
+      face.style.setProperty("--acf-rot", (rng() * 10 - 5).toFixed(1) + "deg");
+      host.appendChild(face);
+      made++;
+      armFaceLifecycle(face, host, lifeBase, idx);
     });
 
-    // 화면 중앙~가장자리 플로팅 얼굴 1~3 (참조 대시보드처럼 항상 시야에)
-    var floatN = mobile ? 1 : 2 + Math.floor(rng() * 2);
-    for (var fi2 = 0; fi2 < floatN; fi2++) {
+    // 플로팅 1개 (가장자리, 작게)
+    if (!mobile || rng() > 0.35) {
       var kind2 = 1 + Math.floor(rng() * 6);
       var ff = spawnFaceEl(kind2, "is-float");
-      ff.style.setProperty("--acf-x", 8 + rng() * 84 + "%");
-      ff.style.setProperty("--acf-y", 18 + rng() * 55 + "%");
-      ff.style.setProperty("--acf-scale", (0.85 + rng() * 0.7).toFixed(2));
-      ff.style.setProperty("--acf-delay", (0.05 + fi2 * 0.1).toFixed(2) + "s");
-      ff.style.setProperty("--acf-rot", (rng() * 20 - 10).toFixed(1) + "deg");
+      var edge = rng() > 0.5;
+      ff.style.setProperty("--acf-x", edge ? 4 + rng() * 10 + "%" : 82 + rng() * 12 + "%");
+      ff.style.setProperty("--acf-y", 28 + rng() * 40 + "%");
+      ff.style.setProperty("--acf-scale", (0.55 + rng() * 0.25).toFixed(2));
+      ff.style.setProperty("--acf-delay", "0.08s");
+      ff.style.setProperty("--acf-rot", (rng() * 12 - 6).toFixed(1) + "deg");
       document.body.appendChild(ff);
       made++;
-      armFaceLifecycle(ff, null, lifeBase + 400, fi2);
+      armFaceLifecycle(ff, null, lifeBase + 200, 0);
     }
 
     if (made) {
@@ -1713,42 +1683,42 @@
     return true;
   }
 
-  /** 2페이즈 진입 직후 코어 FX 한 번에 */
+  /** 2페이즈 진입 — 과밀 금지, 순차·절제 */
   function burstCoreHorror() {
     if (!markPhase2Ui() || busy()) return;
     if (document.body.classList.contains("diary-open")) return;
-    try {
-      runTextBlood({ preferHero: true, multi: true });
-    } catch (e) {}
+    // 피만 먼저 (히어로 단독)
     setTimeout(function () {
       if (phase2Active() && !busy()) {
         try {
-          runRisingHands({ ms: 4500 });
+          runTextBlood({ preferHero: true, multi: false });
+        } catch (e) {}
+      }
+    }, 400);
+    // 손 — 조금 뒤
+    setTimeout(function () {
+      if (phase2Active() && !busy()) {
+        try {
+          runRisingHands({ ms: 3600 });
         } catch (e2) {}
       }
-    }, 600);
+    }, 2800);
+    // 얼굴 1회
     setTimeout(function () {
       if (phase2Active() && !busy()) {
         try {
-          runCardFaces({ ms: 3200 });
+          runCardFaces({ ms: 2800 });
         } catch (e3) {}
+      }
+    }, 5000);
+    // 할퀴는 가끔
+    setTimeout(function () {
+      if (phase2Active() && !busy() && rng() > 0.4) {
         try {
-          runCardClaws({ ms: 3200 });
+          runCardClaws({ ms: 2600 });
         } catch (e4) {}
       }
-    }, 1200);
-    setTimeout(function () {
-      if (phase2Active() && !busy()) {
-        var wAnom = ALL.filter(function (a) {
-          return a.id === "watcher_behind";
-        })[0];
-        if (wAnom) {
-          try {
-            wAnom.run();
-          } catch (e5) {}
-        }
-      }
-    }, 2000);
+    }, 7000);
   }
 
   // 방문마다 더 많이 뽑음 (강도↑)
@@ -1915,60 +1885,69 @@
       }, 9000);
     }
 
-    // ===== 코어 호러 FX: 진입 즉시 + 짧은 간격 강제 =====
-    // 피 — 첫 1.2s, 이후 10~16s
+    // ===== 코어 FX: 여유 간격 + 확률 (과밀 방지) =====
     setTimeout(function bloodLoop() {
       if (!phase2Active()) {
-        setTimeout(bloodLoop, 1500);
+        setTimeout(bloodLoop, 2000);
         return;
       }
-      if (!document.body.classList.contains("diary-open") && !busy()) {
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        rng() > 0.25
+      ) {
         try {
-          runTextBlood({ preferHero: true, multi: true });
+          runTextBlood({ preferHero: true, multi: false });
         } catch (e) {}
       }
       var d =
         typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
-      var gap = Math.max(9000, 12000 + rng() * 6000 - d * 1200);
+      var gap = Math.max(14000, 18000 + rng() * 12000 - d * 1500);
       setTimeout(bloodLoop, gap);
-    }, 1200);
+    }, 8000);
 
-    // 손 — 첫 2s, 이후 8~14s 거의 항상
     setTimeout(function handsLoop() {
       if (!phase2Active()) {
-        setTimeout(handsLoop, 1500);
+        setTimeout(handsLoop, 2000);
         return;
       }
-      if (!document.body.classList.contains("diary-open") && !busy()) {
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        rng() > 0.35
+      ) {
         try {
           runRisingHands();
         } catch (e) {}
       }
       var d2 =
         typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
-      var gap = Math.max(8000, 10000 + rng() * 6000 - d2 * 1000);
+      var gap = Math.max(16000, 20000 + rng() * 14000 - d2 * 1500);
       setTimeout(handsLoop, gap);
-    }, 2000);
+    }, 12000);
 
-    // 얼굴+할퀴 — 첫 2.8s, 이후 7~12s 거의 항상
     setTimeout(function facesLoop() {
       if (!phase2Active()) {
-        setTimeout(facesLoop, 1500);
+        setTimeout(facesLoop, 2000);
         return;
       }
       if (!document.body.classList.contains("diary-open") && !busy()) {
-        try {
-          runCardFaces();
-        } catch (e) {}
-        try {
-          runCardClaws();
-        } catch (e2) {}
+        if (rng() > 0.3) {
+          try {
+            runCardFaces();
+          } catch (e) {}
+        }
+        if (rng() > 0.55) {
+          try {
+            runCardClaws();
+          } catch (e2) {}
+        }
       }
       var d3 =
         typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
-      var gap = Math.max(7000, 9000 + rng() * 5000 - d3 * 900);
+      var gap = Math.max(14000, 18000 + rng() * 12000 - d3 * 1200);
       setTimeout(facesLoop, gap);
-    }, 2800);
+    }, 10000);
 
     // 감시 실루엣 — 더 자주
     var watcherGap = 9000 + rng() * 8000;
@@ -2110,7 +2089,7 @@
     fire: fireRandom,
     flash: flashWakeAgain,
     bloodText: function () {
-      return runTextBlood({ preferHero: true, multi: true });
+      return runTextBlood({ preferHero: true, multi: false });
     },
     risingHands: runRisingHands,
     cardFaces: runCardFaces,
