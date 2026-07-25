@@ -1876,10 +1876,28 @@ body.stage-clean .fake-chrome {
   }
 }
 
-/* stage 1+ : Stasis 레이아웃 일부 해제, 공포 구조로 */
-body:not(.stage-clean) .stasis-pills,
+/* stage 1+ : 공포 톤 유지하되 네비/CTA는 남김 (2·3페이즈 트리거 자리) */
+body:not(.stage-clean) .stasis-pills {
+  display: inline-flex !important;
+  background: rgba(20, 4, 10, 0.75);
+  border-color: rgba(255, 60, 90, 0.18);
+  box-shadow: 0 0 20px rgba(80, 0, 20, 0.25);
+}
+body:not(.stage-clean) .stasis-pills .pill-link {
+  color: #d0a8b0;
+}
+body:not(.stage-clean) .stasis-pills .pill-link:hover {
+  color: #ffd0d8;
+  background: rgba(255, 40, 70, 0.08);
+}
 body:not(.stage-clean) .stasis-cta {
-  display: none !important;
+  display: inline-flex !important;
+  background: #3a0810;
+  color: #ffb0bc;
+  box-shadow: 0 0 16px rgba(255, 30, 60, 0.2);
+}
+body:not(.stage-clean) .stasis-cta:hover {
+  background: #5a0c18;
 }
 body:not(.stage-clean) .stasis-path-hide,
 body:not(.stage-clean) .stasis-clock-hide {
@@ -1889,6 +1907,50 @@ body:not(.stage-clean) .stasis-clock-hide {
   clip: auto;
   opacity: 1;
   overflow: visible;
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: rgba(255, 140, 160, 0.45);
+  user-select: none;
+}
+body:not(.stage-clean) .stasis-path-hide.p2-trig-hot,
+body:not(.stage-clean) .stasis-clock-hide.p2-trig-hot,
+body:not(.stage-clean) .p2-trig-hot {
+  color: rgba(255, 170, 185, 0.72);
+}
+/* 2페이즈 숨은 트리거 핫존 — 티 안 나게, 커서만 */
+.p2-trig-hot {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.p2-trig-hot.climax-holding {
+  outline: 1px solid rgba(255, 80, 120, 0.4);
+  box-shadow: 0 0 14px rgba(255, 40, 80, 0.25);
+}
+/* 푸터 마이크로 — 2페이즈에서도 클릭 가능 */
+body:not(.stage-clean) .foot-micro {
+  pointer-events: auto;
+  cursor: pointer;
+  color: rgba(255, 180, 190, 0.32);
+}
+body:not(.stage-clean) .foot-micro:hover {
+  color: rgba(255, 200, 210, 0.55);
+}
+/* 하단 기다림 줄 — 2페이즈 트리거 자리 */
+body:not(.stage-clean) #resWait,
+body:not(.stage-clean) [data-find="console"] {
+  cursor: pointer;
+  opacity: 0.75;
+}
+body:not(.stage-clean) .stasis-quote-by {
+  cursor: pointer;
+}
+/* 플랜 카드 — 2페이즈에서도 유지 */
+body:not(.stage-clean) .plan-card,
+body:not(.stage-clean) .plan-btn {
+  cursor: pointer;
   pointer-events: auto;
 }
 body:not(.stage-clean) .stasis-nav.top {

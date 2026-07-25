@@ -97,55 +97,78 @@
     enterPhase3();
   }
 
-  // ---------- 20 triggers ----------
+  /**
+   * 2페이즈 게이트 트리거 20 — 클린 SaaS 레이아웃 기준
+   * (WIP 띠/caret/TODO 등 클린 전용 요소 사용 금지)
+   * 대상: 로고·플랜카드·제목·카드·푸터·가짜주소창·경로·시계·배지 등
+   */
+  function p2Only(fn) {
+    return function () {
+      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
+      return fn.apply(this, arguments);
+    };
+  }
+
+  function armHold(el, ms, done, holdClass) {
+    if (!el) return false;
+    var t = null;
+    var cls = holdClass || "climax-holding";
+    function clear() {
+      if (t) clearTimeout(t);
+      t = null;
+      el.classList.remove(cls);
+    }
+    el.addEventListener("pointerdown", function (e) {
+      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
+      if (e.button != null && e.button !== 0) return;
+      el.classList.add(cls);
+      t = setTimeout(function () {
+        clear();
+        done();
+      }, ms);
+    });
+    el.addEventListener("pointerup", clear);
+    el.addEventListener("pointerleave", clear);
+    el.addEventListener("pointercancel", clear);
+    return true;
+  }
+
+  function armClicks(el, need, windowMs, done) {
+    if (!el) return false;
+    var n = 0;
+    var reset = null;
+    el.addEventListener("click", function (e) {
+      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
+      n++;
+      clearTimeout(reset);
+      reset = setTimeout(function () {
+        n = 0;
+      }, windowMs || 2200);
+      if (n >= need) {
+        n = 0;
+        done();
+      }
+    });
+    return true;
+  }
+
   var TRIGGERS = [
     {
       id: "hold_free",
-      hint: "Free 버튼을 길게",
+      hint: "Free 카드 길게",
       arm: function (done) {
-        var btn = document.getElementById("planFree") || document.querySelector(".plan-btn.is-on");
-        if (!btn) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-          btn.classList.remove("climax-holding");
-        }
-        btn.addEventListener("pointerdown", function (e) {
-          if (!phase2Ready() || busy()) return;
-          e.preventDefault();
-          btn.classList.add("climax-holding");
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2500);
-        });
-        btn.addEventListener("pointerup", clear);
-        btn.addEventListener("pointerleave", clear);
-        btn.addEventListener("pointercancel", clear);
+        var btn =
+          document.getElementById("planFree") ||
+          document.querySelector(".plan-card.is-on") ||
+          document.querySelector("[data-fake='2']");
+        armHold(btn, 2500, done);
       },
     },
     {
       id: "triple_logo",
       hint: "로고 3연타",
       arm: function (done) {
-        var el = document.getElementById("topRec");
-        if (!el) return;
-        var n = 0;
-        var tt = null;
-        el.addEventListener("click", function (e) {
-          if (!phase2Ready() || busy()) return;
-          e.preventDefault();
-          n++;
-          clearTimeout(tt);
-          tt = setTimeout(function () {
-            n = 0;
-          }, 700);
-          if (n >= 3) {
-            n = 0;
-            done();
-          }
-        });
+        armClicks(document.getElementById("topRec"), 3, 800, done);
       },
     },
     {
@@ -154,7 +177,7 @@
       arm: function (done) {
         var buf = "";
         document.addEventListener("keydown", function (e) {
-          if (!phase2Ready() || busy()) return;
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           if (e.metaKey || e.ctrlKey || e.altKey) return;
           if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
           buf = (buf + e.key.toLowerCase()).slice(-8);
@@ -172,8 +195,9 @@
         var hold = 0;
         var last = 0;
         setInterval(function () {
-          if (!phase2Ready() || busy()) {
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) {
             hold = 0;
+            last = 0;
             return;
           }
           var el = document.documentElement;
@@ -197,24 +221,13 @@
     },
     {
       id: "team_spam",
-      hint: "Team 버튼 연타",
+      hint: "Team 카드 연타",
       arm: function (done) {
-        var btn = document.getElementById("planTeam") || document.querySelector(".plan-btn.danger-btn");
-        if (!btn) return;
-        var n = 0;
-        var reset = null;
-        btn.addEventListener("click", function () {
-          if (!phase2Ready() || busy()) return;
-          n++;
-          clearTimeout(reset);
-          reset = setTimeout(function () {
-            n = 0;
-          }, 2500);
-          if (n >= 5) {
-            n = 0;
-            done();
-          }
-        });
+        var btn =
+          document.getElementById("planTeam") ||
+          document.querySelector("[data-fake='3']") ||
+          document.querySelector(".plan-card.danger-btn");
+        armClicks(btn, 5, 2500, done);
       },
     },
     {
@@ -223,12 +236,12 @@
       arm: function (done) {
         var bar = document.getElementById("fakeUrlBar");
         if (!bar) return;
-        // pointer events
         document.documentElement.classList.add("climax-fakeurl-live");
         bar.style.pointerEvents = "auto";
+        bar.classList.add("p2-trig-hot");
         var last = 0;
         bar.addEventListener("click", function (e) {
-          if (!phase2Ready() || busy()) return;
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           e.preventDefault();
           var now = Date.now();
           if (now - last < 400) {
@@ -243,103 +256,51 @@
       hint: "아무 텍스트나 복사",
       arm: function (done) {
         document.addEventListener("copy", function () {
-          if (!phase2Ready() || busy()) return;
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           done();
         });
       },
     },
     {
-      id: "console_triple",
-      hint: "ship later 줄 3번",
+      id: "wait_triple",
+      hint: "하단 기다림 문장 3번",
       arm: function (done) {
-        var el = document.getElementById("resWait") || document.querySelector("[data-find='console']");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase2Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2000);
-          if (n >= 3) {
-            n = 0;
-            done();
-          }
-        });
+        // 예전 console.log 자리 — 2페이즈에선 “그것들은 기다린다” 줄
+        var el =
+          document.getElementById("resWait") ||
+          document.querySelector("[data-find='console']") ||
+          document.querySelector(".stasis-later .morph");
+        if (el) el.classList.add("p2-trig-hot");
+        armClicks(el, 3, 2000, done);
       },
     },
     {
-      id: "wip_quad",
+      id: "beta_quad",
       hint: "푸터 beta 4번",
       arm: function (done) {
         var el =
-          document.querySelector("[data-find='wip']") ||
           document.querySelector(".foot-beta") ||
-          document.querySelector(".wip-pill");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase2Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2500);
-          if (n >= 4) {
-            n = 0;
-            done();
-          }
-        });
+          document.querySelector("[data-find='wip']");
+        if (el) el.classList.add("p2-trig-hot");
+        armClicks(el, 4, 2500, done);
       },
     },
     {
-      id: "branch_triple",
+      id: "version_triple",
       hint: "푸터 버전 3번",
       arm: function (done) {
         var el =
-          document.querySelector("[data-find='branch']") ||
           document.querySelector(".foot-micro:not(.foot-beta)") ||
-          document.querySelector(".wip-git code");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase2Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2500);
-          if (n >= 3) {
-            n = 0;
-            done();
-          }
-        });
+          document.querySelector("[data-find='branch']");
+        if (el) el.classList.add("p2-trig-hot");
+        armClicks(el, 3, 2500, done);
       },
     },
     {
       id: "title_mash",
       hint: "제목 5연타",
       arm: function (done) {
-        var el = document.getElementById("mainTitle");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase2Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 1800);
-          if (n >= 5) {
-            n = 0;
-            done();
-          }
-        });
+        armClicks(document.getElementById("mainTitle"), 5, 1800, done);
       },
     },
     {
@@ -351,7 +312,7 @@
         window.addEventListener(
           "scroll",
           function () {
-            if (!phase2Ready() || busy()) return;
+            if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
             var el = document.documentElement;
             var max = el.scrollHeight - el.clientHeight;
             var r = max <= 0 ? 1 : el.scrollTop / max;
@@ -376,11 +337,16 @@
         var need = ["2", "3", "2"];
         document.querySelectorAll("[data-fake]").forEach(function (btn) {
           btn.addEventListener("click", function () {
-            if (!phase2Ready() || busy()) return;
+            if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
             var id = btn.getAttribute("data-fake");
             seq.push(id);
             if (seq.length > 3) seq.shift();
-            if (seq.length === 3 && seq[0] === need[0] && seq[1] === need[1] && seq[2] === need[2]) {
+            if (
+              seq.length === 3 &&
+              seq[0] === need[0] &&
+              seq[1] === need[1] &&
+              seq[2] === need[2]
+            ) {
               seq = [];
               done();
             }
@@ -400,7 +366,7 @@
           window.addEventListener(ev, bump, { passive: true });
         });
         setInterval(function () {
-          if (!phase2Ready() || busy()) {
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) {
             last = Date.now();
             return;
           }
@@ -417,7 +383,7 @@
       arm: function (done) {
         var buf = "";
         document.addEventListener("keydown", function (e) {
-          if (!phase2Ready() || busy()) return;
+          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
           buf = (buf + e.key.toLowerCase()).slice(-12);
           if (buf.indexOf("process") !== -1) {
@@ -428,126 +394,64 @@
       },
     },
     {
-      id: "caret_hold",
-      hint: "헤드라인 주석 길게",
+      id: "path_hold",
+      hint: "상단 경로 문자열 길게",
       arm: function (done) {
-        var el = document.querySelector("[data-find='caret']") || document.querySelector(".wip-cursor-line");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
+        // 2페이즈에만 보이는 corruptPath (stage-clean에선 숨김)
+        var el =
+          document.getElementById("corruptPath") ||
+          document.querySelector(".stasis-path-hide");
+        if (el) {
+          el.classList.add("p2-trig-hot");
+          el.style.pointerEvents = "auto";
         }
-        el.addEventListener("pointerdown", function () {
-          if (!phase2Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2000);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
+        armHold(el, 2200, done);
       },
     },
     {
-      id: "mid_linger",
-      hint: "페이지 중반에서 머물기",
+      id: "badge_hold",
+      hint: "상태 뱃지 길게",
       arm: function (done) {
-        var hold = 0;
-        var last = 0;
-        setInterval(function () {
-          if (!phase2Ready() || busy()) {
-            hold = 0;
-            last = 0;
-            return;
-          }
-          var el = document.documentElement;
-          var max = el.scrollHeight - el.clientHeight;
-          var r = max <= 0 ? 0.5 : el.scrollTop / max;
-          var now = Date.now();
-          if (r >= 0.35 && r <= 0.62) {
-            if (!last) last = now;
-            hold += now - last;
-            last = now;
-            if (hold >= 6000) {
-              hold = 0;
-              done();
-            }
-          } else {
-            last = 0;
-            hold = Math.max(0, hold - 300);
-          }
-        }, 200);
+        var el =
+          document.getElementById("eyebrow") ||
+          document.querySelector(".stasis-badge") ||
+          document.querySelector("[data-find='badge']");
+        if (el) el.classList.add("p2-trig-hot");
+        armHold(el, 2000, done);
       },
     },
     {
-      id: "focus_flap",
-      hint: "탭 밖으로 나갔다 3번",
+      id: "feat_hold",
+      hint: "Features 제목 길게",
       arm: function (done) {
-        var n = 0;
-        document.addEventListener("visibilitychange", function () {
-          if (!phase2Ready() || busy()) return;
-          if (document.hidden) n++;
-          else if (n >= 3) {
-            n = 0;
-            done();
-          }
-        });
+        var el =
+          document.getElementById("h2log") ||
+          document.querySelector(".stasis-card-light h2") ||
+          document.querySelector("[data-find='features']");
+        if (el) el.classList.add("p2-trig-hot");
+        armHold(el, 2000, done);
       },
     },
     {
-      id: "esc_enter",
-      hint: "Esc 다음 Enter",
+      id: "quote_hold",
+      hint: "하단 서명 줄 길게",
       arm: function (done) {
-        var armed = false;
-        var t = null;
-        document.addEventListener("keydown", function (e) {
-          if (!phase2Ready() || busy()) return;
-          if (e.key === "Escape") {
-            armed = true;
-            clearTimeout(t);
-            t = setTimeout(function () {
-              armed = false;
-            }, 2500);
-          } else if ((e.key === "Enter" || e.keyCode === 13) && armed) {
-            armed = false;
-            done();
-          }
-        });
+        var el =
+          document.querySelector(".stasis-quote-by") ||
+          document.querySelector("[data-find='readme']");
+        if (el) el.classList.add("p2-trig-hot");
+        armHold(el, 2200, done);
       },
     },
     {
       id: "hit_pulse",
       hint: "깜빡이는 점 더블클릭 (초 짝수)",
       arm: function (done) {
-        // app.js 히트존 펄스를 이 트리거일 때만 켬
         window.__hauntHitPulseMode = true;
         document.addEventListener("haunt-hit-success", function onHit() {
           document.removeEventListener("haunt-hit-success", onHit);
           done();
         });
-      },
-    },
-    {
-      id: "readme_hold",
-      hint: "last edit 줄 길게",
-      arm: function (done) {
-        var el = document.querySelector("[data-find='readme']") || document.querySelector(".stasis-quote-by");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase2Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2200);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
       },
     },
   ];
@@ -651,27 +555,26 @@
 
   /** 유저용 미션 힌트 (세션당 1회 토스트) — 너무 노골적이지 않게 */
   var MISSION = {
-    hold_free: "요금제 중 ‘Free’… 잠깐 누르고 있어 봐.",
-    triple_logo: "맨 위 브랜드 이름. 세 번.",
+    hold_free: "요금 카드 ‘Free’. 잠깐 누르고 있어.",
+    triple_logo: "왼쪽 위 Stasis 로고. 세 번.",
     type_kill: "키보드. 끝내는 말, 또는 다시 깨우는 말.",
     deep_hold: "페이지 맨 아래. 거기서 조금 더 머물러.",
-    team_spam: "‘Team’ 이라 적힌 버튼. 여러 번.",
+    team_spam: "‘Team’ 요금 카드. 여러 번.",
     fakeurl_double: "화면 맨 위, 가짜 주소창. 두 번.",
     copy_curse: "아무 글이나 복사해 봐. (Ctrl+C)",
-    console_triple: "console.log 한 줄. 세 번 눌러.",
-    wip_quad: "노란 WIP. 네 번.",
-    branch_triple: "브랜치 이름 코드. 세 번.",
+    wait_triple: "페이지 아래쪽, ‘기다린다’ 문장. 세 번.",
+    beta_quad: "푸터 끝 beta. 네 번.",
+    version_triple: "푸터 버전 숫자(v0.x). 세 번.",
     title_mash: "큰 제목. 빠르게 여러 번.",
     scroll_bounce: "맨 아래까지 갔다가, 빨리 맨 위로.",
     plan_sequence: "Free → Team → 다시 Free.",
     idle_haunt: "아무 것도 하지 마. 가만히.",
     type_process: "키보드로 process.",
-    caret_hold: "헤드라인 아래 // 주석. 길게.",
-    mid_linger: "스크롤 중간쯤. 거기서 기다려.",
-    focus_flap: "다른 탭으로 나갔다 와. 몇 번.",
-    esc_enter: "Esc, 그다음 Enter.",
+    path_hold: "상단 내비 근처 경로 문자열. 길게.",
+    badge_hold: "히어로 위 상태 뱃지. 길게.",
+    feat_hold: "Features 카드 제목. 길게.",
+    quote_hold: "어두운 배너 아래 서명 줄. 길게.",
     hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 더블클릭.",
-    readme_hold: "last edit 줄. 길게 눌러.",
   };
   active.mission = MISSION[active.id] || active.hint || "이상 속에서 다음 층으로 가는 조건을 찾아라.";
 
