@@ -390,18 +390,28 @@
   }
 
   function unlockNext() {
-    if (audio()) {
-      try {
+    // 오디오 실패해도 페이지 넘김은 반드시 진행
+    try {
+      if (audio()) {
         audio().unlock();
         if (page === 0) audio().pulse("soft");
         else if (page === 1) audio().pulse("mid");
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
     if (unlocked < 2) {
       unlocked += 1;
       showPage(unlocked);
     } else {
       showPage(Math.min(page + 1, 2));
+    }
+    // 시트 다시 보이게 보장 (CSS filter 글리치 대비)
+    if (sheet) {
+      sheet.style.transform = "";
+      sheet.style.opacity = "1";
+    }
+    if (panel) {
+      panel.hidden = false;
+      panel.style.display = "";
     }
   }
 
@@ -560,14 +570,25 @@
   if (backdrop) backdrop.addEventListener("click", closeDiary);
 
   if (nextBtn) {
-    nextBtn.addEventListener("click", function () {
+    nextBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
       if (nextBtn.disabled) return;
-      if (nextBtn.dataset.mode === "close") {
-        closeDiary();
-        return;
+      try {
+        if (nextBtn.dataset.mode === "close") {
+          closeDiary();
+          return;
+        }
+        if (page < unlocked) showPage(page + 1);
+        else unlockNext();
+      } catch (err) {
+        if (window.console) console.warn("[diary] next failed", err);
+        // 폴백: 최소한 페이지 인덱스만 진행
+        try {
+          if (unlocked < 2) unlocked += 1;
+          showPage(Math.min(unlocked, 2));
+        } catch (e2) {}
       }
-      if (page < unlocked) showPage(page + 1);
-      else unlockNext();
     });
   }
 

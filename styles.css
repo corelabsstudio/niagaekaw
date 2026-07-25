@@ -893,6 +893,7 @@ body.stage-clean .diary-backdrop {
   z-index: 2;
   width: min(440px, 100%);
   max-height: min(78vh, 640px);
+  min-height: min(52vh, 420px);
   margin: 0;
   background: #f7f1e8;
   color: #1a1410;
@@ -902,6 +903,21 @@ body.stage-clean .diary-backdrop {
   flex-direction: column;
   animation: diarySlide 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   font-family: "Segoe UI", "Malgun Gothic", Georgia, serif;
+  /* filter 조상 영향 차단 */
+  transform: translateZ(0);
+  isolation: isolate;
+}
+body.diary-open .diary-panel {
+  /* body filter 이 있어도 패널은 화면 기준으로 고정되게 */
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 200 !important;
+  transform: none !important;
+  filter: none !important;
+}
+body.diary-open .diary-sheet {
+  filter: none !important;
+  opacity: 1 !important;
 }
 @keyframes diarySlide {
   from {
@@ -1575,13 +1591,14 @@ body[data-mood="1"].stage-uneasy #vignette {
   opacity: 0.2 !important;
 }
 
-/* mood 2: 1달 전 — 살짝 더 어둡고 탁함 (아직 풀 다크 아님) */
+/* mood 2: 1달 전 — 살짝 더 어둡고 탁함 (아직 풀 다크 아님)
+   ※ body에 filter 쓰면 position:fixed 일기 패널이 깨짐 → 배경/색만 사용 */
 body.stage-uneasy.mood-dim,
 body[data-mood="2"].stage-uneasy {
   --text: #1a1414;
   --muted: #5a5050;
-  background: linear-gradient(180deg, #e0d4cc 0%, #cfc0b6 55%, #c4b2a8 100%);
-  filter: saturate(0.88) brightness(0.94);
+  background: linear-gradient(180deg, #d8ccc4 0%, #c4b4a8 55%, #b8a498 100%);
+  filter: none !important;
 }
 body[data-mood="2"].stage-uneasy #vignette {
   visibility: visible;
@@ -1598,15 +1615,17 @@ body[data-mood="2"].stage-uneasy .card-horror {
   border-color: rgba(80, 30, 30, 0.14);
 }
 body[data-mood="2"] .fake-chrome {
-  filter: brightness(0.92);
+  /* 가짜 크롬만 살짝 어둡게 — body filter 금지 */
+  opacity: 0.95;
+  background: linear-gradient(180deg, #e0d8d0 0%, #d0c8c0 100%);
 }
 
-/* mood 3 직후 ~ stage-corrupt 전환 전: 더 깊게 가라앉음 */
+/* mood 3 직후 ~ stage-corrupt 전환 전: 더 깊게 가라앉음 (filter 금지) */
 body.stage-uneasy.mood-heavy,
 body[data-mood="3"].stage-uneasy {
   background: linear-gradient(180deg, #b8a49a 0%, #8a7068 50%, #5a4038 100%);
   color: #1a1010;
-  filter: saturate(0.7) brightness(0.82);
+  filter: none !important;
 }
 body[data-mood="3"].stage-uneasy #vignette {
   opacity: 0.55 !important;
