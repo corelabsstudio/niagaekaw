@@ -39,7 +39,9 @@
   var level = 0; // 0 off · 1 soft · 2 mid · 3 heavy
   var beatTimer = null;
   var droneNodes = [];
-  var masterVol = 0.85;
+  // 마스터 + 개별 게인 (기존 너무 작았음 → 크게)
+  var masterVol = 1.45;
+  var SFX = 2.35; // 개별 효과음 배수
 
   function ensureCtx() {
     if (ctx) return ctx;
@@ -48,15 +50,20 @@
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = masterVol;
+    // 컴프레서를 덜 세게 — 작은 소리만 올리고 큰 타격은 덜 죽임
     comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -18;
-    comp.knee.value = 12;
-    comp.ratio.value = 3.5;
-    comp.attack.value = 0.003;
-    comp.release.value = 0.22;
+    comp.threshold.value = -28;
+    comp.knee.value = 18;
+    comp.ratio.value = 2.2;
+    comp.attack.value = 0.005;
+    comp.release.value = 0.28;
     master.connect(comp);
     comp.connect(ctx.destination);
     return ctx;
+  }
+
+  function v(x) {
+    return Math.max(0.0001, (x || 0) * SFX);
   }
 
   function out() {
@@ -99,9 +106,9 @@
     f.frequency.value = opts.freq || 1200;
     f.Q.value = opts.q != null ? opts.q : 0.7;
     var g = c.createGain();
-    var v = Math.max(0.0001, opts.vol != null ? opts.vol : 0.04);
+    var vv = v(opts.vol != null ? opts.vol : 0.05);
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(v, t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(vv, t0 + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + (opts.dur || 0.12));
     src.connect(f);
     f.connect(g);
@@ -115,7 +122,7 @@
     var c = ensureCtx();
     if (!c || !unlocked) return;
     var t0 = now();
-    vol = Math.max(0.001, vol || 0.12);
+    vol = v(vol || 0.14);
     freq = freq || 48;
 
     // 바디 사인
@@ -126,15 +133,15 @@
     osc.frequency.setValueAtTime(freq, t0);
     osc.frequency.exponentialRampToValueAtTime(16, t0 + 0.22);
     lf.type = "lowpass";
-    lf.frequency.value = 140;
+    lf.frequency.value = 160;
     og.gain.setValueAtTime(0.0001, t0);
-    og.gain.exponentialRampToValueAtTime(vol, t0 + 0.014);
-    og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.48);
+    og.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
     osc.connect(lf);
     lf.connect(og);
     og.connect(out());
     osc.start(t0);
-    osc.stop(t0 + 0.5);
+    osc.stop(t0 + 0.52);
 
     // 서브 한 겹
     var sub = c.createOscillator();
@@ -142,26 +149,26 @@
     sub.type = "sine";
     sub.frequency.value = Math.max(22, freq * 0.5);
     sg.gain.setValueAtTime(0.0001, t0);
-    sg.gain.exponentialRampToValueAtTime(vol * 0.55, t0 + 0.02);
-    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+    sg.gain.exponentialRampToValueAtTime(vol * 0.7, t0 + 0.018);
+    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.58);
     sub.connect(sg);
     sg.connect(out());
     sub.start(t0);
-    sub.stop(t0 + 0.58);
+    sub.stop(t0 + 0.6);
 
     // 어택 노이즈
     playNoise({
-      dur: 0.04,
-      freq: 180,
+      dur: 0.05,
+      freq: 200,
       filter: "lowpass",
-      vol: vol * 0.35,
+      vol: (vol / SFX) * 0.45,
       q: 0.5,
     });
   }
 
   function beat() {
     if (level <= 0) return;
-    var base = level === 1 ? 0.09 : level === 2 ? 0.16 : 0.26;
+    var base = level === 1 ? 0.12 : level === 2 ? 0.2 : 0.32;
     thump(base, level >= 3 ? 40 : 50);
     setTimeout(function () {
       if (level <= 0) return;
@@ -187,18 +194,18 @@
     var t0 = now();
     var layers =
       level === 1
-        ? [{ f: 42, v: 0.018, type: "sine" }]
+        ? [{ f: 42, v: v(0.028), type: "sine" }]
         : level === 2
           ? [
-              { f: 38, v: 0.028, type: "sine" },
-              { f: 55, v: 0.012, type: "triangle" },
-              { f: 110, v: 0.006, type: "sine" },
+              { f: 38, v: v(0.04), type: "sine" },
+              { f: 55, v: v(0.02), type: "triangle" },
+              { f: 110, v: v(0.012), type: "sine" },
             ]
           : [
-              { f: 32, v: 0.04, type: "sine" },
-              { f: 48, v: 0.022, type: "triangle" },
-              { f: 72, v: 0.01, type: "sine" },
-              { f: 180, v: 0.005, type: "sawtooth" },
+              { f: 32, v: v(0.055), type: "sine" },
+              { f: 48, v: v(0.035), type: "triangle" },
+              { f: 72, v: v(0.018), type: "sine" },
+              { f: 180, v: v(0.01), type: "sawtooth" },
             ];
 
     layers.forEach(function (L, i) {
@@ -238,7 +245,7 @@
       nf.type = "lowpass";
       nf.frequency.value = 400;
       var ng = c.createGain();
-      ng.gain.value = 0.012;
+      ng.gain.value = v(0.02);
       src.connect(nf);
       nf.connect(ng);
       ng.connect(out());
@@ -262,7 +269,7 @@
       }
       // 가끔 불규칙 (공포감)
       if (level >= 2 && Math.random() > 0.88) {
-        thump(0.05, 60);
+        thump(0.09, 60);
         beatTimer = setTimeout(loop, 400 + Math.random() * 300);
         return;
       }
@@ -300,13 +307,13 @@
 
   function pulse(strength) {
     unlock();
-    var v = strength === "heavy" ? 0.28 : strength === "mid" ? 0.16 : 0.1;
-    thump(v, strength === "heavy" ? 38 : 48);
+    var pv = strength === "heavy" ? 0.34 : strength === "mid" ? 0.22 : 0.14;
+    thump(pv, strength === "heavy" ? 38 : 48);
     setTimeout(function () {
-      thump(v * 0.55, 36);
+      thump(pv * 0.6, 36);
     }, 160);
     if (strength === "heavy") {
-      playNoise({ dur: 0.08, freq: 90, filter: "lowpass", vol: 0.05 });
+      playNoise({ dur: 0.1, freq: 90, filter: "lowpass", vol: 0.08 });
     }
   }
 
@@ -328,15 +335,15 @@
     nFilter.Q.value = 0.85;
     var vol =
       kind === "space"
-        ? 0.014
+        ? 0.028
         : kind === "enter"
-          ? 0.05
+          ? 0.09
           : kind === "hard"
-            ? 0.042
+            ? 0.075
             : kind === "soft"
-              ? 0.02
-              : 0.03;
-    vol *= 0.85 + Math.random() * 0.3;
+              ? 0.04
+              : 0.055;
+    vol = v(vol * (0.85 + Math.random() * 0.3));
     nGain.gain.setValueAtTime(vol, t0);
     nGain.gain.exponentialRampToValueAtTime(0.0001, t0 + (kind === "enter" ? 0.07 : 0.03));
     noise.connect(nFilter);
@@ -356,7 +363,7 @@
           : 850 + Math.random() * 750;
     osc.frequency.setValueAtTime(f, t0);
     osc.frequency.exponentialRampToValueAtTime(Math.max(40, f * 0.28), t0 + 0.022);
-    oGain.gain.setValueAtTime(vol * 0.4, t0);
+    oGain.gain.setValueAtTime(vol * 0.45, t0);
     oGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.028);
     osc.connect(oGain);
     oGain.connect(out());
@@ -372,8 +379,8 @@
     var g = c.createGain();
     osc.type = "square";
     osc.frequency.value = pitch || 880;
-    g.gain.setValueAtTime(0.055, t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.1);
+    g.gain.setValueAtTime(v(0.1), t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
     osc.connect(g);
     g.connect(out());
     osc.start(t0);
@@ -399,7 +406,7 @@
         f.frequency.value = 1600 + Math.random() * 2800;
         f.Q.value = 0.5 + Math.random();
         var g = c.createGain();
-        g.gain.setValueAtTime(0.035 + Math.random() * 0.03, start);
+        g.gain.setValueAtTime(v(0.06 + Math.random() * 0.04), start);
         g.gain.exponentialRampToValueAtTime(0.0001, start + 0.055);
         src.connect(f);
         f.connect(g);
@@ -413,7 +420,7 @@
     osc.type = "sawtooth";
     osc.frequency.setValueAtTime(58, t0);
     osc.frequency.linearRampToValueAtTime(40, t0 + 0.32);
-    og.gain.setValueAtTime(0.018, t0);
+    og.gain.setValueAtTime(v(0.035), t0);
     og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.34);
     osc.connect(og);
     og.connect(out());
@@ -435,7 +442,7 @@
     f.type = "lowpass";
     f.frequency.value = 100;
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.1, t0 + 0.18);
+    g.gain.exponentialRampToValueAtTime(v(0.14), t0 + 0.16);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + sec);
     osc.connect(f);
     f.connect(g);
@@ -443,10 +450,10 @@
     osc.start(t0);
     osc.stop(t0 + sec + 0.05);
     setTimeout(function () {
-      thump(0.08, 44);
+      thump(0.14, 44);
     }, 180);
     setTimeout(function () {
-      thump(0.05, 38);
+      thump(0.1, 38);
     }, 360);
   }
 
@@ -471,23 +478,23 @@
       o.type = i % 2 ? "sawtooth" : "square";
       o.frequency.setValueAtTime(fq, t0);
       o.frequency.exponentialRampToValueAtTime(fq * 0.4, t0 + 0.12);
-      var v = (kind === "soft" ? 0.04 : 0.07) * (1 - i * 0.15);
+      var sv = v((kind === "soft" ? 0.055 : 0.1) * (1 - i * 0.12));
       g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(Math.max(0.001, v), t0 + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, sv), t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2);
       o.connect(g);
       g.connect(out());
       o.start(t0);
-      o.stop(t0 + 0.2);
+      o.stop(t0 + 0.22);
     });
     playNoise({
-      dur: 0.15,
+      dur: 0.18,
       freq: kind === "neon" ? 3000 : 400,
       filter: kind === "neon" ? "highpass" : "bandpass",
-      vol: kind === "soft" ? 0.04 : 0.09,
+      vol: kind === "soft" ? 0.07 : 0.12,
       q: 0.4,
     });
-    thump(kind === "soft" ? 0.08 : 0.18, 36);
+    thump(kind === "soft" ? 0.12 : 0.26, 36);
   }
 
   /** 속삭임 같은 필터 노이즈 */
@@ -506,7 +513,7 @@
     bp.Q.value = 4;
     var g = c.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.035, t0 + 0.15);
+    g.gain.exponentialRampToValueAtTime(v(0.055), t0 + 0.15);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.95);
     src.connect(bp);
     bp.connect(g);
@@ -521,14 +528,14 @@
       dur: (ms || 180) / 1000,
       freq: 2200,
       filter: "highpass",
-      vol: 0.06,
+      vol: 0.1,
       q: 0.3,
     });
     playNoise({
       dur: (ms || 180) / 1000,
       freq: 300,
       filter: "lowpass",
-      vol: 0.04,
+      vol: 0.08,
       q: 0.5,
     });
   }
@@ -547,7 +554,7 @@
     f.frequency.linearRampToValueAtTime(350, t0 + 1.3);
     var g = c.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.linearRampToValueAtTime(0.045, t0 + 0.35);
+    g.gain.linearRampToValueAtTime(v(0.07), t0 + 0.35);
     g.gain.linearRampToValueAtTime(0.0001, t0 + 1.35);
     src.connect(f);
     f.connect(g);
@@ -568,7 +575,7 @@
     o.type = "sine";
     o.frequency.setValueAtTime(420, t0);
     o.frequency.exponentialRampToValueAtTime(40, t0 + 1.6);
-    g.gain.setValueAtTime(0.06, t0);
+    g.gain.setValueAtTime(v(0.1), t0);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.8);
     o.connect(g);
     g.connect(out());
@@ -579,7 +586,7 @@
       staticBurst(200);
     }, 500);
     setTimeout(function () {
-      thump(0.12, 30);
+      thump(0.18, 30);
     }, 900);
   }
 
@@ -602,14 +609,14 @@
       o.type = "square";
       o.frequency.value = fq * (0.98 + Math.random() * 0.04);
       g.gain.setValueAtTime(0.0001, t0 + i * 0.01);
-      g.gain.exponentialRampToValueAtTime(0.03 / (i + 1), t0 + 0.02 + i * 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+      g.gain.exponentialRampToValueAtTime(v(0.055 / (i + 1)), t0 + 0.02 + i * 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
       o.connect(g);
       g.connect(out());
       o.start(t0);
-      o.stop(t0 + 0.4);
+      o.stop(t0 + 0.42);
     });
-    playNoise({ dur: 0.2, freq: 4500, filter: "highpass", vol: 0.03, q: 1.2 });
+    playNoise({ dur: 0.22, freq: 4500, filter: "highpass", vol: 0.06, q: 1.2 });
   }
 
   function stopAll() {
@@ -619,8 +626,9 @@
     stopDrone();
   }
 
-  function setMaster(v) {
-    masterVol = Math.max(0, Math.min(1, v));
+  function setMaster(n) {
+    // 1.0 = 기본(이미 크게 튜닝), 최대 2.0
+    masterVol = Math.max(0, Math.min(2, n));
     if (master) master.gain.value = masterVol;
   }
 
