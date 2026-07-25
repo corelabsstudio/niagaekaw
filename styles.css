@@ -3663,91 +3663,193 @@ body[data-p2-decay="5"] .anom-watcher.is-on .aw-sil {
   to { opacity: 1; }
 }
 
-/* 글자에서 피 흐름(느림) → 보이지 않는 손이 닦음 · 전체 ~15s */
+/*
+ * 글자 피 흘림 — 참조: 흰/분홍 글자 위 짙은 피 + 굵은 흘러내림
+ * 2페이즈 메인 연출 (가느다란 2px 방울 아님)
+ */
 .anom-bleeding {
   position: relative;
-  color: #b84848 !important;
-  transition: color 1.2s ease, text-shadow 1.2s ease;
+  color: #f2e8ea !important;
+  transition: color 0.9s ease, text-shadow 0.9s ease, filter 0.9s ease;
   text-shadow:
-    0 1px 0 rgba(80, 0, 10, 0.4),
-    0 2px 4px rgba(120, 0, 20, 0.2),
-    0 0 14px rgba(160, 0, 25, 0.22) !important;
+    0 0 1px rgba(80, 0, 15, 0.9),
+    0 1px 0 rgba(120, 0, 20, 0.55),
+    0 2px 8px rgba(160, 0, 30, 0.45),
+    0 0 22px rgba(200, 20, 40, 0.35),
+    1px 0 0 rgba(90, 0, 15, 0.5),
+    -1px 0 0 rgba(40, 0, 8, 0.4) !important;
+  filter: contrast(1.08) saturate(1.15);
+}
+.anom-bleeding .title-bleed,
+.anom-bleeding#titleL2,
+#mainTitle.anom-bleeding .title-bleed {
+  color: #ff6a7a !important;
+  text-shadow:
+    0 0 12px rgba(255, 40, 60, 0.55),
+    0 2px 6px rgba(100, 0, 20, 0.5) !important;
 }
 .anom-blood-smear {
-  filter: contrast(1.04);
-  text-shadow: 0 0 6px rgba(100, 20, 30, 0.12) !important;
-  transition: text-shadow 1.2s ease, filter 1.2s ease, color 1.2s ease;
+  color: #d0b8bc !important;
+  text-shadow: 0 1px 4px rgba(80, 10, 20, 0.25) !important;
+  filter: contrast(1.05);
+  transition: text-shadow 1.4s ease, filter 1.4s ease, color 1.4s ease;
 }
 .anom-blood-layer {
   pointer-events: none;
+  overflow: visible !important;
 }
-.anom-blood-layer.anom-blood-slow .anom-blood-drip {
-  /* JS animationDuration 으로 4.5~7.5s 지정 */
+/* 글자 위에 앉는 피 막 */
+.anom-blood-veil {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  top: 0;
+  height: 55%;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(90, 0, 14, 0.55) 0%,
+      rgba(140, 8, 28, 0.35) 35%,
+      rgba(100, 0, 18, 0.12) 70%,
+      transparent 100%
+    );
+  mix-blend-mode: multiply;
+  opacity: 0;
+  animation: bloodVeilIn 1.4s ease forwards;
+  border-radius: 2px;
+  pointer-events: none;
 }
+@keyframes bloodVeilIn {
+  from { opacity: 0; }
+  to { opacity: 0.85; }
+}
+/* 굵은 핏줄기 */
 .anom-blood-drip {
   position: absolute;
-  top: 0.1em;
-  width: 2.5px;
-  border-radius: 2px 2px 8px 8px;
+  top: 0.15em;
+  width: 5px;
+  min-height: 40px;
+  border-radius: 3px 3px 12px 12px;
   background: linear-gradient(
     180deg,
-    rgba(170, 8, 28, 0.98) 0%,
-    rgba(100, 0, 18, 0.9) 40%,
-    rgba(70, 0, 12, 0.75) 75%,
-    rgba(40, 0, 8, 0.15) 100%
+    rgba(90, 0, 12, 0.98) 0%,
+    rgba(140, 5, 22, 1) 12%,
+    rgba(110, 0, 18, 0.95) 45%,
+    rgba(70, 0, 12, 0.88) 78%,
+    rgba(40, 0, 8, 0.2) 100%
   );
   box-shadow:
-    0 0 5px rgba(255, 20, 40, 0.3),
-    1px 0 0 rgba(40, 0, 0, 0.35);
+    0 0 8px rgba(180, 0, 30, 0.45),
+    2px 0 0 rgba(30, 0, 0, 0.4),
+    -1px 0 0 rgba(60, 0, 10, 0.35),
+    inset 1px 0 0 rgba(200, 40, 60, 0.25);
   transform-origin: top center;
-  animation: bloodDripSlow 6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-  opacity: 0.92;
+  animation: bloodDripSlow 5.5s cubic-bezier(0.22, 0.08, 0.25, 1) forwards;
+  opacity: 0;
 }
+.anom-blood-drip.thick {
+  width: 8px;
+  border-radius: 4px 4px 14px 14px;
+  box-shadow:
+    0 0 12px rgba(200, 0, 35, 0.5),
+    2px 0 0 rgba(20, 0, 0, 0.45),
+    inset 1px 0 2px rgba(220, 50, 70, 0.3);
+}
+.anom-blood-drip.thin {
+  width: 3px;
+  opacity: 0.85;
+}
+/* 끝 방울 */
 .anom-blood-drip::after {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -4px;
-  width: 6px;
-  height: 6px;
-  margin-left: -3px;
-  border-radius: 50% 50% 45% 45%;
-  background: rgba(110, 0, 18, 0.8);
-  box-shadow: 0 0 5px rgba(255, 0, 40, 0.28);
+  bottom: -5px;
+  width: 9px;
+  height: 11px;
+  margin-left: -4.5px;
+  border-radius: 45% 45% 50% 50%;
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(160, 20, 40, 0.95), rgba(70, 0, 12, 0.95));
+  box-shadow: 0 2px 8px rgba(255, 0, 40, 0.35);
+}
+.anom-blood-drip.thick::after {
+  width: 12px;
+  height: 14px;
+  margin-left: -6px;
+}
+/* 글자 사이 스며드는 줄 */
+.anom-blood-streak {
+  position: absolute;
+  top: 0.05em;
+  width: 2px;
+  height: 1.2em;
+  border-radius: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(120, 0, 20, 0.9),
+    rgba(80, 0, 15, 0.35)
+  );
+  opacity: 0;
+  animation: bloodStreakIn 0.8s ease forwards;
+}
+@keyframes bloodStreakIn {
+  from { opacity: 0; transform: scaleY(0.2); }
+  to { opacity: 0.75; transform: scaleY(1); }
+}
+/* 하단 피 웅덩이/튀김 */
+.anom-blood-pool {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 0;
+  height: 28%;
+  background:
+    radial-gradient(ellipse 40% 60% at 30% 80%, rgba(90, 0, 15, 0.55), transparent 70%),
+    radial-gradient(ellipse 35% 50% at 70% 85%, rgba(70, 0, 12, 0.4), transparent 65%),
+    radial-gradient(ellipse 20% 40% at 50% 90%, rgba(110, 0, 20, 0.35), transparent 60%);
+  opacity: 0;
+  animation: bloodPoolIn 2.5s ease 0.8s forwards;
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+@keyframes bloodPoolIn {
+  from { opacity: 0; transform: scaleY(0.3); }
+  to { opacity: 0.9; transform: scaleY(1); }
 }
 @keyframes bloodDripSlow {
   0% {
-    transform: scaleY(0.08);
+    transform: scaleY(0.05);
     opacity: 0;
   }
-  8% {
-    opacity: 0.95;
+  6% {
+    opacity: 1;
   }
-  70% {
+  55% {
     transform: scaleY(1);
-    opacity: 0.85;
+    opacity: 0.98;
   }
   100% {
-    transform: scaleY(1.05);
-    opacity: 0.7;
+    transform: scaleY(1.08);
+    opacity: 0.88;
   }
 }
 .anom-blood-hand {
   position: absolute;
-  top: -10%;
-  bottom: -10%;
-  width: 48%;
+  top: -15%;
+  bottom: -15%;
+  width: 42%;
   opacity: 0;
   pointer-events: none;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 245, 245, 0.04) 15%,
-    rgba(200, 50, 60, 0.14) 40%,
-    rgba(255, 245, 245, 0.07) 65%,
+    rgba(255, 240, 240, 0.06) 20%,
+    rgba(180, 30, 45, 0.2) 48%,
+    rgba(255, 240, 240, 0.08) 72%,
     transparent 100%
   );
-  filter: blur(1.5px);
+  filter: blur(2px);
   mix-blend-mode: soft-light;
 }
 .anom-blood-hand.wipe-ltr {
@@ -3758,77 +3860,54 @@ body[data-p2-decay="5"] .anom-watcher.is-on .aw-sil {
   background: linear-gradient(
     270deg,
     transparent 0%,
-    rgba(255, 245, 245, 0.04) 15%,
-    rgba(200, 50, 60, 0.14) 40%,
-    rgba(255, 245, 245, 0.07) 65%,
+    rgba(255, 240, 240, 0.06) 20%,
+    rgba(180, 30, 45, 0.2) 48%,
+    rgba(255, 240, 240, 0.08) 72%,
     transparent 100%
   );
 }
-/* 닦기 ~2.2초 — 천천히 스윽 */
 .anom-blood-layer.is-wiping .anom-blood-hand.is-wiping.wipe-ltr {
-  animation: bloodWipeLtr 2.2s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
+  animation: bloodWipeLtr 2.4s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
 }
 .anom-blood-layer.is-wiping .anom-blood-hand.is-wiping.wipe-rtl {
-  animation: bloodWipeRtl 2.2s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
+  animation: bloodWipeRtl 2.4s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
 }
 @keyframes bloodWipeLtr {
-  0% {
-    left: -50%;
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.9;
-  }
-  100% {
-    left: 110%;
-    opacity: 0.1;
-  }
+  0% { left: -50%; opacity: 0; }
+  10% { opacity: 0.95; }
+  100% { left: 115%; opacity: 0.08; }
 }
 @keyframes bloodWipeRtl {
-  0% {
-    right: -50%;
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.9;
-  }
-  100% {
-    right: 110%;
-    opacity: 0.1;
-  }
+  0% { right: -50%; opacity: 0; }
+  10% { opacity: 0.95; }
+  100% { right: 115%; opacity: 0.08; }
 }
-.anom-blood-layer.is-wiping .anom-blood-drip {
-  animation: bloodSmearOut 1.8s ease-out forwards !important;
+.anom-blood-layer.is-wiping .anom-blood-drip,
+.anom-blood-layer.is-wiping .anom-blood-veil,
+.anom-blood-layer.is-wiping .anom-blood-streak,
+.anom-blood-layer.is-wiping .anom-blood-pool {
+  animation: bloodSmearOut 2s ease-out forwards !important;
 }
 @keyframes bloodSmearOut {
-  0% {
-    opacity: 0.7;
-    filter: blur(0);
-  }
-  35% {
-    opacity: 0.45;
-    filter: blur(0.8px);
-    transform: scaleY(0.85) skewX(8deg);
-  }
-  70% {
-    opacity: 0.15;
-    filter: blur(1.5px);
-    transform: scaleY(0.4) skewX(18deg) translateX(12px);
-  }
-  100% {
-    opacity: 0;
-    filter: blur(3px);
-    transform: scaleY(0.15) skewX(28deg) translateX(28px);
-  }
+  0% { opacity: 0.9; filter: blur(0); }
+  40% { opacity: 0.4; filter: blur(1px); transform: scaleY(0.75) skewX(10deg); }
+  100% { opacity: 0; filter: blur(3px); transform: scaleY(0.2) skewX(22deg) translateX(20px); }
 }
 .anom-blood-layer.is-cleared {
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.1s ease;
+}
+/* 히어로 타이틀에 붙을 때 더 선명 */
+#mainTitle.anom-bleeding,
+.stasis-h1.anom-bleeding {
+  color: #f5eef0 !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .anom-blood-drip,
-  .anom-blood-hand {
-    animation-duration: 0.01ms !important;
+  .anom-blood-hand,
+  .anom-blood-veil,
+  .anom-blood-pool {
+    animation-duration: 0.4s !important;
   }
 }
 .anom-scorch {

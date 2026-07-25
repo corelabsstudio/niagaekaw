@@ -260,6 +260,192 @@
     }, wait);
   }
 
+  /**
+   * 2페이즈 핵심: 글자에서 피 흘림 (참조 이미지 톤)
+   * 히어로 타이틀 우선 · 굵은 줄기 · 하단 웅덩이 · 느린 닦기
+   */
+  function runTextBlood(opts) {
+    opts = opts || {};
+    if (busy()) return false;
+    if (!phase2Active()) return false;
+
+    var prefer = opts.preferHero !== false;
+    var nodes = [];
+    if (prefer) {
+      var hero = document.getElementById("mainTitle");
+      if (hero && (hero.textContent || "").trim()) nodes.push(hero);
+      var lede = document.querySelector(".stasis-lede");
+      if (lede && (lede.textContent || "").trim()) nodes.push(lede);
+    }
+    document
+      .querySelectorAll(
+        ".stasis-h1, .card-horror h2, .card-horror p, .stasis-feat-list li, .eyebrow, .stasis-quote-text"
+      )
+      .forEach(function (n) {
+        if (nodes.indexOf(n) === -1) nodes.push(n);
+      });
+    if (!nodes.length) return false;
+
+    // 히어로 가중 랜덤
+    var el;
+    if (prefer && nodes[0] && nodes[0].id === "mainTitle" && rng() > 0.25) {
+      el = nodes[0];
+    } else {
+      el = nodes[Math.floor(rng() * Math.min(nodes.length, prefer ? 4 : nodes.length))];
+    }
+    if (!el || el.dataset.bleeding === "1") return false;
+    if (!(el.textContent || "").trim()) return false;
+
+    el.dataset.bleeding = "1";
+    el.classList.add("anom-bleeding");
+
+    function placeLayer() {
+      var rect = el.getBoundingClientRect();
+      if (rect.width < 8 || rect.height < 4) return null;
+      var layer = document.createElement("div");
+      layer.className = "anom-blood-layer anom-blood-slow";
+      layer.setAttribute("aria-hidden", "true");
+      layer.style.position = "fixed";
+      layer.style.left = Math.max(0, rect.left - 4) + "px";
+      layer.style.top = Math.max(0, rect.top - 2) + "px";
+      layer.style.width = rect.width + 8 + "px";
+      // 글자 아래로 충분히 흘러내리게
+      layer.style.height = Math.min(rect.height + 140, Math.max(rect.height * 1.8, 120)) + "px";
+      layer.style.pointerEvents = "none";
+      layer.style.zIndex = "58";
+      layer.style.overflow = "visible";
+      return layer;
+    }
+
+    var layer = placeLayer();
+    if (!layer) {
+      el.classList.remove("anom-bleeding");
+      delete el.dataset.bleeding;
+      return false;
+    }
+
+    // 글자 위 피 막
+    var veil = document.createElement("div");
+    veil.className = "anom-blood-veil";
+    layer.appendChild(veil);
+
+    // 글자 사이 짧은 줄기
+    var streakN = mobile ? 4 : 8;
+    for (var s = 0; s < streakN; s++) {
+      var st = document.createElement("span");
+      st.className = "anom-blood-streak";
+      st.style.left = 8 + rng() * 84 + "%";
+      st.style.animationDelay = 0.1 + s * 0.12 + "s";
+      layer.appendChild(st);
+    }
+
+    function syncLayer() {
+      if (!layer.parentNode) return;
+      var rect = el.getBoundingClientRect();
+      layer.style.left = Math.max(0, rect.left - 4) + "px";
+      layer.style.top = Math.max(0, rect.top - 2) + "px";
+      layer.style.width = rect.width + 8 + "px";
+      layer.style.height =
+        Math.min(rect.height + 140, Math.max(rect.height * 1.8, 120)) + "px";
+    }
+
+    function addDrip(kind) {
+      if (!layer.parentNode || busy()) return;
+      syncLayer();
+      var d = document.createElement("span");
+      d.className = "anom-blood-drip" + (kind ? " " + kind : "");
+      d.style.left = 3 + rng() * 92 + "%";
+      d.style.animationDuration = 4.2 + rng() * 3.5 + "s";
+      d.style.height = (kind === "thick" ? 70 : kind === "thin" ? 36 : 50) + rng() * 90 + "px";
+      layer.appendChild(d);
+    }
+
+    document.body.appendChild(layer);
+
+    // 굵은 줄기 위주 — 참조 이미지처럼 많이
+    var dripCount = mobile ? 10 : 16;
+    for (var i = 0; i < dripCount; i++) {
+      (function (idx) {
+        setTimeout(function () {
+          var k = rng() > 0.55 ? "thick" : rng() > 0.4 ? "" : "thin";
+          addDrip(k);
+        }, 120 + idx * (280 + rng() * 220));
+      })(i);
+    }
+    setTimeout(function () {
+      if (!busy() && layer.parentNode) {
+        addDrip("thick");
+        addDrip("thick");
+        addDrip("");
+      }
+    }, 4200);
+    setTimeout(function () {
+      if (!busy() && layer.parentNode) {
+        addDrip("thick");
+        addDrip("thin");
+      }
+    }, 7200);
+
+    var pool = document.createElement("div");
+    pool.className = "anom-blood-pool";
+    layer.appendChild(pool);
+
+    var hand = document.createElement("div");
+    hand.className = "anom-blood-hand";
+    hand.classList.add(rng() > 0.5 ? "wipe-ltr" : "wipe-rtl");
+    layer.appendChild(hand);
+
+    var a = audio();
+    if (a) {
+      if (a.pulse) a.pulse("mid");
+      setTimeout(function () {
+        if (a.hddScratch) a.hddScratch();
+      }, 600);
+    }
+
+    var dripMs = 11000 + rng() * 1200;
+    var wipeMs = 2400;
+    var afterMs = 1400;
+
+    function onScrollOrResize() {
+      syncLayer();
+    }
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+
+    function cleanup() {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      el.classList.remove("anom-bleeding", "anom-blood-smear");
+      delete el.dataset.bleeding;
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+    }
+
+    setTimeout(function () {
+      if (busy() || !layer.parentNode) {
+        cleanup();
+        return;
+      }
+      layer.classList.add("is-wiping");
+      hand.classList.add("is-wiping");
+      if (a && a.hddScratch) a.hddScratch();
+      else if (a && a.typeClick) a.typeClick("mid");
+
+      setTimeout(function () {
+        layer.classList.add("is-cleared");
+        el.classList.remove("anom-bleeding");
+        el.classList.add("anom-blood-smear");
+      }, wipeMs * 0.5);
+
+      setTimeout(cleanup, wipeMs + afterMs);
+    }, dripMs);
+
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[blood-text]", el.id || el.className, "drips", dripCount);
+    }
+    return true;
+  }
+
   // ---------- 기존 + 신규 이상현상 ----------
   var ALL = [
     // ===== 기존 =====
@@ -560,143 +746,7 @@
     {
       id: "text_blood_wipe",
       run: function () {
-        /**
-         * 글자에서 피가 천천히 흐름 → 보이지 않는 손이 스윽 닦음
-         * 전체 약 15초 (drip ~11s + wipe ~2.5s + 잔상 ~1.5s)
-         */
-        if (busy()) return;
-        var nodes = document.querySelectorAll(
-          ".stasis-h1, .stasis-lede, .card-horror h2, .card-horror p, .stasis-feat-list li, .stasis-quote-text, .wip-readme-body, .eyebrow"
-        );
-        if (!nodes.length) return;
-        var el = nodes[Math.floor(rng() * nodes.length)];
-        if (!el || el.dataset.bleeding === "1") return;
-        if (!(el.textContent || "").trim()) return;
-
-        el.dataset.bleeding = "1";
-        el.classList.add("anom-bleeding");
-
-        function placeLayer() {
-          var rect = el.getBoundingClientRect();
-          if (rect.width < 8 || rect.height < 4) return null;
-          var layer = document.createElement("div");
-          layer.className = "anom-blood-layer anom-blood-slow";
-          layer.setAttribute("aria-hidden", "true");
-          layer.style.position = "fixed";
-          layer.style.left = rect.left + "px";
-          layer.style.top = rect.top + "px";
-          layer.style.width = rect.width + "px";
-          layer.style.height = Math.min(rect.height + 72, 160) + "px";
-          layer.style.pointerEvents = "none";
-          layer.style.zIndex = "57";
-          layer.style.overflow = "hidden";
-          return layer;
-        }
-
-        var layer = placeLayer();
-        if (!layer) {
-          el.classList.remove("anom-bleeding");
-          delete el.dataset.bleeding;
-          return;
-        }
-
-        function addDrip(delay) {
-          if (!layer.parentNode || busy()) return;
-          // 스크롤 대응: 위치 갱신
-          var rect = el.getBoundingClientRect();
-          layer.style.left = rect.left + "px";
-          layer.style.top = rect.top + "px";
-          layer.style.width = rect.width + "px";
-
-          var d = document.createElement("span");
-          d.className = "anom-blood-drip";
-          d.style.left = 4 + rng() * 90 + "%";
-          d.style.animationDelay = "0s";
-          // 천천히 흘러내림 4.5~7.5초
-          d.style.animationDuration = 4.5 + rng() * 3 + "s";
-          d.style.height = 22 + rng() * 50 + "px";
-          layer.appendChild(d);
-        }
-
-        document.body.appendChild(layer);
-
-        // 처음 여러 방울 + 이후 천천히 추가 (전체 흐름감)
-        var dripCount = mobile ? 4 : 7;
-        for (var i = 0; i < dripCount; i++) {
-          (function (idx) {
-            setTimeout(function () {
-              addDrip(idx);
-            }, 200 + idx * (900 + rng() * 500));
-          })(i);
-        }
-        // 중반에 추가 방울
-        setTimeout(function () {
-          if (!busy() && layer.parentNode) {
-            addDrip(0);
-            addDrip(1);
-          }
-        }, 5500);
-        setTimeout(function () {
-          if (!busy() && layer.parentNode) addDrip(0);
-        }, 8500);
-
-        var hand = document.createElement("div");
-        hand.className = "anom-blood-hand";
-        if (rng() > 0.5) hand.classList.add("wipe-ltr");
-        else hand.classList.add("wipe-rtl");
-        layer.appendChild(hand);
-
-        var a = audio();
-        if (a && a.typeClick) {
-          setTimeout(function () {
-            a.typeClick("soft");
-          }, 400);
-        }
-
-        // ~11초 흘림 후 닦기 (총 ~15초)
-        var dripMs = 10500 + rng() * 800;
-        var wipeMs = 2200;
-        var afterMs = 1500;
-
-        // 스크롤 시 레이어 추적
-        function onScrollOrResize() {
-          if (!layer.parentNode) return;
-          var rect = el.getBoundingClientRect();
-          layer.style.left = rect.left + "px";
-          layer.style.top = rect.top + "px";
-          layer.style.width = rect.width + "px";
-        }
-        window.addEventListener("scroll", onScrollOrResize, { passive: true });
-        window.addEventListener("resize", onScrollOrResize);
-
-        function cleanup() {
-          window.removeEventListener("scroll", onScrollOrResize);
-          window.removeEventListener("resize", onScrollOrResize);
-          el.classList.remove("anom-bleeding", "anom-blood-smear");
-          delete el.dataset.bleeding;
-          if (layer.parentNode) layer.parentNode.removeChild(layer);
-        }
-
-        setTimeout(function () {
-          if (busy()) {
-            cleanup();
-            return;
-          }
-          layer.classList.add("is-wiping");
-          hand.classList.add("is-wiping");
-          if (a && a.hddScratch) a.hddScratch();
-          else if (a && a.typeClick) a.typeClick("mid");
-
-          setTimeout(function () {
-            layer.classList.add("is-cleared");
-            el.classList.remove("anom-bleeding");
-            el.classList.add("anom-blood-smear");
-          }, wipeMs * 0.55);
-
-          setTimeout(function () {
-            cleanup();
-          }, wipeMs + afterMs);
-        }, dripMs);
+        runTextBlood({ preferHero: true });
       },
     },
     {
@@ -1215,6 +1265,23 @@
   if (POOL_SIZE > ALL.length) POOL_SIZE = ALL.length;
   var pool = pickN(ALL, POOL_SIZE);
 
+  // 글자 피 흘림은 2페이즈 필수 연출 — 풀에 항상 포함
+  (function ensureBloodInPool() {
+    var has = false;
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i].id === "text_blood_wipe") {
+        has = true;
+        break;
+      }
+    }
+    if (!has) {
+      var blood = ALL.filter(function (a) {
+        return a.id === "text_blood_wipe";
+      })[0];
+      if (blood) pool.push(blood);
+    }
+  })();
+
   try {
     sessionStorage.setItem(
       "haunt_anom_pool",
@@ -1347,6 +1414,36 @@
       }, 9000);
     }
 
+    // 글자 피 흘림 — 2페이즈 전용 스케줄 (랜덤 풀에만 맡기지 않음)
+    // 첫 발동 ~6~12초, 이후 22~40초 간격
+    setTimeout(function bloodLoop() {
+      if (!phase2Active()) {
+        setTimeout(bloodLoop, 2500);
+        return;
+      }
+      if (!document.body.classList.contains("diary-open") && !busy()) {
+        try {
+          runTextBlood({ preferHero: true });
+        } catch (e) {}
+      }
+      var d =
+        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
+      var gap = Math.max(16000, 28000 + rng() * 18000 - d * 2500);
+      setTimeout(bloodLoop, gap);
+    }, 6000 + rng() * 6000);
+
+    // decay 2 진입 시 한 번 더 강제 (히어로 피)
+    document.addEventListener("haunt-p2-decay", function (ev) {
+      var lv = ev && ev.detail && ev.detail.level;
+      if (lv === 2 || lv === 4) {
+        setTimeout(function () {
+          if (phase2Active() && !busy() && !document.body.classList.contains("diary-open")) {
+            runTextBlood({ preferHero: true });
+          }
+        }, 400);
+      }
+    });
+
     // 2페이즈 감시 실루엣 — decay 따라 더 자주 (클라이맥스에는 안 나옴)
     var watcherGap = 22000 + rng() * 28000;
     setTimeout(function watchLoop() {
@@ -1456,6 +1553,9 @@
     }),
     fire: fireRandom,
     flash: flashWakeAgain,
+    bloodText: function () {
+      return runTextBlood({ preferHero: true });
+    },
     phase2Active: phase2Active,
     all: ALL.map(function (a) {
       return a.id;
