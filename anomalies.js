@@ -1596,6 +1596,102 @@
     return true;
   }
 
+  /**
+   * 링 영화식: 멀리 점처럼 보이다가 천천히 다가와 → 끝 깜놀
+   * 2페이즈 전용 · 드묾 · 트리거 가리지 않게 짧은 점프 후 퇴장
+   */
+  var lastRingAt = 0;
+  var RING_COOLDOWN = 70000;
+  var ringBusy = false;
+
+  function runRingApproach(opts) {
+    opts = opts || {};
+    if (busy() || !markPhase2Ui()) return false;
+    if (ringBusy) return false;
+    if (document.getElementById("anomRingApproach")) return false;
+    if (!opts.force && Date.now() - lastRingAt < RING_COOLDOWN) return false;
+    if (document.body.classList.contains("diary-open")) return false;
+
+    lastRingAt = Date.now();
+    ringBusy = true;
+
+    var root = document.createElement("div");
+    root.id = "anomRingApproach";
+    root.className = "anom-ring-approach";
+    root.setAttribute("aria-hidden", "true");
+
+    var src = typeof pickFaceSrc === "function" ? pickFaceSrc() : FACE_IMGS[0];
+    root.innerHTML =
+      '<div class="ara-static"></div>' +
+      '<div class="ara-well">' +
+      '<div class="ara-figure">' +
+      '<img class="ara-face" src="' +
+      src +
+      '" alt="" draggable="false" />' +
+      '<div class="ara-hair"></div>' +
+      "</div>" +
+      "</div>" +
+      '<div class="ara-flash"></div>';
+
+    document.body.appendChild(root);
+    void root.offsetWidth;
+    root.classList.add("is-approach");
+
+    try {
+      var au = audio();
+      if (au) {
+        if (au.staticBurst) au.staticBurst(80);
+        if (au.whisper) setTimeout(function () { au.whisper(); }, 400);
+      }
+    } catch (e) {}
+
+    // 접근 구간 길이 (느림)
+    var approachMs = opts.approachMs != null ? opts.approachMs : mobile ? 3200 : 4200 + rng() * 800;
+    // 점프스케어
+    setTimeout(function () {
+      if (!root.parentNode) {
+        ringBusy = false;
+        return;
+      }
+      root.classList.remove("is-approach");
+      root.classList.add("is-jumpscare");
+      try {
+        var au2 = audio();
+        if (au2) {
+          if (au2.sting) au2.sting("blood");
+          if (au2.staticBurst) au2.staticBurst(220);
+          if (au2.codeLaugh) setTimeout(function () { au2.codeLaugh({ vol: 0.04 }); }, 40);
+          if (au2.rumble) au2.rumble(0.6);
+        }
+      } catch (e2) {}
+      // 짧은 화면 흔들림
+      document.body.classList.add("anom-shake");
+      setTimeout(function () {
+        document.body.classList.remove("anom-shake");
+      }, 280);
+    }, approachMs);
+
+    // 정리
+    var total = approachMs + (opts.scareMs != null ? opts.scareMs : 650);
+    setTimeout(function () {
+      if (!root.parentNode) {
+        ringBusy = false;
+        return;
+      }
+      root.classList.remove("is-jumpscare");
+      root.classList.add("is-out");
+      setTimeout(function () {
+        if (root.parentNode) root.parentNode.removeChild(root);
+        ringBusy = false;
+      }, 500);
+    }, total);
+
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[ring-approach]", approachMs + "ms → jumpscare");
+    }
+    return true;
+  }
+
   /** 2페이즈 진입 — 피는 늦게·드물게, 트리거 방해 최소화 */
   function burstCoreHorror() {
     if (!markPhase2Ui() || busy()) return;
@@ -1888,6 +1984,25 @@
       setTimeout(laughLoop, gap);
     }, 9000);
 
+    // 링식 접근 → 깜놀 (첫 ~35s 이후 · 70~110s)
+    setTimeout(function ringLoop() {
+      if (!phase2Active()) {
+        setTimeout(ringLoop, 5000);
+        return;
+      }
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !busy() &&
+        !document.body.classList.contains("is-haunting") &&
+        rng() > 0.35
+      ) {
+        try {
+          runRingApproach({});
+        } catch (e) {}
+      }
+      setTimeout(ringLoop, 70000 + rng() * 40000);
+    }, 35000);
+
     // 감시 실루엣 — 더 자주
     var watcherGap = 9000 + rng() * 8000;
     setTimeout(function watchLoop() {
@@ -2041,6 +2156,7 @@
     risingHands: runRisingHands,
     cardFaces: runCardFaces,
     cardClaws: runCardClaws,
+    ringApproach: runRingApproach,
     burst: burstCoreHorror,
     phase2Active: phase2Active,
     all: ALL.map(function (a) {
