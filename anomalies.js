@@ -1401,6 +1401,30 @@
     return true;
   }
 
+  /** 참조 이미지 톤 실사 얼굴 스프라이트 (assets/faces) */
+  var FACE_IMGS = [
+    "assets/faces/face-1.jpg",
+    "assets/faces/face-2.jpg",
+    "assets/faces/face-3.jpg",
+    "assets/faces/face-4.jpg",
+    "assets/faces/face-5.jpg",
+  ];
+
+  function buildHorrorFaceHtml(kind) {
+    var idx = ((kind || 1) - 1) % FACE_IMGS.length;
+    // kind 로 다른 에셋, 랜덤 오프셋
+    idx = Math.floor(rng() * FACE_IMGS.length);
+    var src = FACE_IMGS[idx];
+    return (
+      '<img class="acf-photo" src="' +
+      src +
+      '" alt="" draggable="false" />' +
+      '<span class="acf-vignette"></span>' +
+      '<span class="acf-scan"></span>' +
+      '<span class="acf-glow"></span>'
+    );
+  }
+
   /**
    * 참조 이미지: 카드/대시보드에 유령 얼굴 깜빡임
    */
@@ -1443,29 +1467,25 @@
       if (cs.position === "static") host.style.position = "relative";
       host.classList.add("anom-card-has-face");
 
-      // 카드당 1~2 얼굴
-      var faceCount = rng() > 0.55 ? 2 : 1;
+      // 카드당 1~3 얼굴 — 참조 이미지 톤 SVG 초상
+      var faceCount = mobile ? 1 + (rng() > 0.5 ? 1 : 0) : 2 + Math.floor(rng() * 2);
       for (var fi = 0; fi < faceCount; fi++) {
         var face = document.createElement("div");
-        face.className = "anom-card-face";
+        var kind = 1 + Math.floor(rng() * 6);
+        face.className = "anom-card-face kind-" + kind;
         face.setAttribute("aria-hidden", "true");
-        var left = 15 + rng() * 70;
-        var top = 15 + rng() * 60;
-        var scale = 1.05 + rng() * 0.75;
-        var kind = 1 + Math.floor(rng() * 4);
-        face.classList.add("kind-" + kind);
+        var left = 12 + rng() * 76;
+        var top = 12 + rng() * 65;
+        var scale = 0.95 + rng() * 0.95;
         face.style.setProperty("--acf-x", left.toFixed(1) + "%");
         face.style.setProperty("--acf-y", top.toFixed(1) + "%");
         face.style.setProperty("--acf-scale", scale.toFixed(2));
         face.style.setProperty(
           "--acf-delay",
-          (idx * 0.06 + fi * 0.1 + rng() * 0.1).toFixed(2) + "s"
+          (idx * 0.05 + fi * 0.08 + rng() * 0.08).toFixed(2) + "s"
         );
-        face.innerHTML =
-          '<span class="acf-skin"></span>' +
-          '<span class="acf-eye l"></span><span class="acf-eye r"></span>' +
-          '<span class="acf-mouth"></span>' +
-          '<span class="acf-noise"></span>';
+        face.style.setProperty("--acf-rot", (rng() * 16 - 8).toFixed(1) + "deg");
+        face.innerHTML = buildHorrorFaceHtml(kind);
         host.appendChild(face);
         made++;
 
