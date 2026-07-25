@@ -4220,6 +4220,15 @@ body[data-p2-decay="5"] .anom-rising-hands.is-on .arh-hand {
     0 0 24px rgba(0, 0, 0, 0.75),
     0 0 40px rgba(80, 0, 20, 0.35);
 }
+/* 화면 고정 플로팅 — 뷰포트 안에 항상 보이도록 */
+.anom-card-face.is-float {
+  position: fixed !important;
+  z-index: 55 !important;
+  margin-left: -70px;
+  margin-top: -70px;
+  width: 140px;
+  height: 140px;
+}
 .anom-card-face .acf-photo {
   width: 100%;
   height: 100%;

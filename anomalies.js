@@ -1436,38 +1436,64 @@
   /**
    * 참조 이미지: 카드/대시보드에 유령 얼굴 깜빡임
    */
+  function spawnFaceEl(kind, extraClass) {
+    var face = document.createElement("div");
+    face.className = "anom-card-face kind-" + kind + (extraClass ? " " + extraClass : "");
+    face.setAttribute("aria-hidden", "true");
+    face.innerHTML = buildHorrorFaceHtml(kind);
+    return face;
+  }
+
+  function armFaceLifecycle(face, host, lifeMs, delayIdx) {
+    setTimeout(function () {
+      face.classList.add("is-on");
+    }, 30 + (delayIdx || 0) * 60);
+    setTimeout(function () {
+      if (!face.parentNode) return;
+      face.classList.add("is-blink");
+      setTimeout(function () {
+        face.classList.remove("is-blink");
+      }, 80);
+    }, lifeMs * 0.4);
+    setTimeout(function () {
+      face.classList.remove("is-on");
+      face.classList.add("is-out");
+      setTimeout(function () {
+        if (face.parentNode) face.parentNode.removeChild(face);
+        if (host && host.classList && !host.querySelector(".anom-card-face")) {
+          host.classList.remove("anom-card-has-face");
+        }
+      }, 500);
+    }, lifeMs);
+  }
+
   function runCardFaces(opts) {
     opts = opts || {};
     if (busy() || !markPhase2Ui()) return false;
 
     var hosts = Array.prototype.slice.call(
       document.querySelectorAll(
-        ".stasis-card-light, .stasis-card-dark, .stasis-monitor-card, .card-horror, .monitor-frame, .monitor-body, .plan-card, .stasis-quote"
+        ".stasis-card-light, .stasis-card-dark, .stasis-monitor-card, .card-horror, .monitor-frame, .plan-card, .stasis-quote, .warning-banner, .stasis-hero, #mainTitle"
       )
     );
     if (!hosts.length) return false;
 
-    var preferred = hosts.filter(function (h) {
-      return (
-        h.classList.contains("stasis-card-light") ||
-        h.classList.contains("stasis-card-dark") ||
-        h.classList.contains("stasis-monitor-card") ||
-        h.classList.contains("monitor-frame") ||
-        h.classList.contains("card-horror") ||
-        h.classList.contains("stasis-quote")
-      );
+    // 뷰포트 안 호스트 우선 (스크롤 아래만 붙으면 안 보임)
+    var vh = window.innerHeight || 800;
+    var visible = hosts.filter(function (h) {
+      var r = h.getBoundingClientRect();
+      return r.bottom > 40 && r.top < vh - 40 && r.width > 40;
     });
-    if (preferred.length) hosts = preferred;
+    if (visible.length) hosts = visible;
 
-    // 2~4장 — 눈에 확실히 보이게
-    var n = mobile ? 2 : 2 + Math.floor(rng() * 3);
+    var n = mobile ? 2 : 3 + Math.floor(rng() * 2);
     var picks = pickN(hosts, Math.min(n, hosts.length));
     var made = 0;
+    var lifeBase = opts.ms != null ? opts.ms : 2800 + rng() * 2600;
 
     picks.forEach(function (host, idx) {
       if (!host) return;
-      // 기존 얼굴 제거 후 재생성 허용
-      var oldF = host.querySelectorAll(".anom-card-face");
+      var oldF = host.querySelectorAll(".anom-card-face:not(.is-float)");
       for (var oi = 0; oi < oldF.length; oi++) {
         if (oldF[oi].parentNode) oldF[oi].parentNode.removeChild(oldF[oi]);
       }
@@ -1475,60 +1501,41 @@
       if (cs.position === "static") host.style.position = "relative";
       host.classList.add("anom-card-has-face");
 
-      // 카드당 1~3 얼굴 — 참조 이미지 톤 SVG 초상
-      var faceCount = mobile ? 1 + (rng() > 0.5 ? 1 : 0) : 2 + Math.floor(rng() * 2);
+      var faceCount = 1 + (rng() > 0.45 ? 1 : 0);
       for (var fi = 0; fi < faceCount; fi++) {
-        var face = document.createElement("div");
         var kind = 1 + Math.floor(rng() * 6);
-        face.className = "anom-card-face kind-" + kind;
-        face.setAttribute("aria-hidden", "true");
-        var left = 12 + rng() * 76;
-        var top = 12 + rng() * 65;
-        var scale = 0.95 + rng() * 0.95;
+        var face = spawnFaceEl(kind);
+        var left = 18 + rng() * 64;
+        var top = 18 + rng() * 55;
+        var scale = 0.9 + rng() * 0.85;
         face.style.setProperty("--acf-x", left.toFixed(1) + "%");
         face.style.setProperty("--acf-y", top.toFixed(1) + "%");
         face.style.setProperty("--acf-scale", scale.toFixed(2));
         face.style.setProperty(
           "--acf-delay",
-          (idx * 0.05 + fi * 0.08 + rng() * 0.08).toFixed(2) + "s"
+          (idx * 0.05 + fi * 0.08).toFixed(2) + "s"
         );
-        face.style.setProperty("--acf-rot", (rng() * 16 - 8).toFixed(1) + "deg");
-        face.innerHTML = buildHorrorFaceHtml(kind);
+        face.style.setProperty("--acf-rot", (rng() * 14 - 7).toFixed(1) + "deg");
         host.appendChild(face);
         made++;
-
-        var life = opts.ms != null ? opts.ms : 2200 + rng() * 2400;
-        (function (faceEl, lifeMs, delayIdx) {
-          setTimeout(function () {
-            faceEl.classList.add("is-on");
-          }, 30 + delayIdx * 70);
-          setTimeout(function () {
-            if (!faceEl.parentNode) return;
-            faceEl.classList.add("is-blink");
-            setTimeout(function () {
-              faceEl.classList.remove("is-blink");
-            }, 70);
-          }, lifeMs * 0.35);
-          setTimeout(function () {
-            if (!faceEl.parentNode) return;
-            faceEl.classList.add("is-blink");
-            setTimeout(function () {
-              faceEl.classList.remove("is-blink");
-            }, 50);
-          }, lifeMs * 0.7);
-          setTimeout(function () {
-            faceEl.classList.remove("is-on");
-            faceEl.classList.add("is-out");
-            setTimeout(function () {
-              if (faceEl.parentNode) faceEl.parentNode.removeChild(faceEl);
-              if (host && !host.querySelector(".anom-card-face")) {
-                host.classList.remove("anom-card-has-face");
-              }
-            }, 500);
-          }, lifeMs);
-        })(face, life, idx + fi);
+        armFaceLifecycle(face, host, lifeBase, idx + fi);
       }
     });
+
+    // 화면 중앙~가장자리 플로팅 얼굴 1~3 (참조 대시보드처럼 항상 시야에)
+    var floatN = mobile ? 1 : 2 + Math.floor(rng() * 2);
+    for (var fi2 = 0; fi2 < floatN; fi2++) {
+      var kind2 = 1 + Math.floor(rng() * 6);
+      var ff = spawnFaceEl(kind2, "is-float");
+      ff.style.setProperty("--acf-x", 8 + rng() * 84 + "%");
+      ff.style.setProperty("--acf-y", 18 + rng() * 55 + "%");
+      ff.style.setProperty("--acf-scale", (0.85 + rng() * 0.7).toFixed(2));
+      ff.style.setProperty("--acf-delay", (0.05 + fi2 * 0.1).toFixed(2) + "s");
+      ff.style.setProperty("--acf-rot", (rng() * 20 - 10).toFixed(1) + "deg");
+      document.body.appendChild(ff);
+      made++;
+      armFaceLifecycle(ff, null, lifeBase + 400, fi2);
+    }
 
     if (made) {
       try {
