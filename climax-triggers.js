@@ -238,9 +238,12 @@
     },
     {
       id: "wip_quad",
-      hint: "WIP 배지 4번",
+      hint: "푸터 beta 4번",
       arm: function (done) {
-        var el = document.querySelector(".wip-pill") || document.querySelector("[data-find='wip']");
+        var el =
+          document.querySelector("[data-find='wip']") ||
+          document.querySelector(".foot-beta") ||
+          document.querySelector(".wip-pill");
         if (!el) return;
         var n = 0;
         var t = null;
@@ -260,9 +263,12 @@
     },
     {
       id: "branch_triple",
-      hint: "브랜치 이름 3번",
+      hint: "푸터 버전 3번",
       arm: function (done) {
-        var el = document.querySelector("[data-find='branch']") || document.querySelector(".wip-git code");
+        var el =
+          document.querySelector("[data-find='branch']") ||
+          document.querySelector(".foot-micro:not(.foot-beta)") ||
+          document.querySelector(".wip-git code");
         if (!el) return;
         var n = 0;
         var t = null;

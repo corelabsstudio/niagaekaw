@@ -305,7 +305,15 @@
       ) {
         var t = el.getAttribute("data-" + key);
         if (t == null) t = el.getAttribute("data-clean") || el.textContent;
-        el.textContent = String(t).replace(/<[^>]+>/g, "");
+        t = String(t).replace(/<[^>]+>/g, "");
+        // 로고 SVG 마크 유지 — .logo-text 만 교체
+        if (el.id === "topRec") {
+          var logoText = el.querySelector(".logo-text");
+          if (logoText) logoText.textContent = t;
+          else el.textContent = t;
+        } else {
+          el.textContent = t;
+        }
       } else if (el.id === "titleL1" || el.id === "titleL2") {
         el.textContent = (
           el.getAttribute("data-" + key) ||
