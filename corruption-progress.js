@@ -384,8 +384,9 @@
       var html = live.getAttribute("data-horror") || live.getAttribute("data-mid") || "";
       live.innerHTML = html;
     }
+    // void-face 까만 얼굴 열 금지 (유치함) — 감시 연출은 anom-watcher 실루엣만
     var face = document.getElementById("faceRow");
-    if (face) face.hidden = false;
+    if (face) face.hidden = true;
     var sp = document.getElementById("deepSpacer");
     if (sp) sp.hidden = false;
     var t1 = document.getElementById("terminalLine");

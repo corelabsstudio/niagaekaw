@@ -197,17 +197,11 @@
     }
   }
 
+  /** 클라이맥스에 유아틱 까만 얼굴 금지 — 감시자 연출은 2페이즈 전용 */
   function startFaces() {
-    if (!facesEl) return;
-    facesEl.hidden = false;
-    facesEl.innerHTML = "";
-    for (var i = 0; i < 5; i++) {
-      var f = document.createElement("div");
-      f.className = "haunt-face";
-      f.style.left = 8 + Math.random() * 80 + "%";
-      f.style.top = 10 + Math.random() * 70 + "%";
-      f.style.animationDelay = Math.random() * 0.5 + "s";
-      facesEl.appendChild(f);
+    if (facesEl) {
+      facesEl.hidden = true;
+      facesEl.innerHTML = "";
     }
   }
 
@@ -256,19 +250,21 @@
 
   function runPhase3(next) {
     setPhase(3);
+    // 얼굴 스폰 없음 — 화면 붕괴·시선 압박은 비네팅/노이즈/사운드만
     startFaces();
+    if (haunt) haunt.classList.add("climax-p3-gaze");
     var a = audio();
     if (a) {
       if (a.rumble) a.rumble(2.2);
       if (a.hddScratch) a.hddScratch();
       if (a.setLevel) a.setLevel(3);
+      if (a.whisper) a.whisper();
     }
     document.title = "DO NOT LOOK AWAY";
     try {
       var ut = document.getElementById("fakeUrlText");
       if (ut) ut.textContent = "about:viewport-corrupt";
     } catch (e) {}
-    // 짧은 구간만 화면 흔들림 (전 구간 무한 흔들림 = 허접)
     if (haunt) haunt.classList.add("climax-shake-on");
     later(reduced ? 500 : 900, function () {
       if (haunt) haunt.classList.remove("climax-shake-on");
@@ -283,7 +279,7 @@
       if (n % 11 === 0 && a && a.hddScratch) a.hddScratch();
     });
     later(reduced ? 2000 : 4600, function () {
-      haunt.classList.remove("climax-invert", "climax-shake-on");
+      haunt.classList.remove("climax-invert", "climax-shake-on", "climax-p3-gaze");
       next();
     });
   }

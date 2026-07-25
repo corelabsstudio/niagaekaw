@@ -703,13 +703,11 @@
       id: "watcher_behind",
       run: function () {
         /**
-         * 화면 뒤 감시자
-         * - 잠시 응시(커서 추적)
-         * - 사라질 때 패턴:
-         *   eyes_close | look_left | look_right | look_away_down | glance_then_close
-         * - 그 동작 후 페이드아웃 (계속 빤히 보지 않음)
+         * 2페이즈 전용 — 주변시 실루엣 (까만 얼굴/눈 금지)
+         * 가장자리 어두운 사람 형태가 잠시 서 있다가 녹듯 사라짐
          */
         if (busy()) return;
+        if (!phase2Active()) return;
         var w = document.getElementById("anomWatcher");
         if (!w) {
           w = document.createElement("div");
@@ -717,10 +715,7 @@
           w.className = "anom-watcher";
           w.setAttribute("aria-hidden", "true");
           w.innerHTML =
-            '<div class="aw-figure">' +
-            '<div class="aw-head"><span class="aw-eye l"></span><span class="aw-eye r"></span></div>' +
-            '<div class="aw-body"></div>' +
-            "</div>";
+            '<div class="aw-sil"></div><div class="aw-haze"></div>';
           document.body.appendChild(w);
         }
         if (w.classList.contains("is-on") || w.classList.contains("is-leaving")) return;
@@ -728,71 +723,45 @@
         var side = rng() > 0.5 ? "left" : "right";
         w.className = "anom-watcher";
         w.classList.add(side === "left" ? "side-left" : "side-right");
-        if (rng() > 0.55) w.classList.add("is-deep");
+        if (rng() > 0.5) w.classList.add("is-deep");
+        // decay 높을수록 조금 더 또렷 (그래도 얼굴 디테일 없음)
+        var d =
+          typeof window.__hauntP2Decay === "function"
+            ? window.__hauntP2Decay()
+            : parseInt(document.body.getAttribute("data-p2-decay") || "0", 10) || 0;
+        if (d >= 4) w.classList.add("is-near");
 
         void w.offsetWidth;
         w.classList.add("is-on");
 
-        var eyes = w.querySelectorAll(".aw-eye");
-        var figure = w.querySelector(".aw-figure");
-        var tracking = true;
+        var sil = w.querySelector(".aw-sil");
+        var tracking = !mobile && !!sil;
 
         function track(e) {
           if (!tracking || !w.classList.contains("is-on") || busy()) return;
           var cx = window.innerWidth / 2;
-          var cy = window.innerHeight / 2;
           var dx = (e.clientX - cx) / cx;
-          var dy = (e.clientY - cy) / cy;
-          eyes.forEach(function (eye) {
-            eye.style.transform =
-              "translate(" + (dx * 3.2).toFixed(2) + "px," + (dy * 2.2).toFixed(2) + "px)";
-          });
-          if (figure) {
-            figure.style.transform =
-              "translate(" + (dx * 5).toFixed(1) + "px," + (dy * 3.5).toFixed(1) + "px)";
+          // 아주 미세한 기울임만 — 눈이 커서 쫓아가는 연출 금지
+          if (sil) {
+            sil.style.transform =
+              "translateX(" + (dx * 4).toFixed(1) + "px) scaleY(1.02)";
           }
         }
-        if (!mobile) document.addEventListener("mousemove", track);
+        if (tracking) document.addEventListener("mousemove", track);
 
-        var leaveModes = [
-          "eyes_close",
-          "look_left",
-          "look_right",
-          "look_away_down",
-          "glance_then_close",
-        ];
+        var leaveModes = ["fade", "sink", "slide", "dissolve"];
         var leaveMode = leaveModes[Math.floor(rng() * leaveModes.length)];
-
-        // 응시는 짧게 (2~4.5초) — 오래 빤히 보지 않음
-        var stareMs = 2000 + rng() * 2500;
-
-        function clearMotionClasses() {
-          w.classList.remove(
-            "aw-eyes-close",
-            "aw-look-left",
-            "aw-look-right",
-            "aw-look-down",
-            "aw-glance",
-            "aw-twitch",
-            "is-leaving",
-            "is-out"
-          );
-        }
+        var stareMs = 1800 + rng() * 2200;
 
         function finishLeave() {
           tracking = false;
-          if (!mobile) document.removeEventListener("mousemove", track);
+          document.removeEventListener("mousemove", track);
           w.classList.remove("is-on");
           w.classList.add("is-out");
           setTimeout(function () {
-            clearMotionClasses();
-            w.classList.remove("is-deep", "side-left", "side-right", "is-out");
-            eyes.forEach(function (eye) {
-              eye.style.transform = "";
-            });
-            if (figure) figure.style.transform = "";
             w.className = "anom-watcher";
-          }, 1100);
+            if (sil) sil.style.transform = "";
+          }, 1200);
         }
 
         function beginLeave() {
@@ -801,41 +770,14 @@
             return;
           }
           tracking = false;
-          if (!mobile) document.removeEventListener("mousemove", track);
-          // 인라인 track transform 제거 후 CSS 연출
-          eyes.forEach(function (eye) {
-            eye.style.transform = "";
-          });
-          if (figure) figure.style.transform = "";
-
-          w.classList.add("is-leaving");
-          w.classList.remove("aw-twitch");
-
-          if (leaveMode === "eyes_close") {
-            w.classList.add("aw-eyes-close");
-            setTimeout(finishLeave, 700);
-          } else if (leaveMode === "look_left") {
-            w.classList.add("aw-look-left");
-            setTimeout(finishLeave, 900);
-          } else if (leaveMode === "look_right") {
-            w.classList.add("aw-look-right");
-            setTimeout(finishLeave, 900);
-          } else if (leaveMode === "look_away_down") {
-            w.classList.add("aw-look-down");
-            setTimeout(finishLeave, 850);
-          } else {
-            // glance_then_close: 왼쪽 흘낏 → 눈 감기 → 퇴장
-            w.classList.add("aw-glance");
-            setTimeout(function () {
-              w.classList.remove("aw-glance");
-              w.classList.add("aw-eyes-close");
-              setTimeout(finishLeave, 650);
-            }, 550);
-          }
+          document.removeEventListener("mousemove", track);
+          if (sil) sil.style.transform = "";
+          w.classList.add("is-leaving", "leave-" + leaveMode);
+          setTimeout(finishLeave, leaveMode === "dissolve" ? 1100 : 900);
         }
 
         setTimeout(beginLeave, stareMs);
-        maybeFlashAfter(0.03);
+        maybeFlashAfter(0.02);
       },
     },
     {
@@ -1405,20 +1347,29 @@
       }, 9000);
     }
 
-    // 드물게 배경 감시자 — 2페이즈 only
-    var watcherGap = 40000 + rng() * 50000;
+    // 2페이즈 감시 실루엣 — decay 따라 더 자주 (클라이맥스에는 안 나옴)
+    var watcherGap = 22000 + rng() * 28000;
     setTimeout(function watchLoop() {
-      if (phase2Active() && rng() > 0.4) {
-        var wAnom = ALL.filter(function (a) {
-          return a.id === "watcher_behind";
-        })[0];
-        if (wAnom) {
-          try {
-            wAnom.run();
-          } catch (e) {}
+      if (phase2Active() && !document.body.classList.contains("diary-open")) {
+        var d =
+          typeof window.__hauntP2Decay === "function"
+            ? window.__hauntP2Decay()
+            : 0;
+        var chance = 0.35 + Math.min(0.45, d * 0.08);
+        if (rng() < chance) {
+          var wAnom = ALL.filter(function (a) {
+            return a.id === "watcher_behind";
+          })[0];
+          if (wAnom) {
+            try {
+              wAnom.run();
+            } catch (e) {}
+          }
         }
       }
-      watcherGap = 45000 + rng() * 70000;
+      var d2 =
+        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
+      watcherGap = Math.max(12000, 32000 + rng() * 40000 - d2 * 4000);
       setTimeout(watchLoop, watcherGap);
     }, watcherGap);
 

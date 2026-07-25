@@ -2319,24 +2319,29 @@ body.stage-dread .morphing {
   box-shadow: inset 0 0 120px rgba(60, 0, 15, 0.5);
 }
 
+/* 주변시 압박 — 얼굴 형태 아님, 가장자리 어둠만 */
 #faceHint {
   pointer-events: none;
   position: fixed;
   z-index: 46;
-  width: 120px;
-  height: 160px;
-  right: 4%;
-  bottom: 12%;
+  width: min(180px, 28vw);
+  height: min(55vh, 420px);
+  right: -4%;
+  bottom: 5%;
   opacity: 0;
-  background:
-    radial-gradient(ellipse 40% 30% at 35% 35%, rgba(255, 200, 200, 0.08), transparent 50%),
-    radial-gradient(ellipse 40% 30% at 65% 35%, rgba(255, 200, 200, 0.08), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 70%, rgba(80, 0, 20, 0.35), transparent 70%),
-    radial-gradient(ellipse 70% 90% at 50% 50%, rgba(20, 0, 10, 0.6), transparent 70%);
-  filter: blur(1px);
-  transition: opacity 0.05s;
+  background: linear-gradient(
+    270deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(8, 0, 6, 0.2) 45%,
+    transparent 100%
+  );
+  filter: blur(14px);
+  transition: opacity 0.12s ease;
 }
 #faceHint.face-on {
+  opacity: 0.4;
+}
+body[data-p2-decay="5"] #faceHint.face-on {
   opacity: 0.55;
 }
 
@@ -3493,202 +3498,128 @@ body:not(.phase-2-active) .anom-load-gauge {
   opacity: 0 !important;
 }
 
-/* 화면 뒤 감시자 — 2페이즈 전용 */
+/*
+ * 2페이즈 감시 실루엣 — 까만 얼굴/눈알 금지
+ * 주변시: 가장자리 어두운 키 큰 형태, 블러, 낮은 불투명도
+ */
 .anom-watcher {
   position: fixed;
-  z-index: 1;
-  top: 18%;
-  width: min(200px, 42vw);
-  height: min(320px, 55vh);
+  z-index: 2;
+  top: 12%;
+  width: min(140px, 28vw);
+  height: min(78vh, 520px);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.4s ease;
-  /* UI 뒤에 깔리게 — main 콘텐츠 z-index 위에 안 올라감 */
-  mix-blend-mode: multiply;
-}
-body:not(.stage-clean) .anom-watcher {
-  mix-blend-mode: screen;
-  z-index: 2;
+  transition: opacity 1.6s ease;
 }
 .anom-watcher.side-left {
-  left: 2%;
+  left: -2%;
 }
 .anom-watcher.side-right {
-  right: 2%;
+  right: -2%;
   left: auto;
 }
 .anom-watcher.is-deep {
-  top: 22%;
-  transform: scale(0.85);
+  top: 18%;
+  width: min(100px, 20vw);
+  height: min(55vh, 380px);
+  filter: blur(3px);
+}
+.anom-watcher.is-near {
+  width: min(160px, 32vw);
   filter: blur(1.2px);
-  opacity: 0;
 }
 .anom-watcher.is-on {
-  opacity: 0.22;
-}
-body:not(.stage-clean) .anom-watcher.is-on {
-  opacity: 0.28;
-}
-.anom-watcher.is-deep.is-on {
-  opacity: 0.14;
-}
-body:not(.stage-clean) .anom-watcher.is-deep.is-on {
-  opacity: 0.18;
+  opacity: 1;
 }
 .anom-watcher.is-out {
   opacity: 0 !important;
-  transition: opacity 1.1s ease;
+  transition: opacity 1.1s ease, filter 1.1s ease;
 }
-.anom-watcher .aw-figure {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transition: transform 0.35s ease-out;
-}
-.anom-watcher .aw-head {
+/* 실루엣: 머리·어깨 암시만, 이목구비 없음 */
+.anom-watcher .aw-sil {
   position: absolute;
-  left: 50%;
-  top: 8%;
-  width: 38%;
-  height: 22%;
-  margin-left: -19%;
-  border-radius: 45% 45% 40% 40%;
-  background: radial-gradient(ellipse at 50% 40%, rgba(40, 20, 25, 0.55), rgba(10, 4, 8, 0.75));
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  inset: 8% 18% 0 18%;
+  border-radius: 48% 48% 12% 12% / 28% 28% 8% 8%;
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 12%, rgba(8, 2, 6, 0.55), transparent 70%),
+    linear-gradient(
+      180deg,
+      rgba(6, 2, 8, 0.5) 0%,
+      rgba(4, 1, 6, 0.38) 28%,
+      rgba(3, 1, 5, 0.22) 62%,
+      transparent 100%
+    );
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.45),
+    inset 0 20px 40px rgba(0, 0, 0, 0.35);
+  filter: blur(2.5px);
+  transition: transform 0.45s ease-out, opacity 0.8s ease, filter 0.9s ease;
 }
-body:not(.stage-clean) .anom-watcher .aw-head {
-  background: radial-gradient(ellipse at 50% 40%, rgba(60, 20, 30, 0.5), rgba(5, 0, 8, 0.8));
-  box-shadow: 0 0 30px rgba(80, 0, 20, 0.25);
+.anom-watcher.is-deep .aw-sil {
+  filter: blur(4px);
+  opacity: 0.75;
 }
-.anom-watcher .aw-eye {
+.anom-watcher.is-near .aw-sil {
+  filter: blur(1.5px);
+  opacity: 0.9;
+}
+/* 가장자리 안개 — 형태를 더 읽기 어렵게 */
+.anom-watcher .aw-haze {
   position: absolute;
-  top: 48%;
-  width: 14%;
-  height: 10%;
-  border-radius: 50%;
-  background: rgba(200, 40, 55, 0.35);
-  box-shadow: 0 0 6px rgba(255, 30, 50, 0.25);
-  transition: transform 0.2s ease-out, opacity 0.4s;
-}
-body:not(.stage-clean) .anom-watcher .aw-eye {
-  background: rgba(255, 50, 70, 0.45);
-  box-shadow: 0 0 10px rgba(255, 20, 40, 0.4);
-}
-.anom-watcher .aw-eye.l {
-  left: 24%;
-}
-.anom-watcher .aw-eye.r {
-  right: 24%;
-}
-.anom-watcher .aw-body {
-  position: absolute;
-  left: 50%;
-  top: 28%;
-  width: 55%;
-  height: 55%;
-  margin-left: -27.5%;
-  border-radius: 40% 40% 20% 20%;
-  background: linear-gradient(
-    180deg,
-    rgba(25, 12, 16, 0.4) 0%,
-    rgba(8, 4, 8, 0.15) 100%
-  );
-}
-body:not(.stage-clean) .anom-watcher .aw-body {
-  background: linear-gradient(
-    180deg,
-    rgba(40, 8, 16, 0.45) 0%,
+  inset: 0 -20%;
+  background: radial-gradient(
+    ellipse 55% 80% at 50% 45%,
+    transparent 20%,
+    rgba(0, 0, 0, 0.25) 70%,
     transparent 100%
   );
+  filter: blur(8px);
+  opacity: 0.7;
 }
-.anom-watcher.aw-twitch .aw-head {
-  transform: rotate(-2deg) translateX(2px);
+body.stage-corrupt .anom-watcher.is-on .aw-sil,
+body.stage-dread .anom-watcher.is-on .aw-sil {
+  opacity: 0.85;
 }
-.anom-watcher.aw-twitch .aw-eye {
-  opacity: 0.5;
+body[data-p2-decay="4"] .anom-watcher.is-on .aw-sil,
+body[data-p2-decay="5"] .anom-watcher.is-on .aw-sil {
+  opacity: 0.95;
+  /* 아주 희미한 붉은 기운 — 눈 아님 */
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.5),
+    0 8% 30px rgba(60, 0, 12, 0.2);
 }
 
-/* —— 퇴장 연출: 계속 보지 않고 시선/눈 감은 뒤 페이드 —— */
+/* 퇴장 */
 .anom-watcher.is-leaving {
-  transition: opacity 0.95s ease 0.15s, filter 0.95s ease;
+  transition: opacity 0.9s ease, filter 0.9s ease, transform 0.9s ease;
 }
-.anom-watcher.is-leaving.is-out,
-.anom-watcher.is-out {
+.anom-watcher.leave-fade.is-leaving,
+.anom-watcher.leave-fade.is-out {
   opacity: 0 !important;
-  filter: blur(2px);
-  transition: opacity 1.05s ease, filter 1.05s ease;
+}
+.anom-watcher.leave-sink.is-leaving .aw-sil {
+  transform: translateY(18%) scaleY(0.92);
+  filter: blur(6px);
+  opacity: 0.2;
+}
+.anom-watcher.leave-slide.side-left.is-leaving {
+  transform: translateX(-40%);
+  opacity: 0;
+}
+.anom-watcher.leave-slide.side-right.is-leaving {
+  transform: translateX(40%);
+  opacity: 0;
+}
+.anom-watcher.leave-dissolve.is-leaving .aw-sil {
+  filter: blur(12px);
+  opacity: 0;
+  transform: scale(1.08);
+}
+.anom-watcher.leave-dissolve.is-leaving .aw-haze {
+  opacity: 0;
 }
 
-/* 눈 감기 */
-.anom-watcher.aw-eyes-close .aw-eye {
-  height: 2% !important;
-  top: 52% !important;
-  border-radius: 2px !important;
-  background: rgba(80, 20, 30, 0.45) !important;
-  box-shadow: none !important;
-  transform: scaleY(0.15) !important;
-  transition:
-    height 0.45s ease,
-    top 0.45s ease,
-    transform 0.5s ease,
-    opacity 0.4s ease,
-    background 0.4s ease !important;
-  opacity: 0.35;
-}
-.anom-watcher.aw-eyes-close .aw-head {
-  transition: transform 0.5s ease;
-  transform: rotate(1deg) translateY(2px);
-}
-
-/* 왼쪽을 봄 */
-.anom-watcher.aw-look-left .aw-eye {
-  transform: translate(-5px, 0.5px) !important;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.anom-watcher.aw-look-left .aw-head {
-  transform: rotate(-7deg) translateX(-4px);
-  transition: transform 0.6s ease;
-}
-.anom-watcher.aw-look-left .aw-figure {
-  transition: transform 0.65s ease;
-  transform: translateX(-6px) !important;
-}
-
-/* 오른쪽을 봄 */
-.anom-watcher.aw-look-right .aw-eye {
-  transform: translate(5px, 0.5px) !important;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.anom-watcher.aw-look-right .aw-head {
-  transform: rotate(7deg) translateX(4px);
-  transition: transform 0.6s ease;
-}
-.anom-watcher.aw-look-right .aw-figure {
-  transition: transform 0.65s ease;
-  transform: translateX(6px) !important;
-}
-
-/* 아래(회피)로 시선 */
-.anom-watcher.aw-look-down .aw-eye {
-  transform: translate(0, 4px) !important;
-  transition: transform 0.5s ease !important;
-  opacity: 0.55;
-}
-.anom-watcher.aw-look-down .aw-head {
-  transform: rotate(2deg) translateY(5px);
-  transition: transform 0.55s ease;
-}
-
-/* 흘낏 (짧게 왼쪽) */
-.anom-watcher.aw-glance .aw-eye {
-  transform: translate(-4px, -0.5px) !important;
-  transition: transform 0.28s ease !important;
-}
-.anom-watcher.aw-glance .aw-head {
-  transform: rotate(-4deg);
-  transition: transform 0.3s ease;
-}
-/* 콘텐츠 카드보다 뒤에 보이도록 메인 래퍼 보정 */
 .stasis-main,
 .wrap,
 .stasis-nav,
@@ -3697,15 +3628,39 @@ body:not(.stage-clean) .anom-watcher .aw-body {
   position: relative;
   z-index: 3;
 }
-body.stage-dread .anom-watcher.is-on,
-body.stage-corrupt .anom-watcher.is-on {
-  /* 부패 화면에선 살짝만 더 */
-  opacity: 0.32;
-}
 @media (prefers-reduced-motion: reduce) {
   .anom-watcher {
     display: none !important;
   }
+}
+
+/* 메인 페이지 까만 얼굴 장식 완전 숨김 */
+.face-row,
+.void-face,
+.haunt-faces,
+.haunt-face {
+  display: none !important;
+}
+
+/* 클라이맥스 p3: 얼굴 대신 시선 압박 비네팅 */
+.haunt.climax-p3-gaze::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 50% 45% at 50% 45%,
+    transparent 0%,
+    transparent 35%,
+    rgba(0, 0, 0, 0.55) 70%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+  animation: climaxGaze 2.8s ease-in-out infinite alternate;
+}
+@keyframes climaxGaze {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
 }
 
 /* 글자에서 피 흐름(느림) → 보이지 않는 손이 닦음 · 전체 ~15s */
