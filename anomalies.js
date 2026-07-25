@@ -1258,28 +1258,265 @@
         }, 3500);
       },
     },
+    {
+      id: "rising_hands",
+      run: function () {
+        runRisingHands();
+      },
+    },
+    {
+      id: "card_faces",
+      run: function () {
+        runCardFaces();
+      },
+    },
+    {
+      id: "card_claws",
+      run: function () {
+        runCardClaws();
+      },
+    },
   ];
+
+  /**
+   * 참조 이미지: 아래에서 올라오는 어두운 손/팔
+   * 2페이즈 전용 · 가끔 · 화면 하단에서 올라왔다가 가라앉음
+   */
+  function runRisingHands(opts) {
+    opts = opts || {};
+    if (busy() || !phase2Active()) return false;
+    if (document.getElementById("anomRisingHands")) return false;
+
+    var layer = document.createElement("div");
+    layer.id = "anomRisingHands";
+    layer.className = "anom-rising-hands";
+    layer.setAttribute("aria-hidden", "true");
+
+    var count = mobile ? 2 : 3 + Math.floor(rng() * 2); // 3~4
+    var html = "";
+    for (var i = 0; i < count; i++) {
+      var side = i % 2 === 0 ? "left" : "right";
+      if (i >= 2) side = rng() > 0.5 ? "left" : "right";
+      var x =
+        side === "left"
+          ? 0 + rng() * 32
+          : 52 + rng() * 36;
+      var scale = 0.95 + rng() * 0.55;
+      var delay = (i * 0.18 + rng() * 0.25).toFixed(2);
+      var rot = (side === "left" ? -18 - rng() * 22 : 18 + rng() * 22).toFixed(1);
+      var variant = 1 + Math.floor(rng() * 3);
+      html +=
+        '<div class="arh-hand v' +
+        variant +
+        " side-" +
+        side +
+        '" style="--arh-x:' +
+        x.toFixed(1) +
+        "%;--arh-scale:" +
+        scale.toFixed(2) +
+        ";--arh-delay:" +
+        delay +
+        "s;--arh-rot:" +
+        rot +
+        'deg">' +
+        '<div class="arh-palm"></div>' +
+        '<div class="arh-finger f1"></div>' +
+        '<div class="arh-finger f2"></div>' +
+        '<div class="arh-finger f3"></div>' +
+        '<div class="arh-finger f4"></div>' +
+        '<div class="arh-finger f5"></div>' +
+        '<div class="arh-haze"></div>' +
+        "</div>";
+    }
+    // 하단 안개/핏빛 그라데이션
+    html += '<div class="arh-fog"></div>';
+    layer.innerHTML = html;
+    document.body.appendChild(layer);
+    void layer.offsetWidth;
+    layer.classList.add("is-on");
+
+    try {
+      var au = audio();
+      if (au && au.whisper) au.whisper();
+      else if (au && au.breath) au.breath();
+    } catch (e) {}
+
+    var hold = opts.ms != null ? opts.ms : 2400 + rng() * 2200;
+    setTimeout(function () {
+      if (!layer.parentNode) return;
+      layer.classList.remove("is-on");
+      layer.classList.add("is-out");
+      setTimeout(function () {
+        if (layer.parentNode) layer.parentNode.removeChild(layer);
+      }, 1400);
+    }, hold);
+    maybeFlashAfter(0.03);
+    return true;
+  }
+
+  /**
+   * 참조 이미지: 카드/대시보드에 유령 얼굴 깜빡임
+   * 나타났다가 사라짐 · 고정 장식 아님
+   */
+  function runCardFaces(opts) {
+    opts = opts || {};
+    if (busy() || !phase2Active()) return false;
+
+    var hosts = Array.prototype.slice.call(
+      document.querySelectorAll(
+        ".stasis-card-light, .stasis-card-dark, .stasis-monitor-card, .card-horror, .monitor-frame, .plan-card"
+      )
+    );
+    if (!hosts.length) return false;
+
+    // 카드/모니터 우선 (플랜 버튼보다 읽기 쉬운 면)
+    var preferred = hosts.filter(function (h) {
+      return (
+        h.classList.contains("stasis-card-light") ||
+        h.classList.contains("stasis-card-dark") ||
+        h.classList.contains("stasis-monitor-card") ||
+        h.classList.contains("monitor-frame") ||
+        h.classList.contains("card-horror")
+      );
+    });
+    if (preferred.length) hosts = preferred;
+
+    // 1~3장에 얼굴
+    var n = mobile ? 1 : 1 + Math.floor(rng() * 2);
+    var picks = pickN(hosts, Math.min(n, hosts.length));
+    var made = 0;
+
+    picks.forEach(function (host, idx) {
+      if (!host || host.querySelector(".anom-card-face")) return;
+      var cs = window.getComputedStyle(host);
+      if (cs.position === "static") host.style.position = "relative";
+      host.classList.add("anom-card-has-face");
+
+      var face = document.createElement("div");
+      face.className = "anom-card-face";
+      face.setAttribute("aria-hidden", "true");
+      // 위치·변형 랜덤 — 카드 중앙~우측 쪽 가중
+      var left = 25 + rng() * 55;
+      var top = 20 + rng() * 50;
+      var scale = 0.95 + rng() * 0.55;
+      var kind = 1 + Math.floor(rng() * 4); // 4 변형
+      face.classList.add("kind-" + kind);
+      face.style.setProperty("--acf-x", left.toFixed(1) + "%");
+      face.style.setProperty("--acf-y", top.toFixed(1) + "%");
+      face.style.setProperty("--acf-scale", scale.toFixed(2));
+      face.style.setProperty("--acf-delay", (idx * 0.08 + rng() * 0.12).toFixed(2) + "s");
+      face.innerHTML =
+        '<span class="acf-skin"></span>' +
+        '<span class="acf-eye l"></span><span class="acf-eye r"></span>' +
+        '<span class="acf-mouth"></span>' +
+        '<span class="acf-noise"></span>';
+      host.appendChild(face);
+      made++;
+
+      var life = opts.ms != null ? opts.ms : 1400 + rng() * 1800;
+      setTimeout(function () {
+        face.classList.add("is-on");
+      }, 20 + idx * 80);
+      // 중간에 한 번 깜빡
+      if (rng() > 0.35) {
+        setTimeout(function () {
+          if (!face.parentNode) return;
+          face.classList.add("is-blink");
+          setTimeout(function () {
+            face.classList.remove("is-blink");
+          }, 80 + rng() * 60);
+        }, life * 0.4);
+      }
+      setTimeout(function () {
+        face.classList.remove("is-on");
+        face.classList.add("is-out");
+        setTimeout(function () {
+          if (face.parentNode) face.parentNode.removeChild(face);
+          if (!host.querySelector(".anom-card-face")) {
+            host.classList.remove("anom-card-has-face");
+          }
+        }, 500);
+      }, life);
+    });
+
+    if (made) {
+      try {
+        var au = audio();
+        if (au && au.staticBurst) au.staticBurst(90);
+        else if (au && au.whisper) au.whisper();
+      } catch (e) {}
+      maybeFlashAfter(0.04);
+    }
+    return made > 0;
+  }
+
+  /**
+   * Features 카드 등에 할퀴 자국 + 붉은 눈점 (참조 Features 카드)
+   */
+  function runCardClaws(opts) {
+    opts = opts || {};
+    if (busy() || !phase2Active()) return false;
+    var host =
+      document.querySelector(".stasis-card-light") ||
+      document.querySelector(".card-horror") ||
+      document.querySelector(".stasis-cards article");
+    if (!host) return false;
+    if (host.querySelector(".anom-card-claws")) return false;
+
+    var cs = window.getComputedStyle(host);
+    if (cs.position === "static") host.style.position = "relative";
+
+    var claws = document.createElement("div");
+    claws.className = "anom-card-claws";
+    claws.setAttribute("aria-hidden", "true");
+    claws.innerHTML =
+      '<span class="acc-slash s1"></span>' +
+      '<span class="acc-slash s2"></span>' +
+      '<span class="acc-slash s3"></span>' +
+      '<span class="acc-eye"></span>';
+    host.appendChild(claws);
+    void claws.offsetWidth;
+    claws.classList.add("is-on");
+
+    try {
+      var au = audio();
+      if (au && au.hddScratch) au.hddScratch();
+    } catch (e) {}
+
+    var life = opts.ms != null ? opts.ms : 1800 + rng() * 2200;
+    setTimeout(function () {
+      claws.classList.remove("is-on");
+      claws.classList.add("is-out");
+      setTimeout(function () {
+        if (claws.parentNode) claws.parentNode.removeChild(claws);
+      }, 700);
+    }, life);
+    return true;
+  }
 
   // 방문마다 더 많이 뽑음 (강도↑)
   var POOL_SIZE = 16 + Math.floor(rng() * 8); // 16~23
   if (POOL_SIZE > ALL.length) POOL_SIZE = ALL.length;
   var pool = pickN(ALL, POOL_SIZE);
 
-  // 글자 피 흘림은 2페이즈 필수 연출 — 풀에 항상 포함
-  (function ensureBloodInPool() {
-    var has = false;
-    for (var i = 0; i < pool.length; i++) {
-      if (pool[i].id === "text_blood_wipe") {
-        has = true;
-        break;
+  // 글자 피 흘림 + 손/얼굴(참조 이미지) — 2페이즈 필수 풀 포함
+  (function ensureCoreAnomsInPool() {
+    var need = ["text_blood_wipe", "rising_hands", "card_faces", "card_claws"];
+    need.forEach(function (id) {
+      var has = false;
+      for (var i = 0; i < pool.length; i++) {
+        if (pool[i].id === id) {
+          has = true;
+          break;
+        }
       }
-    }
-    if (!has) {
-      var blood = ALL.filter(function (a) {
-        return a.id === "text_blood_wipe";
-      })[0];
-      if (blood) pool.push(blood);
-    }
+      if (!has) {
+        var found = ALL.filter(function (a) {
+          return a.id === id;
+        })[0];
+        if (found) pool.push(found);
+      }
+    });
   })();
 
   try {
@@ -1304,7 +1541,14 @@
       else if (id === "wake_flash") a.sting && a.sting("neon");
       else if (id === "screen_shake" || id === "sub_bass_rumble") a.rumble && a.rumble(0.9);
       else if (id === "static_burst" || id === "vignette_crush") a.staticBurst && a.staticBurst(160);
-      else if (id === "watcher_behind" || id === "avatar_hollow") a.whisper && a.whisper();
+      else if (
+        id === "watcher_behind" ||
+        id === "avatar_hollow" ||
+        id === "rising_hands" ||
+        id === "card_faces"
+      )
+        a.whisper && a.whisper();
+      else if (id === "card_claws") a.hddScratch && a.hddScratch();
       else if (id === "text_blood_wipe" || id === "blood_pulse") {
         a.pulse && a.pulse("mid");
         setTimeout(function () {
@@ -1470,6 +1714,79 @@
       setTimeout(watchLoop, watcherGap);
     }, watcherGap);
 
+    // 아래에서 손 올라옴 — 참조 이미지 톤, 가끔 (첫 ~10~18s)
+    setTimeout(function handsLoop() {
+      if (!phase2Active()) {
+        setTimeout(handsLoop, 3000);
+        return;
+      }
+      if (!document.body.classList.contains("diary-open") && !busy()) {
+        var d =
+          typeof window.__hauntP2Decay === "function"
+            ? window.__hauntP2Decay()
+            : 0;
+        var chance = 0.42 + Math.min(0.4, d * 0.08);
+        if (rng() < chance) {
+          try {
+            runRisingHands();
+          } catch (e) {}
+        }
+      }
+      var d2 =
+        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
+      var gap = Math.max(14000, 26000 + rng() * 28000 - d2 * 2800);
+      setTimeout(handsLoop, gap);
+    }, 10000 + rng() * 8000);
+
+    // 카드 얼굴 깜빡임 — 첫 ~8~14s, 이후 가끔
+    setTimeout(function facesLoop() {
+      if (!phase2Active()) {
+        setTimeout(facesLoop, 3000);
+        return;
+      }
+      if (!document.body.classList.contains("diary-open") && !busy()) {
+        var d =
+          typeof window.__hauntP2Decay === "function"
+            ? window.__hauntP2Decay()
+            : 0;
+        var chance = 0.48 + Math.min(0.35, d * 0.07);
+        if (rng() < chance) {
+          try {
+            runCardFaces();
+          } catch (e) {}
+        }
+        // 할퀴 자국은 얼굴보다 덜 자주
+        if (rng() < 0.28 + d * 0.05) {
+          try {
+            runCardClaws();
+          } catch (e) {}
+        }
+      }
+      var d2 =
+        typeof window.__hauntP2Decay === "function" ? window.__hauntP2Decay() : 0;
+      var gap = Math.max(11000, 18000 + rng() * 22000 - d2 * 2200);
+      setTimeout(facesLoop, gap);
+    }, 8000 + rng() * 6000);
+
+    // decay 3/5 때 손·얼굴 한 번 더 강제
+    document.addEventListener("haunt-p2-decay", function (ev) {
+      var lv = ev && ev.detail && ev.detail.level;
+      if (lv === 3 || lv === 5) {
+        setTimeout(function () {
+          if (phase2Active() && !busy() && !document.body.classList.contains("diary-open")) {
+            try {
+              runRisingHands();
+            } catch (e) {}
+            setTimeout(function () {
+              try {
+                runCardFaces();
+              } catch (e2) {}
+            }, 400);
+          }
+        }, 500);
+      }
+    });
+
     // 저주파 앰비언트 간헐 — 2페이즈 only
     setInterval(function () {
       if (!phase2Active()) return;
@@ -1556,6 +1873,9 @@
     bloodText: function () {
       return runTextBlood({ preferHero: true });
     },
+    risingHands: runRisingHands,
+    cardFaces: runCardFaces,
+    cardClaws: runCardClaws,
     phase2Active: phase2Active,
     all: ALL.map(function (a) {
       return a.id;
