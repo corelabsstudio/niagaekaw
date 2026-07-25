@@ -108,6 +108,8 @@
   }
 
   function flashWake(mode) {
+    var a = audio();
+    if (a && a.sting) a.sting(mode === "neon" ? "neon" : "blood");
     if (window.__hauntAnomalies && typeof window.__hauntAnomalies.flash === "function") {
       window.__hauntAnomalies.flash({ force: true, mode: mode || "blood", ms: 40 + Math.random() * 30 });
       return;
@@ -215,8 +217,10 @@
     var a = audio();
     if (a) {
       if (a.unlock) a.unlock();
-      if (a.rumble) a.rumble(1.4);
+      if (a.staticBurst) a.staticBurst(280);
+      if (a.rumble) a.rumble(1.8);
       if (a.hddScratch) a.hddScratch();
+      if (a.termBeep) a.termBeep(140);
     }
     document.title = "SIGNAL INTERRUPT";
     // 주소창도 단계 연출
@@ -224,7 +228,7 @@
       var ut = document.getElementById("fakeUrlText");
       if (ut) ut.textContent = "about:signal-interrupt";
     } catch (e) {}
-    later(reduced ? 1400 : 3200, next);
+    later(reduced ? 1600 : 3600, next);
   }
 
   function runPhase2(next) {
@@ -241,7 +245,7 @@
       if (phase !== 2) return;
       if (a && a.typeClick) a.typeClick("soft");
     });
-    later(reduced ? 2000 : 4800, next);
+    later(reduced ? 2200 : 5200, next);
   }
 
   function runPhase3(next) {

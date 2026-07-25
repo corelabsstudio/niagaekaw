@@ -175,6 +175,13 @@
     setTimeout(function () {
       el.classList.remove("is-on");
     }, ms);
+    // 섬광 = 청각 스팅
+    try {
+      var au = audio();
+      if (au && au.sting && !opts.silent) {
+        au.sting(mode === "neon" ? "neon" : "blood");
+      }
+    } catch (e) {}
 
     lastFlashAt = Date.now();
     flashCount++;
@@ -1272,6 +1279,32 @@
   } catch (e) {}
 
   var lastId = "";
+
+  /** 이상현상별 공포 효과음 (있으면) */
+  function sfxFor(id) {
+    var a = audio();
+    if (!a) return;
+    try {
+      if (id === "red_flash" || id === "invert_blink") a.sting && a.sting("blood");
+      else if (id === "wake_flash") a.sting && a.sting("neon");
+      else if (id === "screen_shake" || id === "sub_bass_rumble") a.rumble && a.rumble(0.9);
+      else if (id === "static_burst" || id === "vignette_crush") a.staticBurst && a.staticBurst(160);
+      else if (id === "watcher_behind" || id === "avatar_hollow") a.whisper && a.whisper();
+      else if (id === "text_blood_wipe" || id === "blood_pulse") {
+        a.pulse && a.pulse("mid");
+        setTimeout(function () {
+          a.hddScratch && a.hddScratch();
+        }, 200);
+      }
+      else if (id === "hdd_scratch") a.hddScratch && a.hddScratch();
+      else if (id === "ghost_banner" || id === "creep_toast") a.termBeep && a.termBeep(320);
+      else if (id === "dead_gray_wash") a.breath && a.breath();
+      else if (id === "path_scream" || id === "tab_title_panic") a.metal && a.metal();
+      else if (id === "refresh_deepens") a.signalDrop && a.signalDrop();
+      else if (rng() > 0.65) a.pulse && a.pulse("soft");
+    } catch (e) {}
+  }
+
   function fireRandom() {
     if (busy()) return;
     if (!phase2Active()) return;
@@ -1283,6 +1316,7 @@
     lastId = a.id;
     try {
       a.run();
+      sfxFor(a.id);
     } catch (e) {}
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[anomaly]", a.id, "stage", stage(), "mood", mood());

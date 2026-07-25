@@ -479,6 +479,17 @@
     document.body.style.filter = "";
     document.body.style.touchAction = "none";
 
+    // 클라이맥스 진입 공포 타격
+    try {
+      var au = window.__hauntAudio;
+      if (au) {
+        if (au.unlock) au.unlock();
+        if (au.dreadHit) au.dreadHit();
+        else if (au.rumble) au.rumble(1.8);
+        if (au.setLevel) au.setLevel(3);
+      }
+    } catch (e) {}
+
     if (haunt) {
       haunt.hidden = false;
       haunt.setAttribute("aria-hidden", "false");

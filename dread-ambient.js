@@ -141,6 +141,10 @@
     }, 5000);
   }
 
+  function audio() {
+    return window.__hauntAudio || null;
+  }
+
   setInterval(function () {
     if (document.body.classList.contains("is-haunting")) return;
     if (document.body.classList.contains("is-ending")) return;
@@ -148,6 +152,8 @@
     if (!stageOk(2)) return;
     if (Math.random() > 0.12) return;
     document.body.classList.add("page-tick");
+    var a = audio();
+    if (a && a.staticBurst) a.staticBurst(70);
     setTimeout(function () {
       document.body.classList.remove("page-tick");
     }, 60 + Math.random() * 80);
@@ -161,4 +167,42 @@
       else el.classList.remove("glitch-burst");
     });
   }, 900);
+
+  // stage3: 간헐적 속삭임·숨소리 (침묵 사이 공포)
+  setInterval(function () {
+    if (document.body.classList.contains("is-haunting")) return;
+    if (document.body.classList.contains("is-ending")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    if (!stageOk(3)) return;
+    if (Math.random() > 0.28) return;
+    var a = audio();
+    if (!a) return;
+    if (Math.random() > 0.5 && a.whisper) a.whisper();
+    else if (a.breath) a.breath();
+  }, 11000);
+
+  // stage3: 아주 가끔 블랙아웃 플래시
+  setInterval(function () {
+    if (document.body.classList.contains("is-haunting")) return;
+    if (document.body.classList.contains("is-ending")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    if (!stageOk(3)) return;
+    if (Math.random() > 0.08) return;
+    document.body.classList.add("horror-blackout");
+    var a = audio();
+    if (a && a.sting) a.sting("soft");
+    setTimeout(function () {
+      document.body.classList.remove("horror-blackout");
+    }, 70 + Math.random() * 90);
+  }, 16000);
+
+  // stage3: 화면 가장자리 맥박
+  setInterval(function () {
+    if (!stageOk(3) || document.body.classList.contains("is-haunting")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    document.body.classList.add("horror-pulse-edge");
+    setTimeout(function () {
+      document.body.classList.remove("horror-pulse-edge");
+    }, 600);
+  }, 8000);
 })();

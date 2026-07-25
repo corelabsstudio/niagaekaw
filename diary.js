@@ -432,6 +432,8 @@
     if (audio()) {
       try {
         audio().unlock();
+        if (audio().breath && page === 0) audio().breath();
+        else if (audio().pulse) audio().pulse(page >= 2 ? "heavy" : page === 1 ? "mid" : "soft");
       } catch (e) {}
     }
     showPage(page);

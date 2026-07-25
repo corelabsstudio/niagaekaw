@@ -20,10 +20,17 @@
   var played = false;
   var active = false;
 
+  function audio() {
+    return window.__hauntAudio || null;
+  }
+
   function stopAudioSoft() {
     try {
-      if (window.__hauntAudio && window.__hauntAudio.setLevel) {
-        window.__hauntAudio.setLevel(0);
+      var a = audio();
+      if (a) {
+        if (a.signalDrop) a.signalDrop();
+        if (a.stopAll) setTimeout(function () { a.stopAll(); }, 400);
+        else if (a.setLevel) a.setLevel(0);
       }
     } catch (e) {}
   }
@@ -48,8 +55,12 @@
         return;
       }
       el.textContent += text.charAt(i);
+      var a = audio();
+      if (a && a.typeClick) {
+        a.typeClick(text.charAt(i) === "." ? "enter" : text.charAt(i) === " " ? "space" : "soft");
+      }
       i++;
-      var extra = text.charAt(i - 1) === "." ? 180 : 0;
+      var extra = text.charAt(i - 1) === "." ? 220 : 0;
       setTimeout(step, base + (Math.random() * 40 - 10) + extra);
     }
     step();
@@ -101,17 +112,21 @@
       if (tab) tab.textContent = "no signal";
     } catch (e) {}
 
-    var silenceMs = opts.skipSilence ? 200 : reduced ? 900 : 2200 + Math.random() * 800;
+    // 정적 구간을 조금 더 길게 — 침묵 공포
+    var silenceMs = opts.skipSilence ? 200 : reduced ? 1100 : 3200 + Math.random() * 1200;
 
     setTimeout(function () {
       if (!active) return;
       root.classList.remove("phase-silence");
       root.classList.add("phase-text");
+      var a = audio();
+      if (a && a.termBeep) a.termBeep(180);
 
-      typeLine(line1, "wakeagain...", 11, function () {
+      typeLine(line1, "wakeagain...", 9, function () {
         setTimeout(function () {
           if (!active) return;
-          typeLine(line2, "no signal...", 10, function () {
+          if (a && a.staticBurst) a.staticBurst(120);
+          typeLine(line2, "no signal...", 8, function () {
             if (line2) {
               var cur = document.createElement("span");
               cur.className = "ending-cursor";
@@ -123,7 +138,7 @@
             } catch (e) {}
             document.dispatchEvent(new CustomEvent("haunt-ending"));
           });
-        }, reduced ? 200 : 700);
+        }, reduced ? 280 : 900);
       });
     }, silenceMs);
   }
