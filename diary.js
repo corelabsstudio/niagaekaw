@@ -349,6 +349,28 @@
     setBoost();
   }
 
+  /** body 에 걸린 filter/transform 이상현상 — fixed 일기 패널 붕괴 원인 */
+  var BODY_LAYOUT_HAZARDS = [
+    "anom-red-flash",
+    "anom-shake",
+    "anom-invert",
+    "anom-gray",
+    "anom-skew",
+    "anom-zoom",
+    "anom-dead-gray",
+    "anom-refresh-deep",
+    "page-tick",
+  ];
+
+  function clearBodyLayoutHazards() {
+    var b = document.body;
+    for (var i = 0; i < BODY_LAYOUT_HAZARDS.length; i++) {
+      b.classList.remove(BODY_LAYOUT_HAZARDS[i]);
+    }
+    b.style.filter = "";
+    b.style.transform = "";
+  }
+
   function openDiary() {
     if (!panel) return;
     discovered = true;
@@ -359,9 +381,24 @@
       } catch (e) {}
     }
     reading = true;
+    // 열기 직전: body layout 위험 클래스 제거 (filter/transform → fixed 깨짐)
+    clearBodyLayoutHazards();
     panel.hidden = false;
     panel.setAttribute("aria-hidden", "false");
     document.body.classList.add("diary-open");
+    if (panel.style) {
+      panel.style.display = "";
+      panel.style.position = "fixed";
+      panel.style.inset = "0";
+      panel.style.zIndex = "200";
+      panel.style.filter = "none";
+      panel.style.transform = "none";
+    }
+    if (sheet) {
+      sheet.style.opacity = "1";
+      sheet.style.filter = "none";
+      sheet.style.transform = "";
+    }
     if (audio()) {
       try {
         audio().unlock();
@@ -390,6 +427,9 @@
   }
 
   function unlockNext() {
+    // 페이지 전환 시 mood-dim 등 body 스타일 바뀌어도 fixed 유지
+    clearBodyLayoutHazards();
+    document.body.classList.add("diary-open");
     // 오디오 실패해도 페이지 넘김은 반드시 진행
     try {
       if (audio()) {
@@ -408,10 +448,16 @@
     if (sheet) {
       sheet.style.transform = "";
       sheet.style.opacity = "1";
+      sheet.style.filter = "none";
     }
     if (panel) {
       panel.hidden = false;
       panel.style.display = "";
+      panel.style.position = "fixed";
+      panel.style.inset = "0";
+      panel.style.zIndex = "200";
+      panel.style.filter = "none";
+      panel.style.transform = "none";
     }
   }
 

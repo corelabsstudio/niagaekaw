@@ -1249,8 +1249,17 @@ body.diary-typing .diary-sheet.is-terminal {
   font-family: var(--mono);
 }
 
+/*
+ * CRITICAL: body 에 filter/transform/animation 이 있으면
+ * 자손 position:fixed 일기 패널이 화면 기준을 잃고 깨짐
+ * (다음 페이지 눌러도 3개월→1개월이 안 넘어간 것처럼 보임).
+ * 패널 자체 filter:none 으로는 조상 containing-block 을 못 푼다.
+ */
 body.diary-open {
   overflow: hidden;
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
 }
 body.diary-found.stage-clean .stasis-badge {
   /* 미세 균열 */
@@ -1883,7 +1892,7 @@ body.stage-dread #floatWords {
   100% { opacity: 0; transform: translateY(-24px); }
 }
 
-body.page-tick {
+body.page-tick:not(.diary-open) {
   filter: contrast(1.25) brightness(1.1) hue-rotate(12deg);
 }
 body.page-tick #staticLayer {
@@ -2595,12 +2604,13 @@ body.is-haunting {
 }
 body.is-haunting #scanlines { opacity: 0.65; }
 
-/* ===== 랜덤 이상현상 클래스 ===== */
-body.anom-red-flash {
+/* ===== 랜덤 이상현상 클래스 =====
+   body filter/transform 은 diary-open 중 금지 (:not) — fixed UI 붕괴 방지 */
+body.anom-red-flash:not(.diary-open) {
   background-color: #4a0010 !important;
   filter: brightness(1.35) saturate(1.5);
 }
-body.anom-shake {
+body.anom-shake:not(.diary-open) {
   animation: anomShake 0.08s linear infinite;
 }
 @keyframes anomShake {
@@ -2610,17 +2620,17 @@ body.anom-shake {
   75% { transform: translate(-2px, -1px); }
   100% { transform: translate(0, 0); }
 }
-body.anom-invert {
+body.anom-invert:not(.diary-open) {
   filter: invert(1) hue-rotate(180deg);
 }
-body.anom-gray {
+body.anom-gray:not(.diary-open) {
   filter: grayscale(1) contrast(1.15);
 }
-body.anom-skew {
+body.anom-skew:not(.diary-open) {
   transform: skewX(-2.5deg) scaleY(1.02);
   transform-origin: center top;
 }
-body.anom-zoom {
+body.anom-zoom:not(.diary-open) {
   transform: scale(1.04);
   transform-origin: 50% 40%;
 }
@@ -3419,7 +3429,7 @@ body.anom-header-bleed .top > * {
   z-index: 1;
 }
 
-body.anom-dead-gray {
+body.anom-dead-gray:not(.diary-open) {
   filter: grayscale(0.55) brightness(0.88) contrast(1.05) !important;
   background: #9a9490 !important;
 }
@@ -3620,7 +3630,7 @@ body.anom-clip-flash {
   outline: 2px solid rgba(255, 40, 60, 0.5);
   outline-offset: -2px;
 }
-body.anom-refresh-deep {
+body.anom-refresh-deep:not(.diary-open) {
   animation: refreshDeep 0.9s ease;
 }
 @keyframes refreshDeep {
@@ -3628,6 +3638,13 @@ body.anom-refresh-deep {
   30% { filter: brightness(0.3) contrast(1.4) hue-rotate(-20deg); }
   60% { filter: brightness(0.6) saturate(1.5); }
   100% { filter: none; }
+}
+
+/* 파일 후반 규칙이 body.diary-open 을 덮어쓰지 못하게 최종 고정 */
+body.diary-open {
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
 }
 body.anom-refresh-hint::after {
   content: "F5 ≠ escape";

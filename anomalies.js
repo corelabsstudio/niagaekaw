@@ -81,7 +81,9 @@
   function busy() {
     return (
       document.body.classList.contains("is-haunting") ||
-      document.body.classList.contains("is-ending")
+      document.body.classList.contains("is-ending") ||
+      /* 일기 읽는 중 body filter/transform 이상현상 → fixed 패널 붕괴 방지 */
+      document.body.classList.contains("diary-open")
     );
   }
 
