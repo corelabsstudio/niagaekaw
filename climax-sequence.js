@@ -111,7 +111,13 @@
     var a = audio();
     if (a && a.sting) a.sting(mode === "neon" ? "neon" : "blood");
     if (window.__hauntAnomalies && typeof window.__hauntAnomalies.flash === "function") {
-      window.__hauntAnomalies.flash({ force: true, mode: mode || "blood", ms: 40 + Math.random() * 30 });
+      // silent: 스팅은 위에서 1회만
+      window.__hauntAnomalies.flash({
+        force: true,
+        mode: mode || "blood",
+        ms: 40 + Math.random() * 30,
+        silent: true,
+      });
       return;
     }
     // fallback
