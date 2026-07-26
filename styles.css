@@ -1016,7 +1016,7 @@ body[data-find-path="fakeurl"] .fake-chrome-url.find-active {
   color: #fff;
 }
 
-/* 제작자 패스 배지 */
+/* 제작자/관리자 패스 배지 */
 .creator-pass {
   position: fixed;
   top: calc(var(--fake-chrome-h, 42px) + 0.35rem);
@@ -1050,7 +1050,9 @@ body[data-find-path="fakeurl"] .fake-chrome-url.find-active {
   padding: 0.05rem 0.25rem;
   border-radius: 3px;
 }
-.creator-pass .p3-go {
+.creator-pass .p3-go,
+.creator-pass .p3-enter,
+.creator-pass .p3-fire {
   appearance: none;
   margin-top: 0.35rem;
   border: 0;
@@ -1064,7 +1066,9 @@ body[data-find-path="fakeurl"] .fake-chrome-url.find-active {
   cursor: pointer;
   width: 100%;
 }
-.creator-pass .p3-go:hover {
+.creator-pass .p3-go:hover,
+.creator-pass .p3-enter:hover,
+.creator-pass .p3-fire:hover {
   background: #3a2010;
 }
 body:not(.stage-clean) .creator-pass {
@@ -1078,9 +1082,111 @@ body:not(.stage-clean) .creator-pass strong {
 body:not(.stage-clean) .creator-pass code {
   background: rgba(255, 255, 255, 0.08);
 }
-body:not(.stage-clean) .creator-pass .p3-go {
+body:not(.stage-clean) .creator-pass .p3-go,
+body:not(.stage-clean) .creator-pass .p3-enter,
+body:not(.stage-clean) .creator-pass .p3-fire {
   background: #5a1020;
   color: #ffd0d8;
+}
+
+/* 통합 관리자 패널 */
+.admin-pass-panel {
+  top: calc(var(--fake-chrome-h, 42px) + 0.4rem) !important;
+  right: 0.5rem !important;
+  z-index: 10050 !important;
+  width: min(260px, 78vw);
+  max-width: min(260px, 78vw);
+  padding: 0.5rem 0.55rem 0.55rem !important;
+  pointer-events: auto;
+  user-select: none;
+}
+.admin-pass-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+.admin-pass-head strong {
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+}
+.admin-pass-min {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+}
+.admin-pass-meta {
+  margin: 0 0 0.4rem;
+  font-size: 0.62rem;
+  opacity: 0.75;
+  word-break: break-all;
+}
+.admin-pass-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.admin-pass-actions button {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+.admin-pass-actions button:hover {
+  filter: brightness(1.08);
+}
+.admin-pass-actions button.is-primary {
+  background: #2a1018;
+  color: #ffd0d8;
+  border-color: rgba(255, 80, 100, 0.35);
+}
+.admin-pass-actions button.is-danger {
+  background: #6a1020;
+  color: #ffe0e6;
+  border-color: rgba(255, 60, 80, 0.5);
+  font-weight: 700;
+}
+body.stage-clean .admin-pass-actions button.is-primary {
+  background: #1a1410;
+  color: #f7f1e8;
+}
+body.stage-clean .admin-pass-actions button.is-danger {
+  background: #5a2010;
+  color: #fff0e8;
+}
+.admin-pass-tip {
+  margin: 0.4rem 0 0;
+  font-size: 0.58rem;
+  opacity: 0.55;
+  line-height: 1.3;
+}
+.admin-pass-panel.is-min .admin-pass-meta,
+.admin-pass-panel.is-min .admin-pass-actions,
+.admin-pass-panel.is-min .admin-pass-tip {
+  display: none;
+}
+.admin-pass-panel.is-min {
+  width: auto;
+  max-width: none;
+}
+body.is-ending .admin-pass-panel {
+  display: none !important;
 }
 .plan-btn.climax-holding,
 .find-holding {

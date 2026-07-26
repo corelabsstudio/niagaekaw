@@ -1293,11 +1293,12 @@
     }
   }, 3000);
 
-  // 제작자 프리패스
+  // 제작자 프리패스 — UI는 admin-pass.js 통합 패널 사용
   function isCreator() {
     try {
-      if (/[?&](debug|creator|summon)=1/.test(location.search || "")) return true;
+      if (/[?&](debug|creator|summon|admin)=1/.test(location.search || "")) return true;
       if (localStorage.getItem("haunt_creator") === "1") return true;
+      if (localStorage.getItem("haunt_admin") === "1") return true;
     } catch (e) {}
     return false;
   }
@@ -1306,49 +1307,14 @@
 
   if (window.__hauntCreatorPass) {
     try {
-      if (/[?&]creator=1/.test(location.search || "")) {
+      if (/[?&](creator|admin)=1/.test(location.search || "")) {
         localStorage.setItem("haunt_creator", "1");
+        localStorage.setItem("haunt_admin", "1");
       }
     } catch (e) {}
-
-    var badge = document.createElement("div");
-    badge.className = "creator-pass creator-p3";
-    badge.innerHTML =
-      "<strong>P2→P3</strong> gate: <code>" +
-      active.id +
-      "</code><br/>" +
-      "<button type='button' class='p3-enter'>▶ 3페이즈</button> " +
-      "<button type='button' class='p3-go'>▶ 클라이맥스</button>";
-    badge.title = "제작자 프리패스";
-    document.body.appendChild(badge);
-    var enterBtn = badge.querySelector(".p3-enter");
-    var go = badge.querySelector(".p3-go");
-    if (enterBtn) {
-      enterBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        window.__hauntCreatorPass = true;
-        window.__hauntDiaryDiscovered = true;
-        if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
-        if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
-        fired = true;
-        hideP2Hint(true);
-        enterPhase3();
-      });
-    }
-    if (go) {
-      go.addEventListener("click", function (e) {
-        e.stopPropagation();
-        window.__hauntCreatorPass = true;
-        if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
-        if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
-        window.__hauntDiaryDiscovered = true;
-        if (!window.__hauntPhase3Active) enterPhase3();
-        summon();
-      });
-    }
   }
 
-  // Shift+Alt+3 = freepass climax (skip)
+  // Shift+Alt+3 = freepass climax (admin-pass 와 동일)
   document.addEventListener("keydown", function (e) {
     if (e.shiftKey && e.altKey && (e.key === "3" || e.code === "Digit3")) {
       e.preventDefault();

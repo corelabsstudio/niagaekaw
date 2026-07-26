@@ -899,33 +899,14 @@
     }
   }, 1500);
 
-  // 제작자 표시
+  // 제작자 표시 — 배지는 admin-pass.js 통합. 여기서는 fire API 만 유지
   function isCreator() {
     try {
-      if (/[?&](debug|creator|summon)=1/.test(location.search || "")) return true;
+      if (/[?&](debug|creator|summon|admin)=1/.test(location.search || "")) return true;
       if (localStorage.getItem("haunt_creator") === "1") return true;
+      if (localStorage.getItem("haunt_admin") === "1") return true;
     } catch (e) {}
     return false;
-  }
-
-  if (isCreator()) {
-    var badge = document.createElement("div");
-    badge.className = "creator-pass creator-p3-climax";
-    badge.innerHTML =
-      "<strong>P3→CLIMAX</strong> <code>" +
-      active.id +
-      "</code><br/><button type='button' class='p3-fire'>▶ 이 트리거 발동</button>";
-    document.body.appendChild(badge);
-    var fireBtn = badge.querySelector(".p3-fire");
-    if (fireBtn) {
-      fireBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        window.__hauntPhase3Active = true;
-        document.body.classList.add("phase-3-active");
-        fired = false;
-        onDone();
-      });
-    }
   }
 
   if (/[?&]p3fire=1/.test(location.search || "")) {

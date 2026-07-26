@@ -1586,24 +1586,26 @@
         openDiary();
       }, 300);
     }
-    if (/[?&]debug=1/.test(location.search || "") || localStorage.getItem("haunt_creator") === "1") {
-      var badge = document.createElement("button");
-      badge.type = "button";
-      badge.className = "creator-pass";
-      badge.innerHTML =
-        "<strong>CREATOR</strong> path: <code>" +
-        findPath +
-        "</code> · 클릭=일기";
-      badge.title = "제작자 패스 — 클릭하면 일기 오픈";
-      badge.addEventListener("click", function () {
-        openDiary();
-      });
-      document.body.appendChild(badge);
-      // 한 번 켜면 로컬에 기억 (일반 공유 URL에는 안 붙음)
-      if (/[?&]creator=1/.test(location.search || "")) {
-        localStorage.setItem("haunt_creator", "1");
+    // 제작자 배지 UI는 admin-pass.js 통합. 여기선 플래그만 기억
+    if (
+      /[?&](debug|creator|admin)=1/.test(location.search || "") ||
+      localStorage.getItem("haunt_creator") === "1"
+    ) {
+      if (/[?&](creator|admin)=1/.test(location.search || "")) {
+        try {
+          localStorage.setItem("haunt_creator", "1");
+          localStorage.setItem("haunt_admin", "1");
+        } catch (eMem) {}
       }
+      try {
+        window.__hauntOpenDiary = openDiary;
+        window.__hauntFindPath = findPath;
+      } catch (eExp) {}
     }
+    // 항상 관리자 훅용 export
+    try {
+      window.__hauntOpenDiary = openDiary;
+    } catch (e2) {}
   } catch (e) {}
 
   setBoost();
