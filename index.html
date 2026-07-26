@@ -74,11 +74,36 @@
     <div class="p2-atm-fog"></div>
   </div>
 
-  <!-- 3페이즈 상시 레이어: 참조 목업 대기 + 랜덤 얼굴 -->
+  <!-- 3페이즈: 살아있는 생체-디지털 조직 + 촉수 + 얼굴 -->
   <div id="p3Atmosphere" class="p3-atmosphere" aria-hidden="true">
     <div class="p3-atm-bg"></div>
+    <div class="p3-atm-pulse"></div>
+    <div class="p3-atm-veins"></div>
     <div class="p3-atm-veil"></div>
     <div class="p3-atm-scan"></div>
+    <!-- 화면을 찢고 나오는 촉수/발톱 -->
+    <div class="p3-tentacles" aria-hidden="true">
+      <svg class="p3-tent t1" viewBox="0 0 200 400" preserveAspectRatio="xMidYMax meet">
+        <path d="M40 400 C20 280 80 220 50 140 S90 40 120 0" fill="none" stroke="#3a0810" stroke-width="28" stroke-linecap="round"/>
+        <path d="M40 400 C20 280 80 220 50 140 S90 40 120 0" fill="none" stroke="#6a1020" stroke-width="14" stroke-linecap="round" opacity="0.7"/>
+        <path d="M110 20 L145 -10 M110 20 L155 25 M110 20 L100 -15" stroke="#1a0408" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <svg class="p3-tent t2" viewBox="0 0 200 400" preserveAspectRatio="xMidYMax meet">
+        <path d="M160 400 C180 300 100 240 150 160 S90 50 70 0" fill="none" stroke="#2a060c" stroke-width="32" stroke-linecap="round"/>
+        <path d="M160 400 C180 300 100 240 150 160 S90 50 70 0" fill="none" stroke="#5a0c18" stroke-width="16" stroke-linecap="round" opacity="0.75"/>
+        <path d="M75 15 L40 -20 M75 15 L30 30 M75 15 L90 -25" stroke="#100204" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+      <svg class="p3-tent t3" viewBox="0 0 160 320" preserveAspectRatio="xMidYMax meet">
+        <path d="M30 320 C10 200 90 160 40 80 S70 10 100 -20" fill="none" stroke="#4a0a14" stroke-width="22" stroke-linecap="round"/>
+        <path d="M95 0 L130 -30 M95 0 L140 20 M95 0 L80 -35" stroke="#180408" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <svg class="p3-tent t4" viewBox="0 0 160 320" preserveAspectRatio="xMidYMax meet">
+        <path d="M130 320 C150 210 50 170 110 90 S80 20 50 -15" fill="none" stroke="#3a0810" stroke-width="24" stroke-linecap="round"/>
+        <path d="M55 0 L20 -28 M55 0 L15 25 M55 0 L70 -30" stroke="#120306" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <div class="p3-handprint left"></div>
+      <div class="p3-handprint right"></div>
+    </div>
     <div id="p3FloatFaces" class="p3-float-faces" aria-hidden="true">
       <img class="p3-ff f1" src="assets/faces/face-1.jpg" alt="" />
       <img class="p3-ff f2" src="assets/faces/face-3.jpg" alt="" />
@@ -263,6 +288,25 @@
           data-clean="Features"
           data-mid="// log"
           data-horror="// blackbox_log">Features</h2>
+        <!-- 3페이즈: 오염된 blackbox_log — 고통·얼굴 쏟아냄 -->
+        <div class="p3-corrupt-log" id="p3BlackboxLog" aria-hidden="true">
+          <div class="p3-clog-blood"></div>
+          <div class="p3-clog-faces">
+            <img src="assets/faces/face-1.jpg" alt="" />
+            <img src="assets/faces/face-3.jpg" alt="" />
+            <img src="assets/faces/face-5.jpg" alt="" />
+            <img src="assets/faces/face-7.jpg" alt="" />
+            <img src="assets/faces/face-2.jpg" alt="" />
+            <img src="assets/faces/face-9.jpg" alt="" />
+          </div>
+          <ul class="p3-clog-lines">
+            <li>2024-08-03 — scream.open()</li>
+            <li>2024-11-19 — still breathing on :3847</li>
+            <li>???? — your session is too loud</li>
+            <li class="bad">ERROR: pain overflows buffer</li>
+            <li class="bad">it knows you opened this tab</li>
+          </ul>
+        </div>
         <ul class="log stasis-feat-list" id="log">
           <li class="morph-li"
             data-clean="✓ Healthcheck pings — always on"
@@ -300,6 +344,17 @@
           data-clean="실시간 대시보드 미리보기"
           data-mid="방치된 사이드 프로젝트는 사라지지 않는다."
           data-horror="방치된 사이드 프로젝트는 사라지지 않는다. 하드 구석, 꺼진 노트북, 잊힌 서버 볼륨 안에서 <strong class='red-glow'>형태를 바꾼다.</strong>">실시간 대시보드 미리보기</p>
+
+        <!-- 3페이즈 autopsy: 지표 소멸 · OVER 만 남음 -->
+        <div class="p3-autopsy-over" id="p3AutopsyOver" aria-hidden="true">
+          <div class="p3-over-ring"></div>
+          <div class="p3-over-faces">
+            <img src="assets/faces/face-4.jpg" alt="" />
+            <img src="assets/faces/face-6.jpg" alt="" />
+            <img src="assets/faces/face-8.jpg" alt="" />
+          </div>
+          <span class="p3-over-word">OVER</span>
+        </div>
 
         <!-- 모니터 목업 UI -->
         <div class="monitor-frame" aria-hidden="true">

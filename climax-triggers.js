@@ -44,14 +44,29 @@
     return P3_FACE_POOL[Math.floor(Math.random() * P3_FACE_POOL.length)];
   }
 
-  /** 플랜 카드: 금 간 유리 뒤 눈 — 랜덤 출몰 */
+  /** 플랜 카드: 산산조각 상시 + 눈/얼굴 랜덤 맥동 */
+  function shatterAllPlansPermanent() {
+    document.querySelectorAll(".plan-btn.plan-card").forEach(function (card) {
+      card.classList.add("p3-plan-ready", "is-shattered", "is-smashed");
+      var face = card.querySelector(".p3-plan-face");
+      if (face) {
+        try {
+          face.src = p3FaceSrc();
+        } catch (e) {}
+      }
+    });
+  }
+
   function pulsePlanShatter() {
     if (!document.body.classList.contains("phase-3-active")) return;
     if (document.body.classList.contains("diary-open")) return;
     if (document.body.classList.contains("is-haunting")) return;
     var cards = document.querySelectorAll(".plan-btn.plan-card");
     if (!cards.length) return;
-    // 1~3장 랜덤 깨짐
+    // 상시 깨진 상태 유지 + 1~3장 눈 다시 깜빡
+    cards.forEach(function (card) {
+      card.classList.add("is-shattered", "is-smashed");
+    });
     var order = Array.prototype.slice.call(cards).sort(function () {
       return Math.random() - 0.5;
     });
@@ -66,15 +81,14 @@
             face.src = p3FaceSrc();
           } catch (e) {}
         }
-        card.classList.add("is-shattered", "is-eyes");
+        card.classList.add("is-eyes", "is-scream");
+        setTimeout(function () {
+          card.classList.remove("is-scream");
+        }, 400);
         setTimeout(function () {
           card.classList.remove("is-eyes");
-        }, 1400 + Math.random() * 1200);
-        setTimeout(function () {
-          // 가끔 금은 남기고 눈만 끔 / 가끔 금도 풀림
-          if (Math.random() > 0.45) card.classList.remove("is-shattered");
-        }, 2800 + Math.random() * 2200);
-      }, i * (120 + Math.random() * 200));
+        }, 1800 + Math.random() * 1600);
+      }, i * (100 + Math.random() * 180));
     });
   }
 
@@ -125,14 +139,38 @@
     }, life);
   }
 
+  function corruptLogPanels() {
+    var light = document.querySelector(".stasis-card-light");
+    var dark = document.querySelector(".stasis-card-dark");
+    if (light) light.classList.add("p3-log-corrupted");
+    if (dark) dark.classList.add("p3-autopsy-corrupted");
+    var bb = document.getElementById("p3BlackboxLog");
+    if (bb) {
+      bb.setAttribute("aria-hidden", "false");
+      bb.classList.add("is-on");
+    }
+    var over = document.getElementById("p3AutopsyOver");
+    if (over) {
+      over.setAttribute("aria-hidden", "false");
+      over.classList.add("is-on");
+    }
+    // 기존 리스트/KPI 숨김은 CSS
+    var h2log = document.getElementById("h2log");
+    if (h2log) h2log.textContent = "// blackbox_log";
+    var h2notes = document.getElementById("h2notes");
+    if (h2notes) h2notes.textContent = "// autopsy";
+  }
+
   function startPhase3FxLoops() {
     if (p3FxStarted) return;
     p3FxStarted = true;
-    // 진입 직후 한 번 깨짐
+    shatterAllPlansPermanent();
+    corruptLogPanels();
+    // 진입 직후 눈 + 얼굴
     setTimeout(function () {
       pulsePlanShatter();
       pulseP3FloatFaces();
-    }, 900);
+    }, 600);
     setTimeout(function planLoop() {
       if (!document.body.classList.contains("phase-3-active")) {
         setTimeout(planLoop, 4000);
@@ -144,8 +182,8 @@
       ) {
         pulsePlanShatter();
       }
-      setTimeout(planLoop, 7000 + Math.random() * 9000);
-    }, 5000);
+      setTimeout(planLoop, 5500 + Math.random() * 7000);
+    }, 4000);
     setTimeout(function faceLoop() {
       if (!document.body.classList.contains("phase-3-active")) {
         setTimeout(faceLoop, 4000);
@@ -157,8 +195,8 @@
       ) {
         pulseP3FloatFaces();
       }
-      setTimeout(faceLoop, 8000 + Math.random() * 12000);
-    }, 3500);
+      setTimeout(faceLoop, 6500 + Math.random() * 9000);
+    }, 2800);
   }
 
   /** 3페이즈 지속 UI — 참조 목업 핏빛 심층 */
@@ -192,7 +230,7 @@
       if (chrome) chrome.classList.add("is-phase3");
     } catch (eU) {}
 
-    // 히어로 — 참조 목업 카피
+    // 히어로 — 녹아내린 헤드라인
     try {
       var t1 = document.getElementById("titleL1");
       var t2 = document.getElementById("titleL2");
@@ -205,10 +243,15 @@
         t2.textContent = "깨어날 준비를 하고 있다.";
       }
       var lede = document.getElementById("lede");
-      if (lede) lede.classList.add("p3-lede");
+      if (lede) {
+        lede.classList.add("p3-lede");
+        // 레데는 녹은 경고로 대체 느낌
+        lede.classList.add("p3-lede-melt");
+      }
       var mainTitle = document.getElementById("mainTitle");
-      if (mainTitle) mainTitle.classList.add("p3-title");
-      // 플랜 카드 깨짐 레이어 준비
+      if (mainTitle) {
+        mainTitle.classList.add("p3-title", "p3-title-melt");
+      }
       document.querySelectorAll(".plan-btn.plan-card").forEach(function (c) {
         c.classList.add("p3-plan-ready");
       });
@@ -222,7 +265,7 @@
       var layerText = document.getElementById("p3LayerText");
       if (layerText) {
         layerText.textContent =
-          "2페이즈 통과. 살과 회로가 섞인 층이다. 카드가 금 가기 시작한다.";
+          "어둠이 살이 되었다. 촉수가 화면을 찢는다. 지표는 끝났다 — OVER.";
       }
       if (layer) {
         layer.classList.add("is-on");

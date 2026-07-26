@@ -4141,9 +4141,39 @@ body.phase-3-active .p3-atmosphere {
 .p3-atm-bg {
   position: absolute;
   inset: 0;
-  /* 참조 이미지는 body background — 여기선 약한 추가 핏빛만 */
   background:
     radial-gradient(ellipse 80% 55% at 50% 45%, rgba(80, 0, 20, 0.15), transparent 60%);
+}
+/* 살아있는 조직: 붉·보라 맥박 */
+.p3-atm-pulse {
+  position: absolute;
+  inset: -5%;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 42%, rgba(140, 0, 40, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 30% 60%, rgba(90, 0, 80, 0.28) 0%, transparent 50%),
+    radial-gradient(ellipse 35% 40% at 75% 55%, rgba(120, 20, 60, 0.25) 0%, transparent 50%);
+  animation: p3TissuePulse 3.2s ease-in-out infinite;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+@keyframes p3TissuePulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); filter: hue-rotate(0deg); }
+  40% { opacity: 0.95; transform: scale(1.03); filter: hue-rotate(-8deg) brightness(1.15); }
+  70% { opacity: 0.7; transform: scale(1.01); filter: hue-rotate(12deg); }
+}
+.p3-atm-veins {
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  background:
+    radial-gradient(ellipse 2% 40% at 20% 50%, rgba(180, 20, 50, 0.5), transparent),
+    radial-gradient(ellipse 1.5% 50% at 80% 40%, rgba(140, 0, 60, 0.4), transparent),
+    radial-gradient(ellipse 60% 2% at 50% 70%, rgba(160, 10, 40, 0.35), transparent);
+  animation: p3VeinPulse 4.5s ease-in-out infinite;
+}
+@keyframes p3VeinPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.55; }
 }
 .p3-atm-veil {
   position: absolute;
@@ -4166,6 +4196,85 @@ body.phase-3-active .p3-atmosphere {
 @keyframes p3Scan {
   0% { transform: translateY(0); }
   100% { transform: translateY(12px); }
+}
+
+/* 촉수·발톱·손바닥 — 화면을 찢고 나옴 */
+.p3-tentacles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.p3-tent {
+  position: absolute;
+  width: min(220px, 32vw);
+  height: min(70vh, 520px);
+  opacity: 0.88;
+  filter: drop-shadow(0 0 18px rgba(80, 0, 15, 0.7)) contrast(1.15);
+}
+.p3-tent.t1 {
+  left: -4%;
+  bottom: -8%;
+  transform: rotate(-12deg);
+  animation: p3TentReachL 7s ease-in-out infinite;
+}
+.p3-tent.t2 {
+  right: -6%;
+  bottom: -10%;
+  transform: rotate(14deg) scaleX(-1);
+  animation: p3TentReachR 8.5s ease-in-out infinite;
+}
+.p3-tent.t3 {
+  left: 8%;
+  top: -5%;
+  width: min(160px, 24vw);
+  height: min(45vh, 340px);
+  transform: rotate(160deg);
+  opacity: 0.7;
+  animation: p3TentDrip 9s ease-in-out infinite;
+}
+.p3-tent.t4 {
+  right: 10%;
+  top: -2%;
+  width: min(150px, 22vw);
+  height: min(42vh, 320px);
+  transform: rotate(-155deg) scaleX(-1);
+  opacity: 0.65;
+  animation: p3TentDrip 10s ease-in-out infinite reverse;
+}
+@keyframes p3TentReachL {
+  0%, 100% { transform: rotate(-12deg) translateY(0) translateX(0); }
+  50% { transform: rotate(-8deg) translateY(-28px) translateX(18px); }
+}
+@keyframes p3TentReachR {
+  0%, 100% { transform: rotate(14deg) scaleX(-1) translateY(0); }
+  50% { transform: rotate(10deg) scaleX(-1) translateY(-22px) translateX(12px); }
+}
+@keyframes p3TentDrip {
+  0%, 100% { transform: rotate(160deg) translateY(0); opacity: 0.55; }
+  50% { transform: rotate(155deg) translateY(16px); opacity: 0.85; }
+}
+.p3-handprint {
+  position: absolute;
+  width: min(200px, 28vw);
+  height: min(240px, 36vh);
+  opacity: 0.35;
+  filter: blur(1px);
+  background:
+    radial-gradient(ellipse 45% 50% at 50% 55%, rgba(60, 8, 16, 0.85), transparent 70%),
+    radial-gradient(ellipse 12% 28% at 28% 30%, rgba(40, 4, 10, 0.8), transparent 70%),
+    radial-gradient(ellipse 12% 32% at 42% 18%, rgba(40, 4, 10, 0.8), transparent 70%),
+    radial-gradient(ellipse 12% 34% at 58% 16%, rgba(40, 4, 10, 0.8), transparent 70%),
+    radial-gradient(ellipse 11% 30% at 72% 28%, rgba(40, 4, 10, 0.8), transparent 70%),
+    radial-gradient(ellipse 14% 26% at 22% 58%, rgba(40, 4, 10, 0.75), transparent 70%);
+  animation: p3HandThrob 5s ease-in-out infinite;
+}
+.p3-handprint.left { left: 2%; bottom: 18%; transform: rotate(-20deg); }
+.p3-handprint.right { right: 2%; bottom: 22%; transform: rotate(18deg) scaleX(-1); animation-delay: -2.5s; }
+@keyframes p3HandThrob {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.5; }
 }
 
 /* 3페이즈 떠다니는 얼굴 — 평소 숨김, .is-on 만 */
@@ -4286,7 +4395,7 @@ body.phase-3-active .fake-chrome-url .url-text {
   color: #ffb0b8 !important;
 }
 
-/* 제목 — 참조 목업 핏빛 세리프 */
+/* 제목 — 녹아내림 + 피·고름 */
 body.phase-3-active .stasis-h1.title-horror,
 body.phase-3-active #mainTitle.p3-title {
   color: #f4e8ea !important;
@@ -4295,6 +4404,53 @@ body.phase-3-active #mainTitle.p3-title {
     0 0 18px rgba(120, 0, 20, 0.3),
     1px 0 rgba(255, 50, 70, 0.25) !important;
   font-family: "Instrument Serif", Georgia, serif !important;
+}
+body.phase-3-active #mainTitle.p3-title-melt {
+  position: relative;
+  filter: url(#none);
+  animation: p3TitleMelt 6s ease-in-out infinite;
+}
+body.phase-3-active #mainTitle.p3-title-melt .title-line,
+body.phase-3-active #mainTitle.p3-title-melt .title-bleed {
+  display: inline-block;
+  background: linear-gradient(
+    180deg,
+    #fff0f2 0%,
+    #ff90a0 40%,
+    #8a1020 75%,
+    #3a0810 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 2px rgba(80, 0, 15, 0.6));
+}
+body.phase-3-active #mainTitle.p3-title-melt::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -6%;
+  height: 28%;
+  background:
+    linear-gradient(180deg, transparent, rgba(120, 10, 25, 0.55) 40%, rgba(40, 0, 10, 0.4)),
+    radial-gradient(ellipse 20% 60% at 25% 0%, rgba(180, 30, 40, 0.5), transparent),
+    radial-gradient(ellipse 18% 50% at 55% 10%, rgba(140, 20, 30, 0.45), transparent),
+    radial-gradient(ellipse 16% 55% at 78% 0%, rgba(100, 15, 25, 0.4), transparent);
+  pointer-events: none;
+  animation: p3BloodDrip 4s ease-in-out infinite;
+  border-radius: 0 0 40% 40%;
+  opacity: 0.9;
+}
+@keyframes p3TitleMelt {
+  0%, 100% { transform: skewX(0deg) scaleY(1); letter-spacing: -0.02em; }
+  35% { transform: skewX(-1.2deg) scaleY(1.04); letter-spacing: 0.01em; }
+  70% { transform: skewX(0.8deg) scaleY(0.98); }
+}
+@keyframes p3BloodDrip {
+  0%, 100% { transform: scaleY(0.85); opacity: 0.75; }
+  50% { transform: scaleY(1.15); opacity: 1; }
 }
 body.phase-3-active .title-bleed {
   color: #ff90a0 !important;
@@ -4308,6 +4464,13 @@ body.phase-3-active .p2-title-glitch {
       rgba(80, 10, 20, 0.22) 2px 3px
     ),
     radial-gradient(ellipse 70% 55% at 50% 50%, rgba(40, 4, 10, 0.75) 0%, transparent 70%) !important;
+  filter: contrast(1.2) saturate(1.3);
+  animation: p3GlitchBlock 3.5s steps(3) infinite;
+}
+@keyframes p3GlitchBlock {
+  0%, 100% { opacity: 0.85; transform: none; }
+  40% { opacity: 1; transform: translate(1px, 0); }
+  60% { opacity: 0.7; transform: translate(-2px, 1px); }
 }
 body.phase-3-active .p2-title-glitch::before {
   color: rgba(255, 80, 100, 0.28) !important;
@@ -4316,6 +4479,11 @@ body.phase-3-active .p2-title-glitch::before {
 body.phase-3-active .stasis-lede,
 body.phase-3-active .p3-lede {
   color: #c8a8b0 !important;
+}
+body.phase-3-active .p3-lede-melt {
+  opacity: 0.55;
+  filter: blur(0.4px);
+  text-shadow: 0 2px 8px rgba(80, 0, 15, 0.5);
 }
 body.phase-3-active .stasis-logo {
   color: #f0d0d8 !important;
@@ -4449,10 +4617,53 @@ body.phase-3-active .p3-plan-shatter {
   30% { transform: scale(1.03) rotate(-0.4deg); }
   100% { transform: scale(1); }
 }
+/* 3페이즈 상시 산산조각 — 더 거친 균열 + 얼굴 상시 희미 */
+body.phase-3-active .plan-btn.plan-card.is-smashed {
+  animation: none;
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.65),
+    inset 0 0 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(80, 10, 20, 0.5) !important;
+}
+body.phase-3-active .plan-btn.plan-card.is-smashed .p3-plan-cracks {
+  opacity: 1 !important;
+  background:
+    linear-gradient(125deg, transparent 40%, rgba(255, 255, 255, 0.65) 40.8%, transparent 41.6%),
+    linear-gradient(55deg, transparent 35%, rgba(255, 220, 230, 0.55) 36%, transparent 37%),
+    linear-gradient(160deg, transparent 48%, rgba(255, 255, 255, 0.5) 48.8%, transparent 49.6%),
+    linear-gradient(20deg, transparent 58%, rgba(255, 200, 210, 0.45) 58.8%, transparent 59.6%),
+    linear-gradient(95deg, transparent 25%, rgba(255, 255, 255, 0.4) 25.6%, transparent 26.4%),
+    linear-gradient(-30deg, transparent 62%, rgba(255, 180, 190, 0.35) 62.8%, transparent 63.5%),
+    radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.35) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 62% 55%, rgba(255, 255, 255, 0.3) 0 1px, transparent 2.5px),
+    radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.25) 0 1px, transparent 2px);
+}
+body.phase-3-active .plan-btn.plan-card.is-smashed .p3-plan-face {
+  opacity: 0.35;
+}
+body.phase-3-active .plan-btn.plan-card.is-smashed.is-eyes .p3-plan-face {
+  opacity: 0.95;
+  filter: contrast(1.4) saturate(0.6) brightness(0.95);
+  animation: p3EyeStare 2.2s ease-in-out infinite;
+}
+@keyframes p3EyeStare {
+  0%, 100% { transform: scale(1); filter: contrast(1.4) saturate(0.6) brightness(0.95); }
+  50% { transform: scale(1.06); filter: contrast(1.55) saturate(0.7) brightness(1.05); }
+}
+body.phase-3-active .plan-btn.plan-card.is-scream {
+  animation: p3CardHit 0.35s ease-out;
+}
 body.phase-3-active .plan-btn.plan-card.is-shattered .plan-name,
 body.phase-3-active .plan-btn.plan-card.is-eyes .plan-name {
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
   color: #fff !important;
+}
+/* 아이콘·가격 글자 거의 안 보이게 (파편 속 얼굴이 주인공) */
+body.phase-3-active .plan-btn.plan-card.is-smashed .plan-icon {
+  opacity: 0.15;
+}
+body.phase-3-active .plan-btn.plan-card.is-smashed .plan-price {
+  opacity: 0.2;
 }
 
 /* 카드 패널 */
@@ -4533,8 +4744,188 @@ body.diary-open.phase-3-active .p3-depth-bar {
 }
 body.is-haunting.phase-3-active .p3-float-faces,
 body.is-ending.phase-3-active .p3-float-faces,
-body.diary-open.phase-3-active .p3-float-faces {
+body.diary-open.phase-3-active .p3-float-faces,
+body.is-haunting.phase-3-active .p3-tentacles,
+body.is-ending.phase-3-active .p3-tentacles,
+body.diary-open.phase-3-active .p3-tentacles {
   opacity: 0 !important;
+}
+
+/* ===== 오염된 blackbox_log / autopsy ===== */
+.p3-corrupt-log {
+  display: none;
+  position: relative;
+  margin-top: 0.5rem;
+  min-height: 160px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(160, 30, 50, 0.4);
+  background: #0a0406;
+}
+body.phase-3-active .p3-corrupt-log.is-on {
+  display: block;
+}
+body.phase-3-active .stasis-card-light.p3-log-corrupted .stasis-feat-list,
+body.phase-3-active .stasis-card-light.p3-log-corrupted #log {
+  display: none !important;
+}
+body.phase-3-active .stasis-card-light.p3-log-corrupted .wip-card-meta {
+  display: none !important;
+}
+.p3-clog-blood {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 20% 0%, rgba(100, 0, 20, 0.55), transparent 55%),
+    linear-gradient(180deg, rgba(60, 0, 12, 0.4) 0%, transparent 50%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 3px,
+      rgba(255, 40, 60, 0.04) 3px 4px
+    );
+  animation: p3GlitchBlock 2.8s steps(2) infinite;
+  pointer-events: none;
+}
+.p3-clog-faces {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 8px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.p3-clog-faces img {
+  width: 100%;
+  height: 48px;
+  object-fit: cover;
+  object-position: center 28%;
+  border-radius: 4px;
+  filter: contrast(1.3) saturate(0.4) brightness(0.7);
+  -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+  animation: p3ClogFace 3s ease-in-out infinite;
+}
+.p3-clog-faces img:nth-child(2) { animation-delay: 0.4s; }
+.p3-clog-faces img:nth-child(3) { animation-delay: 0.8s; }
+.p3-clog-faces img:nth-child(4) { animation-delay: 0.2s; }
+.p3-clog-faces img:nth-child(5) { animation-delay: 0.6s; }
+.p3-clog-faces img:nth-child(6) { animation-delay: 1s; }
+@keyframes p3ClogFace {
+  0%, 100% { opacity: 0.45; filter: contrast(1.3) saturate(0.4) brightness(0.65); }
+  50% { opacity: 0.9; filter: contrast(1.5) saturate(0.55) brightness(0.9); }
+}
+.p3-clog-lines {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  margin: 0;
+  padding: 0.85rem 0.9rem 1rem;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: #e0a0a8;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+.p3-clog-lines li.bad {
+  color: #ff6070;
+  animation: p3MadBlink 1.1s steps(1) infinite;
+}
+@keyframes p3MadBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.35; }
+}
+
+/* autopsy OVER */
+.p3-autopsy-over {
+  display: none;
+  position: relative;
+  margin: 0.75rem 0 0.5rem;
+  min-height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(120, 20, 40, 0.45);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(40, 0, 12, 0.4) 0%, #050208 70%);
+}
+body.phase-3-active .p3-autopsy-over.is-on {
+  display: block;
+}
+body.phase-3-active .stasis-card-dark.p3-autopsy-corrupted .monitor-frame,
+body.phase-3-active .stasis-card-dark.p3-autopsy-corrupted .monitor-caption,
+body.phase-3-active .stasis-card-dark.p3-autopsy-corrupted .wip-card-meta,
+body.phase-3-active .stasis-card-dark.p3-autopsy-corrupted .stasis-status-row {
+  display: none !important;
+}
+.p3-over-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(220px, 70%);
+  height: min(220px, 70%);
+  margin: -110px 0 0 -110px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 180, 200, 0.25);
+  box-shadow:
+    0 0 0 40px rgba(0, 100, 120, 0.06),
+    0 0 0 80px rgba(0, 80, 100, 0.04),
+    inset 0 0 40px rgba(0, 200, 220, 0.08);
+  animation: p3OverSpin 12s linear infinite;
+}
+@keyframes p3OverSpin {
+  to { transform: rotate(360deg); }
+}
+.p3-over-faces {
+  position: absolute;
+  inset: 12%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-content: center;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.p3-over-faces img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 28%;
+  filter: contrast(1.25) saturate(0.35) brightness(0.7);
+}
+.p3-over-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(2.4rem, 8vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #f0f4f8;
+  text-shadow:
+    0 0 24px rgba(255, 40, 60, 0.5),
+    0 0 40px rgba(0, 0, 0, 0.8);
+  animation: p3OverBlink 1.8s steps(1) infinite;
+  z-index: 3;
+}
+@keyframes p3OverBlink {
+  0%, 70% { opacity: 1; }
+  71%, 85% { opacity: 0.15; }
+  86%, 100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3-atm-pulse,
+  .p3-tent,
+  .p3-handprint,
+  body.phase-3-active #mainTitle.p3-title-melt,
+  .p3-over-word,
+  .p3-over-ring {
+    animation: none !important;
+  }
 }
 
 .p3-layer-toast {
@@ -4546,9 +4937,9 @@ body.diary-open.phase-3-active .p3-float-faces {
   min-width: min(340px, 90vw);
   padding: 1rem 1.2rem;
   border-radius: 14px;
-  background: rgba(2, 18, 22, 0.96);
-  border: 1px solid rgba(0, 220, 190, 0.45);
-  color: #c8f8f0;
+  background: rgba(18, 4, 8, 0.96);
+  border: 1px solid rgba(255, 60, 80, 0.45);
+  color: #f0d0d8;
   font-size: 0.92rem;
   text-align: center;
   opacity: 0;
@@ -4556,7 +4947,7 @@ body.diary-open.phase-3-active .p3-float-faces {
   transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(0, 160, 140, 0.2);
+    0 0 40px rgba(160, 20, 40, 0.25);
 }
 .p3-layer-toast.is-on {
   opacity: 1;
@@ -4567,8 +4958,8 @@ body.diary-open.phase-3-active .p3-float-faces {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #041210;
-  background: #2ee6c0;
+  color: #1a0508;
+  background: #ff3a55;
   padding: 0.18rem 0.5rem;
   border-radius: 4px;
   margin-bottom: 0.45rem;
@@ -4576,11 +4967,11 @@ body.diary-open.phase-3-active .p3-float-faces {
 .p3-layer-toast p {
   margin: 0.3rem 0 0;
   line-height: 1.5;
-  color: #a8e8e0;
+  color: #e0b8c0;
 }
 body.phase-3-active .p2-trig-hot,
 body.phase-3-active .p2-trig-banner {
-  outline-color: rgba(0, 220, 180, 0.35) !important;
+  outline-color: rgba(255, 80, 100, 0.4) !important;
 }
 
 .p3-holding,
