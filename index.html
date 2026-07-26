@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=presence2" />
 </head>
 <body class="stage-clean" data-stage="0">
   <!-- ===== FAKE BROWSER CHROME (in-page address bar eye-trick) ===== -->
@@ -628,22 +628,23 @@
     <p id="p3LayerText">2페이즈를 통과했다. 여기는 더 깊다. 화면이 바뀌었다.</p>
   </div>
 
-  <!-- 방문자 / 영혼 카운터 (페이즈별 카피) -->
-  <div id="presenceHud" class="presence-hud" role="status" aria-live="polite" data-phase="1">
-    <span class="presence-dot" aria-hidden="true"></span>
-    <span class="presence-live">
+  <!-- 방문자 / 영혼 카운터 (페이즈별 카피) — inline로 CSS 캐시 깨져도 보이게 -->
+  <div id="presenceHud" class="presence-hud is-ready" role="status" aria-live="polite" data-phase="1"
+    style="position:fixed;z-index:9980;top:52px;left:12px;right:auto;display:inline-flex;align-items:center;gap:6px 8px;padding:8px 14px 8px 10px;border-radius:999px;font:600 13px/1.35 ui-monospace,Consolas,monospace;color:#1a1917;background:#fffdf9;border:1px solid rgba(0,0,0,.16);box-shadow:0 6px 22px rgba(20,16,12,.14);opacity:1;visibility:visible;pointer-events:none;user-select:none;">
+    <span class="presence-dot" aria-hidden="true" style="width:8px;height:8px;border-radius:50%;background:#2f9e55;flex-shrink:0;"></span>
+    <span class="presence-live" style="display:inline-flex;gap:5px;white-space:nowrap;">
       <span id="presenceLiveLabel" class="presence-label">접속 중</span>
-      <strong id="presenceLiveCount" class="presence-num">—</strong>
+      <strong id="presenceLiveCount" class="presence-num">1</strong>
     </span>
     <span id="presenceTotalWrap" class="presence-sep" aria-hidden="true">·</span>
-    <span class="presence-total">
+    <span class="presence-total" style="display:inline-flex;gap:5px;white-space:nowrap;">
       <span id="presenceTotalLabel" class="presence-label">총 방문자</span>
       <strong id="presenceTotalCount" class="presence-num">—</strong>
     </span>
   </div>
 
   <script src="app.js"></script>
-  <script src="presence.js"></script>
+  <script src="presence.js?v=presence2"></script>
   <script src="haunt-audio.js"></script>
   <script src="diary-stories.js"></script>
   <script src="diary.js"></script>
