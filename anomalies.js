@@ -1470,6 +1470,69 @@
     }, lifeMs);
   }
 
+  /**
+   * 대시보드 내장 얼굴 슬롯 — 평소 opacity 0, 가끔 is-on 후 페이드아웃
+   */
+  function pulseMonitorFaces(opts) {
+    opts = opts || {};
+    if (!phase2Active()) return false;
+    if (document.body.classList.contains("diary-open")) return false;
+    var root = document.querySelector(".p2-monitor-faces");
+    if (!root) return false;
+    var faces = Array.prototype.slice.call(root.querySelectorAll(".p2-mf"));
+    if (!faces.length) return false;
+
+    // 이전 잔여 클리어
+    faces.forEach(function (f) {
+      f.classList.remove("is-on", "is-out");
+    });
+
+    // 1~3개 랜덤 (모바일은 1~2)
+    var n = mobile ? 1 + (rng() > 0.55 ? 1 : 0) : 1 + Math.floor(rng() * 3);
+    if (n > faces.length) n = faces.length;
+    var order = faces.slice().sort(function () {
+      return rng() - 0.5;
+    });
+    var picks = order.slice(0, n);
+    var life = opts.ms != null ? opts.ms : 1600 + rng() * 2200;
+
+    // 소스 가끔 교체 (같은 장만 안 보이게)
+    picks.forEach(function (f, i) {
+      try {
+        if (rng() > 0.35 && typeof pickFaceSrc === "function") {
+          f.src = pickFaceSrc();
+        }
+      } catch (e) {}
+      setTimeout(function () {
+        if (!phase2Active() || !f.parentNode) return;
+        f.classList.remove("is-out");
+        f.classList.add("is-on");
+      }, i * (80 + rng() * 120));
+    });
+
+    setTimeout(function () {
+      picks.forEach(function (f, i) {
+        setTimeout(function () {
+          if (!f.parentNode) return;
+          f.classList.remove("is-on");
+          f.classList.add("is-out");
+          setTimeout(function () {
+            f.classList.remove("is-out");
+          }, 750);
+        }, i * 90);
+      });
+    }, life);
+
+    try {
+      var au = audio();
+      if (au && rng() > 0.55) {
+        if (au.whisper) au.whisper();
+        else if (au.breath) au.breath();
+      }
+    } catch (e) {}
+    return true;
+  }
+
   function runCardFaces(opts) {
     opts = opts || {};
     if (busy() || !markPhase2Ui()) return false;
@@ -1887,6 +1950,22 @@
       }, 9000);
     }
 
+    // 모니터 안 얼굴: 평소 없음 → 가끔 1~3개 나타났다가 사라짐
+    setTimeout(function monitorFacesLoop() {
+      if (!phase2Active() || document.body.classList.contains("diary-open") || busy()) {
+        setTimeout(monitorFacesLoop, 3500);
+        return;
+      }
+      try {
+        pulseMonitorFaces();
+      } catch (e) {}
+      // 다음 등장까지 8~22초 (decay 높을수록 조금 더 자주)
+      var lv = p2DecayLevel();
+      var gap = 8000 + rng() * 14000 - lv * 800;
+      if (gap < 5500) gap = 5500;
+      setTimeout(monitorFacesLoop, gap);
+    }, 6000 + rng() * 5000);
+
     // 피: 첫 22s 이후 · 55~90s 간격 · 낮은 확률 — 트리거 가리지 않음
     setTimeout(function bloodLoop() {
       if (!phase2Active()) {
@@ -2155,6 +2234,7 @@
     },
     risingHands: runRisingHands,
     cardFaces: runCardFaces,
+    monitorFaces: pulseMonitorFaces,
     cardClaws: runCardClaws,
     ringApproach: runRingApproach,
     burst: burstCoreHorror,

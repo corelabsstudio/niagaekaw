@@ -5943,7 +5943,7 @@ body.stage-dread .mc-line path {
   stroke: #c04058 !important;
 }
 
-/* 모니터 안 얼굴 — 참조처럼 차트 위에 떠 있음 */
+/* 모니터 안 얼굴 — 평소 숨김, .is-on 때만 짧게 등장 */
 .p2-monitor-faces {
   display: none;
   position: absolute;
@@ -5952,7 +5952,8 @@ body.stage-dread .mc-line path {
   z-index: 4;
 }
 body.stage-corrupt .p2-monitor-faces,
-body.stage-dread .p2-monitor-faces {
+body.stage-dread .p2-monitor-faces,
+body.phase-2-active .p2-monitor-faces {
   display: block;
 }
 .p2-mf {
@@ -5962,20 +5963,39 @@ body.stage-dread .p2-monitor-faces {
   object-fit: cover;
   object-position: center 28%;
   border-radius: 50%;
-  opacity: 0.72;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.92);
   filter: contrast(1.2) saturate(0.45) brightness(0.85);
   -webkit-mask-image: radial-gradient(circle at 50% 48%, #000 40%, transparent 72%);
   mask-image: radial-gradient(circle at 50% 48%, #000 40%, transparent 72%);
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.55);
-  animation: p2FaceFloat 5.5s ease-in-out infinite;
+  transition:
+    opacity 0.55s ease,
+    visibility 0.55s ease,
+    transform 0.65s ease,
+    filter 0.4s ease;
 }
-.p2-mf.f1 { left: 12%; top: 18%; width: 48px; height: 48px; animation-delay: 0s; }
-.p2-mf.f2 { right: 14%; top: 12%; left: auto; width: 56px; height: 56px; animation-delay: 0.8s; opacity: 0.8; }
-.p2-mf.f3 { left: 38%; bottom: 14%; top: auto; width: 44px; height: 44px; animation-delay: 1.4s; opacity: 0.65; }
-.p2-mf.f4 { right: 22%; bottom: 20%; left: auto; top: auto; width: 50px; height: 50px; animation-delay: 0.4s; opacity: 0.78; }
+.p2-mf.is-on {
+  opacity: 0.82;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  animation: p2FaceFloat 2.8s ease-in-out infinite;
+}
+.p2-mf.is-out {
+  opacity: 0 !important;
+  visibility: hidden;
+  transform: translateY(-4px) scale(0.96);
+  animation: none;
+  transition-duration: 0.7s;
+}
+.p2-mf.f1 { left: 12%; top: 18%; width: 48px; height: 48px; }
+.p2-mf.f2 { right: 14%; top: 12%; left: auto; width: 56px; height: 56px; }
+.p2-mf.f3 { left: 38%; bottom: 14%; top: auto; width: 44px; height: 44px; }
+.p2-mf.f4 { right: 22%; bottom: 20%; left: auto; top: auto; width: 50px; height: 50px; }
 @keyframes p2FaceFloat {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.65; }
-  50% { transform: translateY(-4px) scale(1.04); opacity: 0.85; }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.03); }
 }
 body.stage-corrupt .monitor-charts,
 body.stage-dread .monitor-charts {
