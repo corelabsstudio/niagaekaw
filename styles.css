@@ -4708,10 +4708,12 @@ body.phase-3-active .p2-hint-toast {
   50% { opacity: 0.35; transform: scale(0.85); }
 }
 
-/* 3페이즈 미션 힌트 (→ 클라이맥스, 진입 5분 후) */
+/* 3페이즈 미션 힌트 (→ 클라이맥스, 진입 2분 후) */
 .find-hint-toast.p3-hint-toast {
   border-color: rgba(180, 60, 255, 0.4);
   background: rgba(14, 6, 22, 0.95);
+  /* phase3 연출·presence 칩 위로 — 안 보이는 문제 방지 */
+  z-index: 9995 !important;
 }
 .find-hint-tag.p3 {
   background: #a855f7;
@@ -4721,7 +4723,7 @@ body.phase-3-active .p2-hint-toast {
   position: fixed;
   right: 0.75rem;
   bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
-  z-index: 63;
+  z-index: 9994;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;

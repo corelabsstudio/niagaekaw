@@ -2,7 +2,7 @@
  * 3페이즈 → 클라이맥스 트리거
  * - 별도 20종 풀 (2페이즈 게이트 트리거와 분리)
  * - phase3Ready: __hauntPhase3Active (2페이즈 게이트 통과 후)
- * - 힌트: 3페이즈 진입 후 5분 (300s). ?hintfast=1 이면 8초
+ * - 힌트: 3페이즈 진입 후 2분 (2페이즈와 동일). ?hintfast=1 → 8초, ?p3hint=1 → 3초
  * - 공개 빌드 (관리자 프리패스 없음)
  */
 (function () {
@@ -709,13 +709,13 @@
     if (window.console) console.warn("[p3] arm failed", active.id, e);
   }
 
-  // ----- 3페이즈 힌트: 진입 후 5분 -----
+  // ----- 3페이즈 힌트: 진입 후 2분 (2페이즈와 동일 탐험 여유) -----
   var p3Toast = document.getElementById("p3HintToast");
   var p3Text = document.getElementById("p3HintText");
   var p3Close = document.getElementById("p3HintClose");
   var p3Chip = document.getElementById("p3MissionChip");
   var p3HintShown = false;
-  var HINT_MS = 5 * 60 * 1000; // 5분
+  var HINT_MS = 2 * 60 * 1000; // 2분 (이전 5분은 사실상 안 뜨는 것처럼 느껴짐)
   if (/[?&]hintfast=1/.test(location.search || "")) HINT_MS = 8000;
   if (/[?&]p3hint=1/.test(location.search || "")) HINT_MS = 3000;
 
@@ -753,17 +753,26 @@
   }
 
   function showP3Hint() {
-    if (fired || busy()) return;
+    if (fired) return;
     if (!phase3Ready()) return;
-    if (document.body.classList.contains("diary-open")) {
-      setTimeout(function () {
-        if (!fired && phase3Ready() && !busy()) showP3Hint();
-      }, 1200);
+    if (busy() || document.body.classList.contains("diary-open")) {
+      if (hintRetryTimer) clearTimeout(hintRetryTimer);
+      hintRetryTimer = setTimeout(tryShowP3Hint, 1500);
       return;
     }
     // 힌트 순간부터 타깃 공개
     revealMissionTargets();
     if (alreadyHinted()) {
+      // 이미 본 세션: 칩으로 재확인 가능 + 토스트 한 번 더 띄워 안 보였던 경우 보완
+      if (p3Text) {
+        p3Text.textContent = "클라이맥스 조건 — " + active.mission;
+      }
+      if (p3Toast) {
+        p3Toast.hidden = false;
+        p3Toast.classList.add("is-in");
+        p3Toast.classList.remove("is-out");
+      }
+      document.body.classList.add("p3-hint-visible");
       if (p3Chip) p3Chip.hidden = false;
       return;
     }
@@ -828,6 +837,19 @@
   }
 
   var hintTimer = null;
+  var hintRetryTimer = null;
+
+  function tryShowP3Hint() {
+    if (fired || !phase3Ready()) return;
+    if (busy() || document.body.classList.contains("diary-open")) {
+      // busy 순간에 스킵되면 영구 누락되던 버그 → 재시도
+      if (hintRetryTimer) clearTimeout(hintRetryTimer);
+      hintRetryTimer = setTimeout(tryShowP3Hint, 1500);
+      return;
+    }
+    showP3Hint();
+  }
+
   function scheduleHintFromEntry() {
     if (hintTimer) clearTimeout(hintTimer);
     if (!phase3Ready() || fired) return;
@@ -845,9 +867,9 @@
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[p3] hint in", Math.round(wait / 1000) + "s", "trigger", active.id);
     }
-    // 대기 중 미세 칩: 힌트 전엔 숨김. 5분 후 토스트.
+    // 대기 중 칩 숨김. 2분 후 토스트 (busy면 tryShow가 재시도).
     hintTimer = setTimeout(function () {
-      if (!fired && phase3Ready() && !busy()) showP3Hint();
+      tryShowP3Hint();
     }, wait);
   }
 
@@ -855,11 +877,11 @@
     if (!getEnteredAt()) setEnteredAt(Date.now());
     document.body.classList.add("phase-3-active");
     document.body.setAttribute("data-game-phase", "3");
-    // 2페이즈 칩 숨김
-    var p2Chip = document.getElementById("p2MissionChip");
-    if (p2Chip) p2Chip.hidden = true;
-    var p2Toast = document.getElementById("p2HintToast");
-    if (p2Toast) p2Toast.hidden = true;
+    // 2페이즈 칩/토스트 숨김
+    var p2ChipEl = document.getElementById("p2MissionChip");
+    if (p2ChipEl) p2ChipEl.hidden = true;
+    var p2ToastEl = document.getElementById("p2HintToast");
+    if (p2ToastEl) p2ToastEl.hidden = true;
     scheduleHintFromEntry();
     // 진입 토스트 (힌트 아님 — 층이 바뀌었다는 신호만)
     showLayerToast();
