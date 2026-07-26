@@ -28,6 +28,7 @@
       metal: noop,
       codeLaugh: noop,
       binauralWhisper: noop,
+      muffledHeartbeat: noop,
       stopAll: noop,
       setMaster: noop,
     };
@@ -761,6 +762,88 @@
     }
   }
 
+  /**
+   * 3페이즈: 수중/고막 압박 — 먹먹한 이명 + 가슴을 치는 심박 럼블
+   */
+  function muffledHeartbeat(opts) {
+    opts = opts || {};
+    unlock();
+    var c = ensureCtx();
+    if (!c || !unlocked) return;
+    var ms = opts.ms != null ? opts.ms : 5200;
+    var t0 = now();
+    var dur = ms / 1000;
+    try {
+      // 먹먹한 이명 패드
+      var o = c.createOscillator();
+      var o2 = c.createOscillator();
+      var g = c.createGain();
+      var f = c.createBiquadFilter();
+      o.type = "sine";
+      o2.type = "sine";
+      o.frequency.value = 48;
+      o2.frequency.value = 52;
+      f.type = "lowpass";
+      f.frequency.value = 180;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(v(0.055), t0 + 0.4);
+      g.gain.setValueAtTime(v(0.05), t0 + dur * 0.75);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(f);
+      o2.connect(f);
+      f.connect(g);
+      g.connect(out());
+      o.start(t0);
+      o2.start(t0);
+      o.stop(t0 + dur + 0.05);
+      o2.stop(t0 + dur + 0.05);
+      // 심박 박동
+      var beats = Math.floor(dur / 0.72);
+      for (var i = 0; i < beats; i++) {
+        (function (i) {
+          var t = t0 + 0.35 + i * 0.72;
+          // lub
+          var b1 = c.createOscillator();
+          var bg1 = c.createGain();
+          b1.type = "sine";
+          b1.frequency.setValueAtTime(55, t);
+          b1.frequency.exponentialRampToValueAtTime(28, t + 0.12);
+          bg1.gain.setValueAtTime(0.0001, t);
+          bg1.gain.exponentialRampToValueAtTime(v(0.12), t + 0.02);
+          bg1.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+          b1.connect(bg1);
+          bg1.connect(out());
+          b1.start(t);
+          b1.stop(t + 0.2);
+          // dub
+          var t2 = t + 0.14;
+          var b2 = c.createOscillator();
+          var bg2 = c.createGain();
+          b2.type = "triangle";
+          b2.frequency.setValueAtTime(42, t2);
+          b2.frequency.exponentialRampToValueAtTime(22, t2 + 0.15);
+          bg2.gain.setValueAtTime(0.0001, t2);
+          bg2.gain.exponentialRampToValueAtTime(v(0.09), t2 + 0.015);
+          bg2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.2);
+          b2.connect(bg2);
+          bg2.connect(out());
+          b2.start(t2);
+          b2.stop(t2 + 0.22);
+        })(i);
+      }
+      // 물속 노이즈
+      playNoise({
+        dur: Math.min(1.2, dur * 0.4),
+        freq: 280,
+        filter: "lowpass",
+        vol: 0.035,
+        q: 0.5,
+      });
+    } catch (e) {
+      rumble(2);
+    }
+  }
+
   function stopAll() {
     level = 0;
     if (beatTimer) clearTimeout(beatTimer);
@@ -897,6 +980,7 @@
     metal: metal,
     codeLaugh: codeLaugh,
     binauralWhisper: binauralWhisper,
+    muffledHeartbeat: muffledHeartbeat,
     stopAll: stopAll,
     setMaster: setMaster,
   };

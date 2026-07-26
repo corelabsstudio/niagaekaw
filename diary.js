@@ -682,21 +682,40 @@
           fx === "manic_flash" ||
           fx === "smash" ||
           fx === "session_warn" ||
-          fx === "redirect_clone";
+          fx === "redirect_clone" ||
+          fx === "compiler_scream" ||
+          fx === "final_session" ||
+          fx === "disk_scratch";
         var rogue = fx === "rogue_cursor" || fx === "port_force";
-        var mad = fx === "mad_rewrite" || fx === "conflict_merge";
+        var mad =
+          fx === "mad_rewrite" ||
+          fx === "conflict_merge" ||
+          fx === "final_session";
         var rough =
-          (fx === "rough_backspace" || fx === "port_force") && !step.system;
+          (fx === "rough_backspace" ||
+            fx === "port_force" ||
+            fx === "heartbeat") &&
+          !step.system;
         var gothic = fx === "backspace_gothic" && !step.system;
-        var rewrite = (mad || fx === "conflict_merge") && !step.system;
+        var rewrite =
+          (fx === "mad_rewrite" || fx === "conflict_merge") && !step.system;
         var auto =
           (fx === "autocomplete" || fx === "tab_complete") && !step.system;
         var stutter = fx === "stutter";
-        var flee = fx === "flee_cursor" && !step.system;
+        var flee =
+          (fx === "flee_cursor" || fx === "remote_hijack") && !step.system;
         var tremor = fx === "tremor";
         var clone = fx === "redirect_clone" && !step.system;
+        var heartbeat = fx === "heartbeat" && !step.system;
+        var disk = fx === "disk_scratch";
+        var remote = fx === "remote_hijack" && !step.system;
+        var scream = fx === "compiler_scream";
 
-        if ((manic || fx === "conflict_merge") && sheet && !reduced) {
+        if (
+          (manic || fx === "conflict_merge" || fx === "final_session") &&
+          sheet &&
+          !reduced
+        ) {
           sheet.classList.add("diary-manic-burst");
           setTimeout(function () {
             if (sheet) sheet.classList.remove("diary-manic-burst");
@@ -809,12 +828,16 @@
               system: !!step.system,
               manic: manic,
               rogue: rogue,
-              mad: mad,
+              mad: mad || fx === "final_session",
               rough: rough,
               stutter: stutter,
-              flee: flee,
+              flee: flee && !remote,
               tremor: tremor,
               clone: clone,
+              heartbeat: heartbeat,
+              disk: disk,
+              remote: remote,
+              scream: scream,
               hostP: p,
             },
             token

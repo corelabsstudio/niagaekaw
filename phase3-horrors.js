@@ -440,6 +440,271 @@
     });
   }
 
+  // ========== 5선 추가 ==========
+
+  var TITLE_KIDNAP = [
+    "[WARNING] HE_IS_LOOKING_AT_YOU",
+    "[ERROR] PROCESS_CANNOT_BE_KILLED",
+    "[ALERT] DO_NOT_CLOSE_THIS_TAB",
+    "[SYS] SESSION_OWNER=NOT_YOU",
+    "[FATAL] STILL_BREATHING",
+    "████ HELP ████",
+  ];
+  var titleKidnapTimer = null;
+  var titleKidnapPrev = "";
+
+  function browserTitleKidnap() {
+    if (blocked()) return false;
+    busyFx = true;
+    if (!titleKidnapPrev) titleKidnapPrev = document.title || "Stasis";
+    var a = audio();
+    if (a && a.termBeep) a.termBeep(200);
+    var flips = 0;
+    var maxFlips = reduced ? 10 : 18;
+    if (titleKidnapTimer) clearInterval(titleKidnapTimer);
+    titleKidnapTimer = setInterval(function () {
+      if (!phase3() || flips >= maxFlips) {
+        clearInterval(titleKidnapTimer);
+        titleKidnapTimer = null;
+        document.title = titleKidnapPrev || "Stasis";
+        busyFx = false;
+        return;
+      }
+      flips++;
+      if (flips % 2 === 0) {
+        document.title = titleKidnapPrev;
+      } else {
+        document.title =
+          TITLE_KIDNAP[Math.floor(rng() * TITLE_KIDNAP.length)];
+        if (a && a.termBeep && flips % 3 === 1) a.termBeep(90 + rng() * 40);
+      }
+    }, reduced ? 160 : 120);
+    // 탭 타이틀(가짜 크롬)도 같이
+    try {
+      var tab = document.getElementById("fakeTabTitle");
+      if (tab) {
+        var prevTab = tab.textContent;
+        var ti = 0;
+        var tabIv = setInterval(function () {
+          if (ti++ > maxFlips) {
+            clearInterval(tabIv);
+            tab.textContent = prevTab;
+            return;
+          }
+          tab.textContent =
+            ti % 2 === 0
+              ? prevTab
+              : TITLE_KIDNAP[Math.floor(rng() * TITLE_KIDNAP.length)];
+        }, 130);
+      }
+    } catch (e) {}
+    return true;
+  }
+
+  var scrollTrapArmed = false;
+  var scrollFailUntil = 0;
+
+  function scrollGravityFail() {
+    if (blocked()) return false;
+    busyFx = true;
+    scrollFailUntil = Date.now() + (reduced ? 3500 : 5500);
+    document.body.classList.add("p3h-scroll-fail");
+    var a = audio();
+    if (a && a.rumble) a.rumble(0.8);
+    if (a && a.sting) a.sting("soft");
+    // 즉시 한 번 위로 튕김
+    try {
+      window.scrollBy(0, -Math.min(280, window.innerHeight * 0.35));
+    } catch (e) {}
+    later(scrollFailUntil - Date.now(), function () {
+      document.body.classList.remove("p3h-scroll-fail");
+      busyFx = false;
+    });
+    return true;
+  }
+
+  function armScrollGravityListener() {
+    if (scrollTrapArmed) return;
+    scrollTrapArmed = true;
+    window.addEventListener(
+      "wheel",
+      function (e) {
+        if (!phase3()) return;
+        if (Date.now() > scrollFailUntil) return;
+        if (document.body.classList.contains("is-haunting")) return;
+        if (document.body.classList.contains("diary-open")) return;
+        e.preventDefault();
+        // 반대 방향 튕김 + 스크롤바 이탈 연출
+        var dy = e.deltaY || 0;
+        window.scrollBy(0, -dy * 1.35 - (dy > 0 ? 40 : -40));
+        document.body.classList.add("p3h-scroll-flee");
+        var bar = document.getElementById("p3hFakeScroll");
+        if (!bar) {
+          bar = document.createElement("div");
+          bar.id = "p3hFakeScroll";
+          bar.className = "p3h-fake-scroll";
+          bar.setAttribute("aria-hidden", "true");
+          document.body.appendChild(bar);
+        }
+        bar.classList.add("is-on");
+        bar.style.top = 10 + rng() * 70 + "%";
+        bar.style.right = rng() > 0.5 ? "2px" : "auto";
+        bar.style.left = rng() > 0.5 ? "2px" : "auto";
+        later(400, function () {
+          bar.classList.remove("is-on");
+          document.body.classList.remove("p3h-scroll-flee");
+        });
+      },
+      { passive: false }
+    );
+  }
+
+  function ghostElementSpawn() {
+    if (blocked()) return false;
+    busyFx = true;
+    var layer = document.getElementById("p3hGhostUi");
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.id = "p3hGhostUi";
+      layer.className = "p3h-ghost-ui";
+      layer.setAttribute("aria-hidden", "true");
+      document.body.appendChild(layer);
+    }
+    layer.innerHTML = "";
+    layer.classList.add("is-on");
+    var labels = [
+      "Submit",
+      "Cancel",
+      "OK",
+      "Delete forever",
+      "Don't",
+      "Help",
+      "████",
+      "Run",
+      "Abort",
+    ];
+    var n = reduced ? 6 : 9 + Math.floor(rng() * 6);
+    for (var i = 0; i < n; i++) {
+      (function (idx) {
+        later(idx * 90, function () {
+          if (!phase3()) return;
+          var el = document.createElement("button");
+          el.type = "button";
+          el.className = "p3h-ghost-btn" + (rng() > 0.55 ? " is-popup" : "");
+          el.textContent = labels[Math.floor(rng() * labels.length)];
+          el.style.left = 4 + rng() * 82 + "%";
+          el.style.top = 8 + rng() * 78 + "%";
+          el.style.setProperty("--grot", (-20 + rng() * 40).toFixed(1) + "deg");
+          el.addEventListener("pointerenter", function () {
+            el.classList.add("is-squish");
+            var a = audio();
+            if (a && a.typeClick) a.typeClick("hard");
+            later(120, function () {
+              el.classList.add("is-scatter");
+              // 파편 복제
+              for (var k = 0; k < 4; k++) {
+                var bit = el.cloneNode(true);
+                bit.className = "p3h-ghost-btn is-bit";
+                bit.style.left = el.style.left;
+                bit.style.top = el.style.top;
+                bit.style.setProperty("--bx", (-40 + rng() * 80).toFixed(0) + "px");
+                bit.style.setProperty("--by", (-50 + rng() * 80).toFixed(0) + "px");
+                bit.style.setProperty("--br", (-40 + rng() * 80).toFixed(0) + "deg");
+                layer.appendChild(bit);
+                later(700, function () {
+                  if (bit.parentNode) bit.parentNode.removeChild(bit);
+                });
+              }
+            });
+            later(500, function () {
+              if (el.parentNode) el.parentNode.removeChild(el);
+            });
+          });
+          el.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+          layer.appendChild(el);
+        });
+      })(i);
+    }
+    later(reduced ? 3500 : 5500, function () {
+      layer.classList.remove("is-on");
+      layer.innerHTML = "";
+      busyFx = false;
+    });
+    return true;
+  }
+
+  function webcamMockGlitch() {
+    if (blocked()) return false;
+    busyFx = true;
+    var cam = document.getElementById("p3hWebcam");
+    if (!cam) {
+      cam = document.createElement("div");
+      cam.id = "p3hWebcam";
+      cam.className = "p3h-webcam";
+      cam.setAttribute("aria-hidden", "true");
+      cam.innerHTML =
+        '<div class="p3h-cam-chrome"><span class="p3h-cam-rec">REC ●</span><span class="p3h-cam-live">LIVE FEED</span></div>' +
+        '<div class="p3h-cam-noise"></div>' +
+        '<div class="p3h-cam-scan"></div>' +
+        '<div class="p3h-cam-face"></div>' +
+        '<div class="p3h-cam-label">uploading to stasis…</div>';
+      document.body.appendChild(cam);
+    }
+    cam.classList.add("is-on");
+    var a = audio();
+    if (a) {
+      if (a.staticBurst) a.staticBurst(100);
+      if (a.termBeep) a.termBeep(880);
+    }
+    later(reduced ? 3200 : 5200, function () {
+      cam.classList.remove("is-on");
+      busyFx = false;
+    });
+    return true;
+  }
+
+  function audioMuffledHeartbeat() {
+    if (blocked()) return false;
+    busyFx = true;
+    document.body.classList.add("p3h-muffled");
+    var ms = reduced ? 3200 : 5500;
+    var a = audio();
+    if (a) {
+      if (typeof a.muffledHeartbeat === "function") {
+        a.muffledHeartbeat({ ms: ms });
+      } else {
+        if (a.setLevel) a.setLevel(1);
+        if (a.rumble) a.rumble(2.2);
+      }
+    }
+    // 시각 심박 펄스 (사운드와 맞춤)
+    var beats = 0;
+    var maxBeats = Math.floor(ms / 720);
+    var iv = setInterval(function () {
+      if (!phase3() || beats++ >= maxBeats) {
+        clearInterval(iv);
+        return;
+      }
+      document.body.classList.add("p3h-muffled-beat");
+      if (a && typeof a.muffledHeartbeat !== "function") {
+        if (a.termBeep) a.termBeep(beats % 2 ? 55 : 70);
+        if (a.rumble && beats % 2 === 0) a.rumble(1.5);
+      }
+      setTimeout(function () {
+        document.body.classList.remove("p3h-muffled-beat");
+      }, 160);
+    }, 720);
+    later(ms + 100, function () {
+      clearInterval(iv);
+      document.body.classList.remove("p3h-muffled", "p3h-muffled-beat");
+      busyFx = false;
+    });
+    return true;
+  }
+
   // ========== 4. AV 과부하 ==========
 
   function binauralWhisper() {
@@ -542,6 +807,11 @@
     { id: "keyboard_ghost_typing", run: keyboardGhostTyping, w: 1.0 },
     { id: "binaural_whisper", run: binauralWhisper, w: 1.15 },
     { id: "screen_glitch_teardown", run: screenGlitchTeardown, w: 0.35 },
+    { id: "browser_title_kidnap", run: browserTitleKidnap, w: 1.15 },
+    { id: "scroll_gravity_fail", run: scrollGravityFail, w: 1.05 },
+    { id: "ghost_element_spawn", run: ghostElementSpawn, w: 1.1 },
+    { id: "webcam_mock_glitch", run: webcamMockGlitch, w: 1.05 },
+    { id: "audio_muffled_heartbeat", run: audioMuffledHeartbeat, w: 1.1 },
   ];
 
   function pickFx() {
@@ -600,12 +870,16 @@
     started = true;
     clipboardScream();
     armTabCloseTrap();
+    armScrollGravityListener();
     // 진입 직후 한 방 (가벼운 것)
     later(reduced ? 2500 : 4500, function () {
       if (!blocked()) titleBeating();
     });
     later(reduced ? 7000 : 12000, function () {
       if (!blocked()) shadowGrasp();
+    });
+    later(reduced ? 9000 : 16000, function () {
+      if (!blocked()) browserTitleKidnap();
     });
     scheduleLoop();
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
@@ -638,5 +912,10 @@
     keyboardGhostTyping: keyboardGhostTyping,
     binauralWhisper: binauralWhisper,
     screenGlitchTeardown: screenGlitchTeardown,
+    browserTitleKidnap: browserTitleKidnap,
+    scrollGravityFail: scrollGravityFail,
+    ghostElementSpawn: ghostElementSpawn,
+    webcamMockGlitch: webcamMockGlitch,
+    audioMuffledHeartbeat: audioMuffledHeartbeat,
   };
 })();
