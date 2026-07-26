@@ -162,39 +162,43 @@
     });
   }
 
+  var DIARY_FX_CLASSES = [
+    "diary-fx-rogue-cursor",
+    "diary-fx-manic-flash",
+    "diary-fx-backspace-gothic",
+    "diary-fx-mad-rewrite",
+    "diary-fx-rough-backspace",
+    "diary-fx-autocomplete",
+    "diary-fx-tab-complete",
+    "diary-fx-smash",
+    "diary-fx-session-warn",
+    "diary-fx-stutter",
+  ];
+
   function clearDiaryFx() {
-    document.body.classList.remove(
-      "diary-fx-rogue-cursor",
-      "diary-fx-manic-flash",
-      "diary-fx-backspace-gothic"
-    );
-    if (panel) {
-      panel.classList.remove(
-        "diary-fx-rogue-cursor",
-        "diary-fx-manic-flash",
-        "diary-fx-backspace-gothic"
-      );
-    }
-    if (sheet) {
-      sheet.classList.remove(
-        "diary-fx-rogue-cursor",
-        "diary-fx-manic-flash",
-        "diary-fx-backspace-gothic"
-      );
-    }
+    DIARY_FX_CLASSES.forEach(function (cls) {
+      document.body.classList.remove(cls);
+      if (panel) panel.classList.remove(cls);
+      if (sheet) sheet.classList.remove(cls);
+    });
   }
 
   function applyDiaryFx(fx) {
     clearDiaryFx();
     if (!fx) return;
-    var cls =
-      fx === "rogue_cursor"
-        ? "diary-fx-rogue-cursor"
-        : fx === "manic_flash"
-          ? "diary-fx-manic-flash"
-          : fx === "backspace_gothic"
-            ? "diary-fx-backspace-gothic"
-            : "";
+    var map = {
+      rogue_cursor: "diary-fx-rogue-cursor",
+      manic_flash: "diary-fx-manic-flash",
+      backspace_gothic: "diary-fx-backspace-gothic",
+      mad_rewrite: "diary-fx-mad-rewrite",
+      rough_backspace: "diary-fx-rough-backspace",
+      autocomplete: "diary-fx-autocomplete",
+      tab_complete: "diary-fx-tab-complete",
+      smash: "diary-fx-smash",
+      session_warn: "diary-fx-session-warn",
+      stutter: "diary-fx-stutter",
+    };
+    var cls = map[fx];
     if (!cls) return;
     document.body.classList.add(cls);
     if (panel) panel.classList.add(cls);
@@ -208,6 +212,9 @@
     var system = !!opts.system;
     var manic = !!opts.manic;
     var rogue = !!opts.rogue;
+    var mad = !!opts.mad;
+    var rough = !!opts.rough;
+    var stutter = !!opts.stutter;
     var i = 0;
 
     return new Promise(function (resolve) {
@@ -227,43 +234,130 @@
           resolve(true);
           return;
         }
+
+        // rough: 가끔 방금 쓴 글자 2~5개 거칠게 지우고 다시
+        if (rough && i > 4 && Math.random() > 0.86) {
+          var cut = 2 + Math.floor(Math.random() * 4);
+          cut = Math.min(cut, i);
+          textNode.textContent = (textNode.textContent || "").slice(0, -cut);
+          i -= cut;
+          if (i < 0) i = 0;
+          if (caret) caret.classList.add("is-backspacing");
+          clickForChar("\b", true);
+          setTimeout(function () {
+            if (caret) caret.classList.remove("is-backspacing");
+            tick();
+          }, 28 + Math.random() * 40);
+          return;
+        }
+
         var ch = text.charAt(i);
         textNode.textContent += ch;
         i++;
-        clickForChar(ch, hard || system || manic);
+        clickForChar(ch, hard || system || manic || mad);
         if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
 
-        // 로그 커서: 캐럿이 가끔 옆으로 튀고 돌아옴
-        if (rogue && caret) {
-          var jx = (Math.random() - 0.5) * 18;
-          var jy = (Math.random() - 0.5) * 10;
+        if ((rogue || mad) && caret) {
+          var jx = (Math.random() - 0.5) * (mad ? 22 : 18);
+          var jy = (Math.random() - 0.5) * (mad ? 14 : 10);
           caret.style.transform =
             "translate(" + jx.toFixed(1) + "px," + jy.toFixed(1) + "px)";
-          if (Math.random() > 0.82) {
+          if (Math.random() > (mad ? 0.55 : 0.82)) {
             caret.classList.add("is-rogue-jump");
             setTimeout(function () {
               caret.classList.remove("is-rogue-jump");
-            }, 80);
+            }, mad ? 50 : 80);
           }
         }
 
         var base = 1000 / cps;
         var jitter = (Math.random() - 0.35) * base * (manic ? 0.25 : 0.55);
         var extra = 0;
-        if (!manic) {
+        if (stutter) {
+          // 버벅: 가끔 길게 멈춤
+          if (Math.random() > 0.78) extra += 220 + Math.random() * 480;
+          if (Math.random() > 0.92) extra += 600 + Math.random() * 700;
+          base *= 1.15 + Math.random() * 0.9;
+        } else if (!manic) {
           if (ch === "." || ch === "…" || ch === "?" || ch === "!") extra = 140 + Math.random() * 160;
           if (ch === ",") extra = 50;
         } else {
-          // 광기 속도: 간헐적으로 더 미친 버스트
           if (Math.random() > 0.88) base *= 0.35;
         }
-        if (system && !manic) {
+        if (mad && Math.random() > 0.9) base *= 0.4;
+        if (system && !manic && !stutter) {
           base *= 0.85;
           jitter *= 0.4;
         }
-        setTimeout(tick, Math.max(manic ? 10 : 16, base + jitter + extra));
+        setTimeout(tick, Math.max(manic ? 10 : stutter ? 20 : 16, base + jitter + extra));
       }
       tick();
+    });
+  }
+
+  /** 자동완성/탭: 단어·구 단위로 툭툭 붙음 */
+  function typeChunks(textNode, caret, text, opts, token) {
+    opts = opts || {};
+    var tabMode = !!opts.tab;
+    // 공백/구두점 단위 청크
+    var chunks = [];
+    var buf = "";
+    for (var c = 0; c < text.length; c++) {
+      var ch = text.charAt(c);
+      buf += ch;
+      if (ch === " " || ch === "…" || ch === "." || ch === "?" || ch === "!" || ch === "," || ch === "·") {
+        chunks.push(buf);
+        buf = "";
+      }
+    }
+    if (buf) chunks.push(buf);
+    var ci = 0;
+
+    return new Promise(function (resolve) {
+      function nextChunk() {
+        if (token !== typeToken) {
+          resolve(false);
+          return;
+        }
+        if (reduced) {
+          textNode.textContent = text;
+          if (caret && caret.parentNode) caret.parentNode.removeChild(caret);
+          resolve(true);
+          return;
+        }
+        if (ci >= chunks.length) {
+          if (caret && caret.parentNode) caret.parentNode.removeChild(caret);
+          resolve(true);
+          return;
+        }
+        var piece = chunks[ci++];
+        if (tabMode && caret) {
+          caret.classList.add("is-tab-pulse");
+          setTimeout(function () {
+            caret.classList.remove("is-tab-pulse");
+          }, 90);
+        }
+        // 청크 안은 빠르게 한 글자씩
+        var j = 0;
+        function charTick() {
+          if (token !== typeToken) {
+            resolve(false);
+            return;
+          }
+          if (j >= piece.length) {
+            if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
+            // 다음 청크 전 짧은 멈춤 = 탭/완성 느낌
+            setTimeout(nextChunk, tabMode ? 70 + Math.random() * 90 : 40 + Math.random() * 60);
+            return;
+          }
+          textNode.textContent += piece.charAt(j);
+          clickForChar(piece.charAt(j), true);
+          j++;
+          setTimeout(charTick, 12 + Math.random() * 18);
+        }
+        charTick();
+      }
+      nextChunk();
     });
   }
 

@@ -1534,6 +1534,82 @@ body.diary-fx-backspace-gothic .diary-inline-caret.is-backspacing {
   color: #ff7080;
 }
 
+/* 4) mad_rewrite — 미친 커서 + 지웠다 다시 */
+body.diary-fx-mad-rewrite .diary-inline-caret,
+body.diary-fx-mad-rewrite .diary-inline-caret.is-mad {
+  animation: diaryMadBlink 0.18s steps(1) infinite;
+  color: #ff3a50;
+  text-shadow: 0 0 12px rgba(255, 30, 50, 0.7);
+}
+@keyframes diaryMadBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.diary-live-type p.diary-mad-rewrite {
+  color: #ffd0d4 !important;
+  text-shadow: 0 0 10px rgba(255, 40, 60, 0.3);
+}
+
+/* 5) rough_backspace */
+body.diary-fx-rough-backspace .diary-inline-caret.is-backspacing {
+  color: #ff6a7a;
+  transform: translateX(-2px);
+}
+.diary-live-type p.diary-rough {
+  color: #e8d0d4;
+}
+
+/* 6–8) autocomplete / tab / smash */
+body.diary-fx-autocomplete .diary-inline-caret,
+body.diary-fx-tab-complete .diary-inline-caret {
+  color: #9ec8ff;
+}
+body.diary-fx-tab-complete .diary-inline-caret.is-tab-pulse {
+  color: #fff;
+  text-shadow: 0 0 14px rgba(120, 180, 255, 0.9);
+  transform: scale(1.25);
+}
+.diary-live-type p.diary-auto,
+.diary-live-type p.diary-tab {
+  color: #d8e8ff;
+}
+body.diary-fx-smash .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.2s steps(2) infinite;
+}
+.diary-live-type p.diary-smash {
+  letter-spacing: 0.02em;
+  color: #ffe8ea !important;
+}
+
+/* 9) session warn */
+body.diary-fx-session-warn .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.32s steps(2) infinite;
+  box-shadow: inset 0 0 40px rgba(255, 30, 40, 0.12);
+}
+.diary-term-status.is-warn {
+  color: #ff6a7a !important;
+  text-shadow: 0 0 10px rgba(255, 40, 60, 0.45);
+}
+
+/* 10) stutter / low memory */
+body.diary-fx-stutter .diary-sheet.is-terminal {
+  animation: diaryStutterDim 1.4s ease-in-out infinite;
+}
+@keyframes diaryStutterDim {
+  0%, 100% { filter: brightness(1); }
+  40% { filter: brightness(0.88) contrast(1.05); }
+  55% { filter: brightness(1.05); }
+  70% { filter: brightness(0.92); }
+}
+.diary-live-type p.diary-stutter {
+  color: #c8d0d4;
+  opacity: 0.92;
+}
+body.diary-fx-stutter .diary-inline-caret {
+  animation: caret-blink 1.4s steps(1) infinite;
+  color: #ffb070;
+}
+
 .diary-foot {
   padding: 0.75rem 1.1rem 1.1rem;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
