@@ -111,6 +111,9 @@
     typeToken++;
     if (cursorLine) cursorLine.hidden = true;
     document.body.classList.remove("diary-typing");
+    try {
+      clearDiaryFx();
+    } catch (e) {}
   }
 
   function wait(ms, token) {
@@ -159,10 +162,142 @@
     });
   }
 
+  function clearDiaryFx() {
+    document.body.classList.remove(
+      "diary-fx-rogue-cursor",
+      "diary-fx-manic-flash",
+      "diary-fx-backspace-gothic"
+    );
+    if (panel) {
+      panel.classList.remove(
+        "diary-fx-rogue-cursor",
+        "diary-fx-manic-flash",
+        "diary-fx-backspace-gothic"
+      );
+    }
+    if (sheet) {
+      sheet.classList.remove(
+        "diary-fx-rogue-cursor",
+        "diary-fx-manic-flash",
+        "diary-fx-backspace-gothic"
+      );
+    }
+  }
+
+  function applyDiaryFx(fx) {
+    clearDiaryFx();
+    if (!fx) return;
+    var cls =
+      fx === "rogue_cursor"
+        ? "diary-fx-rogue-cursor"
+        : fx === "manic_flash"
+          ? "diary-fx-manic-flash"
+          : fx === "backspace_gothic"
+            ? "diary-fx-backspace-gothic"
+            : "";
+    if (!cls) return;
+    document.body.classList.add(cls);
+    if (panel) panel.classList.add(cls);
+    if (sheet) sheet.classList.add(cls);
+  }
+
+  function typeIntoNode(textNode, caret, text, opts, token) {
+    opts = opts || {};
+    var cps = opts.cps || 18;
+    var hard = !!opts.hard;
+    var system = !!opts.system;
+    var manic = !!opts.manic;
+    var rogue = !!opts.rogue;
+    var i = 0;
+
+    return new Promise(function (resolve) {
+      function tick() {
+        if (token !== typeToken) {
+          resolve(false);
+          return;
+        }
+        if (reduced) {
+          textNode.textContent = text;
+          if (caret && caret.parentNode) caret.parentNode.removeChild(caret);
+          resolve(true);
+          return;
+        }
+        if (i >= text.length) {
+          if (caret && caret.parentNode) caret.parentNode.removeChild(caret);
+          resolve(true);
+          return;
+        }
+        var ch = text.charAt(i);
+        textNode.textContent += ch;
+        i++;
+        clickForChar(ch, hard || system || manic);
+        if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
+
+        // 로그 커서: 캐럿이 가끔 옆으로 튀고 돌아옴
+        if (rogue && caret) {
+          var jx = (Math.random() - 0.5) * 18;
+          var jy = (Math.random() - 0.5) * 10;
+          caret.style.transform =
+            "translate(" + jx.toFixed(1) + "px," + jy.toFixed(1) + "px)";
+          if (Math.random() > 0.82) {
+            caret.classList.add("is-rogue-jump");
+            setTimeout(function () {
+              caret.classList.remove("is-rogue-jump");
+            }, 80);
+          }
+        }
+
+        var base = 1000 / cps;
+        var jitter = (Math.random() - 0.35) * base * (manic ? 0.25 : 0.55);
+        var extra = 0;
+        if (!manic) {
+          if (ch === "." || ch === "…" || ch === "?" || ch === "!") extra = 140 + Math.random() * 160;
+          if (ch === ",") extra = 50;
+        } else {
+          // 광기 속도: 간헐적으로 더 미친 버스트
+          if (Math.random() > 0.88) base *= 0.35;
+        }
+        if (system && !manic) {
+          base *= 0.85;
+          jitter *= 0.4;
+        }
+        setTimeout(tick, Math.max(manic ? 10 : 16, base + jitter + extra));
+      }
+      tick();
+    });
+  }
+
+  function backspaceNode(textNode, caret, opts, token) {
+    opts = opts || {};
+    var cps = opts.cps || 48;
+    return new Promise(function (resolve) {
+      function tick() {
+        if (token !== typeToken) {
+          resolve(false);
+          return;
+        }
+        var cur = textNode.textContent || "";
+        if (!cur.length) {
+          resolve(true);
+          return;
+        }
+        textNode.textContent = cur.slice(0, -1);
+        clickForChar("\b", true);
+        if (caret) {
+          caret.classList.add("is-backspacing");
+        }
+        if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
+        setTimeout(tick, Math.max(12, 1000 / cps));
+      }
+      tick();
+    });
+  }
+
   async function runTodayTyping(token) {
     if (!liveType) return;
     liveType.innerHTML = "";
     todayDone = false;
+    clearDiaryFx();
     if (cursorLine) cursorLine.hidden = false;
     if (sheet) sheet.classList.add("is-terminal");
     if (nextBtn) {
@@ -179,21 +314,54 @@
     }
 
     var TODAY_SEQ = getTodaySeq();
-    // 스토리 메타를 상태줄에 한 번 더
     if (window.__hauntDiaryStories && window.__hauntDiaryStories.current) {
       var st = window.__hauntDiaryStories.current;
       if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[diary] typing story #" + st.id, st.title);
+        console.log(
+          "[diary] typing story #" + st.id,
+          st.title,
+          st.today && st.today.fx
+        );
       }
     }
 
     for (var s = 0; s < TODAY_SEQ.length; s++) {
-      if (token !== typeToken) return;
+      if (token !== typeToken) {
+        clearDiaryFx();
+        return;
+      }
       var step = TODAY_SEQ[s];
       var ok = true;
 
       if (step.kind === "pause") {
         ok = await wait(step.ms || 500, token);
+        if (!ok) {
+          clearDiaryFx();
+          return;
+        }
+        continue;
+      }
+
+      if (step.kind === "fx_start") {
+        applyDiaryFx(step.fx);
+        // manic: 시작 섬광 2~3회
+        if (step.fx === "manic_flash" && sheet) {
+          sheet.classList.add("diary-manic-burst");
+          setTimeout(function () {
+            if (sheet) sheet.classList.remove("diary-manic-burst");
+          }, 420);
+        }
+        ok = await wait(reduced ? 80 : 220, token);
+        if (!ok) {
+          clearDiaryFx();
+          return;
+        }
+        continue;
+      }
+
+      if (step.kind === "fx_end") {
+        clearDiaryFx();
+        ok = await wait(120, token);
         if (!ok) return;
         continue;
       }
@@ -209,7 +377,10 @@
         if (step.beep && a && a.termBeep) a.termBeep(s % 2 ? 990 : 770);
         else clickForChar(">", true);
         ok = await wait(step.delay || 350, token);
-        if (!ok) return;
+        if (!ok) {
+          clearDiaryFx();
+          return;
+        }
         continue;
       }
 
@@ -222,59 +393,112 @@
         caret.className = "diary-inline-caret";
         caret.textContent = "█";
         p.appendChild(caret);
-        // type into a text node before caret
         var textNode = document.createTextNode("");
         p.insertBefore(textNode, caret);
 
-        // custom type into text node
-        var text = step.text;
+        var text = step.text || "";
         var cps = step.cps || 18;
         var hard = !!step.hardKeys;
-        var i = 0;
-        await new Promise(function (resolve) {
-          function tick() {
-            if (token !== typeToken) {
-              resolve(false);
-              return;
-            }
-            if (reduced) {
-              textNode.textContent = text;
-              if (caret.parentNode) caret.parentNode.removeChild(caret);
-              resolve(true);
-              return;
-            }
-            if (i >= text.length) {
-              if (caret.parentNode) caret.parentNode.removeChild(caret);
-              resolve(true);
-              return;
-            }
-            var ch = text.charAt(i);
-            textNode.textContent += ch;
-            i++;
-            clickForChar(ch, hard || step.system);
-            if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
-            var base = 1000 / cps;
-            var jitter = (Math.random() - 0.35) * base * 0.55;
-            var extra = 0;
-            if (ch === "." || ch === "…") extra = 140 + Math.random() * 160;
-            if (ch === ",") extra = 50;
-            // 시스템 구간은 더 기계적·균일
-            if (step.system) {
-              base *= 0.85;
-              jitter *= 0.4;
-            }
-            setTimeout(tick, Math.max(16, base + jitter + extra));
+        var manic = step.fx === "manic_flash";
+        var rogue = step.fx === "rogue_cursor";
+        var gothic = step.fx === "backspace_gothic" && !step.system;
+
+        // manic 중 단락 시작마다 짧은 섬광
+        if (manic && sheet && !reduced) {
+          sheet.classList.add("diary-manic-burst");
+          setTimeout(function () {
+            if (sheet) sheet.classList.remove("diary-manic-burst");
+          }, 160);
+        }
+
+        if (gothic && !reduced) {
+          // 1) 일반체로 타이핑
+          ok = await typeIntoNode(
+            textNode,
+            caret,
+            text,
+            { cps: cps, hard: hard, system: false, manic: false, rogue: false },
+            token
+          );
+          if (!ok) {
+            clearDiaryFx();
+            return;
           }
-          tick();
-        });
-        if (token !== typeToken) return;
-        ok = await wait(step.system ? 280 : 420, token);
-        if (!ok) return;
+          ok = await wait(380, token);
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+          // 2) 백스페이스로 전부 지움
+          // caret 다시 붙이기
+          if (!caret.parentNode) {
+            caret = document.createElement("span");
+            caret.className = "diary-inline-caret is-backspacing";
+            caret.textContent = "█";
+            p.appendChild(caret);
+          } else {
+            caret.classList.add("is-backspacing");
+          }
+          ok = await backspaceNode(textNode, caret, { cps: 52 }, token);
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+          ok = await wait(280, token);
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+          // 3) 고딕체로 다시 타이핑
+          p.classList.add("diary-gothic");
+          caret.classList.remove("is-backspacing");
+          caret.classList.add("diary-gothic-caret");
+          if (!caret.parentNode) p.appendChild(caret);
+          ok = await typeIntoNode(
+            textNode,
+            caret,
+            text,
+            { cps: Math.max(12, cps - 2), hard: true, system: true, manic: false, rogue: false },
+            token
+          );
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+        } else {
+          ok = await typeIntoNode(
+            textNode,
+            caret,
+            text,
+            {
+              cps: cps,
+              hard: hard,
+              system: !!step.system,
+              manic: manic,
+              rogue: rogue,
+            },
+            token
+          );
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+        }
+
+        ok = await wait(step.system ? (manic ? 120 : 280) : manic ? 160 : 420, token);
+        if (!ok) {
+          clearDiaryFx();
+          return;
+        }
       }
     }
 
-    if (token !== typeToken) return;
+    if (token !== typeToken) {
+      clearDiaryFx();
+      return;
+    }
     todayDone = true;
+    clearDiaryFx();
     if (cursorLine) cursorLine.hidden = true;
     document.body.classList.remove("diary-typing");
     if (nextBtn) {

@@ -1456,6 +1456,82 @@ body.diary-typing .diary-sheet.is-terminal {
   .diary-break {
     animation: none;
   }
+  .diary-sheet.diary-manic-burst,
+  body.diary-fx-rogue-cursor .diary-inline-caret,
+  body.diary-fx-manic-flash .diary-sheet.is-terminal {
+    animation: none !important;
+  }
+}
+
+/* ===== 오늘 페이지 스토리별 연출 ===== */
+
+/* 1) 커서가 제멋대로 — rogue_cursor */
+body.diary-fx-rogue-cursor .diary-inline-caret {
+  animation: diaryRogueCaret 0.55s steps(2) infinite;
+  color: #ff9aa8;
+  text-shadow: 0 0 10px rgba(255, 60, 90, 0.55);
+}
+body.diary-fx-rogue-cursor .diary-inline-caret.is-rogue-jump {
+  color: #fff;
+  filter: brightness(1.6);
+}
+@keyframes diaryRogueCaret {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.15; }
+  55% { opacity: 1; transform: translate(3px, -2px); }
+  70% { transform: translate(-4px, 1px); }
+}
+body.diary-fx-rogue-cursor .diary-live-type p.diary-rogue {
+  text-shadow: 0.5px 0 rgba(255, 80, 100, 0.25), -0.5px 0 rgba(80, 255, 160, 0.15);
+}
+
+/* 2) 화면 번쩍 + 광기 속도 — manic_flash */
+body.diary-fx-manic-flash .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.28s steps(2) infinite;
+}
+.diary-sheet.diary-manic-burst {
+  animation: diaryManicBurst 0.18s steps(2) both !important;
+}
+@keyframes diaryManicFlicker {
+  0%, 100% { filter: brightness(1) contrast(1.05); }
+  50% { filter: brightness(1.25) contrast(1.2) saturate(1.15); }
+}
+@keyframes diaryManicBurst {
+  0% { filter: brightness(1); box-shadow: inset 0 0 0 transparent; }
+  30% { filter: brightness(1.55) contrast(1.25); box-shadow: inset 0 0 40px rgba(255, 40, 60, 0.25); }
+  100% { filter: brightness(1); box-shadow: inset 0 0 0 transparent; }
+}
+body.diary-fx-manic-flash .diary-live-type p.diary-manic,
+body.diary-fx-manic-flash .diary-live-type p.diary-human {
+  color: #ffe0e4;
+  letter-spacing: 0.01em;
+}
+body.diary-fx-manic-flash .diary-inline-caret {
+  color: #ff4058;
+  animation: caret-blink 0.22s steps(1) infinite;
+}
+
+/* 3) 지웠다 고딕으로 재타이핑 — backspace_gothic */
+body.diary-fx-backspace-gothic .diary-inline-caret.is-backspacing {
+  color: #ff6a7a;
+  animation: none;
+  opacity: 0.9;
+}
+.diary-live-type p.diary-gothic {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", "Batang", serif !important;
+  font-size: 1.05em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #f0d0d4 !important;
+  text-shadow:
+    0 0 12px rgba(180, 20, 40, 0.35),
+    1px 0 rgba(255, 40, 70, 0.2);
+  line-height: 1.7;
+}
+.diary-live-type p.diary-gothic .diary-gothic-caret,
+.diary-inline-caret.diary-gothic-caret {
+  font-family: "Instrument Serif", Georgia, serif;
+  color: #ff7080;
 }
 
 .diary-foot {
