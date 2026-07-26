@@ -332,16 +332,8 @@
     try {
       var au = window.__hauntAudio;
       if (au) {
-        // 3페이즈 BGM — 이벤트 리스너 실패 대비 직접 호출
-        if (au.startPhase3Bgm) {
-          au.startPhase3Bgm();
-          setTimeout(function () {
-            if (au.startPhase3Bgm) au.startPhase3Bgm();
-          }, 250);
-          setTimeout(function () {
-            if (au.startPhase3Bgm) au.startPhase3Bgm();
-          }, 900);
-        }
+        if (au.stopPhase2Bgm) au.stopPhase2Bgm(true);
+        if (au.stopPhase3Bgm) au.stopPhase3Bgm(true);
         if (au.rumble) au.rumble(1.6);
         if (au.sting) setTimeout(function () { au.sting("blood"); }, 180);
         if (au.whisper) setTimeout(function () { au.whisper(); }, 500);

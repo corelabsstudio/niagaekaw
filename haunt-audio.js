@@ -157,85 +157,16 @@
     }
   }
 
+  // 배경음악 비활성 (요청: 2·3페이즈 BGM 제거)
+  var BGM_DISABLED = true;
+
   function startPhase3Bgm() {
-    p3BgmWanted = true;
-    if (!p3BgmReady()) {
-      console.log("[p3-bgm] skip — not in phase3", {
-        flag: window.__hauntPhase3Active,
-        cls: document.body && document.body.className,
-      });
+    p3BgmWanted = false;
+    if (BGM_DISABLED) {
+      stopPhase3Bgm(true);
       return false;
     }
-
-    try {
-      killP2BgmHard();
-    } catch (eK) {
-      try {
-        if (typeof stopPhase2Bgm === "function") stopPhase2Bgm(true);
-      } catch (eS) {}
-    }
-
-    // AudioContext 깨우기 (다른 SFX 와 같이)
-    try {
-      if (typeof ensureCtx === "function") {
-        var c = ensureCtx();
-        if (c && c.state === "suspended") c.resume();
-      }
-    } catch (eCtx) {}
-
-    var el = ensureP3BgmEl();
-    if (!el) {
-      console.warn("[p3-bgm] no audio element");
-      return false;
-    }
-
-    // 이미 재생 중이면 볼륨만 보정
-    if (!el.paused && !el.ended && el.currentTime > 0) {
-      try {
-        el.volume = P3_BGM_VOL;
-        el.muted = false;
-      } catch (eV) {}
-      p3BgmPlaying = true;
-      return true;
-    }
-
-    try {
-      el.muted = false;
-      el.loop = true;
-      el.volume = P3_BGM_VOL;
-      // 처음부터
-      try {
-        if (el.currentTime > 0.5) el.currentTime = 0;
-      } catch (eT) {}
-    } catch (eSet) {}
-
-    var attempt = function (n) {
-      n = n || 0;
-      var p = el.play();
-      if (p && typeof p.then === "function") {
-        p.then(function () {
-          p3BgmPlaying = true;
-          try {
-            el.volume = P3_BGM_VOL;
-            el.muted = false;
-          } catch (e2) {}
-          console.log("[p3-bgm] PLAYING", p3BgmSrc(), "vol", el.volume);
-        }).catch(function (err) {
-          p3BgmLastErr = String(err && err.message ? err.message : err);
-          p3BgmPlaying = false;
-          console.warn("[p3-bgm] play() failed", p3BgmLastErr, "try", n);
-          if (n < 5) {
-            setTimeout(function () {
-              if (p3BgmWanted && p3BgmReady()) attempt(n + 1);
-            }, 400 + n * 300);
-          }
-        });
-      } else {
-        p3BgmPlaying = !el.paused;
-      }
-    };
-    attempt(0);
-    return true;
+    return false;
   }
 
   function stopPhase3Bgm(fast) {
@@ -271,6 +202,10 @@
   }
 
   function syncPhase3Bgm() {
+    if (BGM_DISABLED) {
+      stopPhase3Bgm(true);
+      return;
+    }
     if (p3BgmReady()) {
       var el = ensureP3BgmEl();
       var ok = el && !el.paused && el.volume > 0.05;
@@ -512,44 +447,16 @@
   }
 
   function startPhase2Bgm() {
-    p2BgmWanted = true;
-    if (!p2BgmReady()) {
-      if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[p2-bgm] not ready (need phase2)");
+    p2BgmWanted = false;
+    if (BGM_DISABLED) {
+      try {
+        killP2BgmHard();
+      } catch (e) {
+        stopPhase2Bgm(true);
       }
       return false;
     }
-    // 이미 잘 재생 중
-    if (p2BgmPlaying && p2BgmUseWA && p2BgmSource) return true;
-    if (p2BgmPlaying && p2BgmEl && !p2BgmEl.paused && p2BgmEl.volume >= P2_BGM_VOL * 0.4) {
-      return true;
-    }
-
-    // 1) Web Audio 우선 (reduced 모션은 HTML 만)
-    if (!reduced && typeof ensureCtx === "function") {
-      try {
-        ensureCtx();
-      } catch (eC) {}
-      if (ctx) {
-        startWebBgm().catch(function () {
-          return startHtmlBgm().catch(function (err) {
-            p2BgmLastErr = String(err && err.message ? err.message : err);
-            p2BgmPlaying = false;
-            if (window.console && /[?&]debug=1/.test(location.search || "")) {
-              console.warn("[p2-bgm] all play paths failed", p2BgmLastErr);
-            }
-          });
-        });
-        return true;
-      }
-    }
-
-    // 2) HTMLAudio 폴백 (reduced / ctx 실패)
-    startHtmlBgm().catch(function (err) {
-      p2BgmLastErr = String(err && err.message ? err.message : err);
-      p2BgmPlaying = false;
-    });
-    return true;
+    return false;
   }
 
   function stopPhase2Bgm(fast) {
@@ -563,6 +470,14 @@
   }
 
   function syncPhase2Bgm() {
+    if (BGM_DISABLED) {
+      try {
+        killP2BgmHard();
+      } catch (e) {
+        stopPhase2Bgm(true);
+      }
+      return;
+    }
     if (p2BgmReady()) {
       var ok = p2BgmPlaying;
       if (p2BgmUseWA && p2BgmSource) ok = true;
@@ -2044,6 +1959,9 @@
     approachLaugh: approachLaugh,
     binauralWhisper: binauralWhisper,
     muffledHeartbeat: muffledHeartbeat,
+    heartbeatBurst: heartbeatBurst,
+    startHauntHeartbeats: startHauntHeartbeats,
+    stopHauntHeartbeats: stopHauntHeartbeats,
     stopAll: stopAll,
     setMaster: setMaster,
     startPhase2Bgm: startPhase2Bgm,

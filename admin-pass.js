@@ -85,17 +85,12 @@
         document.dispatchEvent(new CustomEvent("haunt-phase3", { detail: { from: "admin" } }));
       } catch (e) {}
     }
-    // BGM 직접 재시도 (관리자 버튼 = 사용자 제스처 → play 허용)
     try {
       var au = window.__hauntAudio;
       if (au) {
         if (au.unlock) au.unlock();
-        if (au.startPhase3Bgm) {
-          au.startPhase3Bgm();
-          setTimeout(function () {
-            if (au.startPhase3Bgm) au.startPhase3Bgm();
-          }, 200);
-        }
+        if (au.stopPhase2Bgm) au.stopPhase2Bgm(true);
+        if (au.stopPhase3Bgm) au.stopPhase3Bgm(true);
       }
     } catch (eB) {}
   }
