@@ -4788,12 +4788,21 @@ body.phase-3-active .p2-title-glitch::before {
 }
 body.phase-3-active .stasis-lede,
 body.phase-3-active .p3-lede {
-  color: #c8a8b0 !important;
+  position: relative;
+  z-index: 5;
+  color: #e0c0c8 !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
 }
 body.phase-3-active .p3-lede-melt {
-  opacity: 0.55;
-  filter: blur(0.4px);
-  text-shadow: 0 2px 8px rgba(80, 0, 15, 0.5);
+  opacity: 0.75;
+  filter: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+/* 플랜·카드도 레이어 위로 */
+body.phase-3-active .stasis-plan-row,
+body.phase-3-active .stasis-cards {
+  position: relative;
+  z-index: 5;
 }
 body.phase-3-active .stasis-logo {
   color: #f0d0d8 !important;
@@ -7635,4 +7644,435 @@ body:not(.stage-corrupt):not(.stage-dread):not(.phase-2-active) .plan-corrupt-me
 }
 body:not(.stage-corrupt):not(.stage-dread) .p2-title-glitch {
   display: none !important;
+}
+
+/* ============================================================
+   3페이즈 극한 공포 (phase3-horrors.js)
+   ============================================================ */
+
+/* --- UI melt --- */
+body.p3h-ui-melt .stasis-nav.top,
+body.p3h-ui-melt .stasis-pills,
+body.p3h-ui-melt .stasis-cta,
+body.p3h-ui-melt .stasis-logo {
+  animation: p3hMelt 2.8s ease-in forwards;
+  transform-origin: top center;
+  filter: blur(0.3px);
+}
+body.p3h-ui-melt .stasis-pills .pill-link {
+  animation: p3hMeltDrop 2.4s ease-in forwards;
+}
+body.p3h-ui-melt .stasis-pills .pill-link:nth-child(2) { animation-delay: 0.15s; }
+body.p3h-ui-melt .stasis-pills .pill-link:nth-child(3) { animation-delay: 0.28s; }
+@keyframes p3hMelt {
+  0% { transform: none; filter: none; opacity: 1; }
+  40% { transform: scaleY(1.15) translateY(8px); filter: blur(0.8px) saturate(1.3); }
+  100% { transform: scaleY(1.8) translateY(48px) skewX(4deg); filter: blur(2.5px); opacity: 0.25; }
+}
+@keyframes p3hMeltDrop {
+  0% { transform: none; opacity: 1; }
+  100% { transform: translateY(60px) scaleY(1.6) rotate(3deg); opacity: 0.15; filter: blur(1.5px); }
+}
+
+/* --- text cannibal --- */
+.p3h-cannibal {
+  animation: p3hShakeText 0.12s linear infinite;
+  color: #ff8090 !important;
+}
+.p3h-scream-left {
+  color: #ff4058 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-shadow: 0 0 16px rgba(255, 30, 50, 0.6) !important;
+  animation: p3hScreamPulse 0.5s steps(2) infinite !important;
+}
+.p3h-eaten {
+  opacity: 0.08 !important;
+  filter: blur(1px);
+}
+@keyframes p3hShakeText {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(1px, -1px); }
+  100% { transform: translate(-1px, 1px); }
+}
+@keyframes p3hScreamPulse {
+  50% { opacity: 0.55; filter: contrast(1.4); }
+}
+
+/* --- fake error windows --- */
+.p3h-error-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 88;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.p3h-error-layer.is-on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.p3h-err-win {
+  position: absolute;
+  width: min(280px, 78vw);
+  background: #ece9d8;
+  border: 2px solid #000;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 0, 0, 0.3);
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 12px;
+  color: #000;
+  animation: p3hErrPop 0.18s ease-out both;
+  pointer-events: auto;
+}
+@keyframes p3hErrPop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.p3h-err-title {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  padding: 4px 6px;
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.p3h-err-ico { font-size: 13px; }
+.p3h-err-x {
+  margin-left: auto;
+  background: #c0c0c0;
+  border: 1px solid #000;
+  width: 16px;
+  height: 14px;
+  line-height: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.p3h-err-body {
+  padding: 12px 10px;
+  background: #fff;
+  min-height: 48px;
+  line-height: 1.4;
+}
+.p3h-err-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  background: #ece9d8;
+}
+.p3h-err-btn {
+  min-width: 72px;
+  padding: 3px 10px;
+  border: 1px solid #000;
+  background: #ece9d8;
+  box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #fff;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* --- title heartbeat --- */
+body.p3h-title-beat #mainTitle.p3h-beating,
+#mainTitle.p3h-beating {
+  animation: p3hHeart 0.7s ease-in-out infinite;
+  transform-origin: center center;
+}
+@keyframes p3hHeart {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.08); }
+  45% { transform: scale(0.98); }
+  60% { transform: scale(1.12); }
+}
+body.p3h-beat-flash {
+  background-color: rgba(80, 0, 12, 0.35) !important;
+}
+body.p3h-beat-flash::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 30, 50, 0.35), transparent 65%);
+  animation: p3hBeatWash 0.18s ease-out both;
+}
+@keyframes p3hBeatWash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* --- shadow grasp 3D hands --- */
+.p3h-shadow-grasp {
+  position: fixed;
+  inset: 0;
+  z-index: 72;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  perspective: 900px;
+}
+.p3h-shadow-grasp.is-on {
+  opacity: 1;
+  visibility: visible;
+}
+.p3h-sg-hand {
+  position: absolute;
+  width: min(280px, 42vw);
+  height: min(50vh, 380px);
+  bottom: -8%;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 70%, rgba(20, 2, 6, 0.95), transparent 70%),
+    linear-gradient(180deg, transparent 20%, rgba(10, 0, 4, 0.9) 100%);
+  filter: drop-shadow(0 0 24px rgba(0, 0, 0, 0.9));
+  transform-style: preserve-3d;
+}
+.p3h-sg-hand.left {
+  left: 0;
+  transform: rotateY(28deg) rotateZ(-8deg) translateZ(40px);
+  animation: p3hGraspL 2.8s ease-out both;
+  clip-path: polygon(20% 100%, 10% 60%, 25% 30%, 40% 10%, 55% 25%, 70% 5%, 85% 30%, 90% 70%, 80% 100%);
+}
+.p3h-sg-hand.right {
+  right: 0;
+  transform: rotateY(-28deg) rotateZ(8deg) translateZ(40px);
+  animation: p3hGraspR 2.8s ease-out both;
+  clip-path: polygon(20% 100%, 10% 70%, 15% 30%, 30% 5%, 45% 22%, 60% 8%, 75% 28%, 90% 55%, 80% 100%);
+}
+@keyframes p3hGraspL {
+  from { transform: rotateY(40deg) rotateZ(-12deg) translateZ(-80px) translateY(40px); opacity: 0; }
+  to { transform: rotateY(22deg) rotateZ(-6deg) translateZ(60px) translateY(0); opacity: 1; }
+}
+@keyframes p3hGraspR {
+  from { transform: rotateY(-40deg) rotateZ(12deg) translateZ(-80px) translateY(40px); opacity: 0; }
+  to { transform: rotateY(-22deg) rotateZ(6deg) translateZ(60px) translateY(0); opacity: 1; }
+}
+.p3h-sg-scratch {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, transparent 48%, rgba(255, 255, 255, 0.15) 49%, transparent 50%),
+    linear-gradient(80deg, transparent 52%, rgba(255, 200, 210, 0.12) 53%, transparent 54%);
+  animation: p3hScratch 0.4s steps(2) infinite;
+  opacity: 0.7;
+}
+@keyframes p3hScratch {
+  50% { opacity: 0.3; transform: translateX(2px); }
+}
+.p3h-sg-push {
+  position: absolute;
+  inset: 8% 12%;
+  border: 2px solid rgba(255, 80, 100, 0.15);
+  border-radius: 8px;
+  box-shadow: inset 0 0 60px rgba(255, 40, 60, 0.12);
+  animation: p3hPush 2s ease-in-out infinite;
+}
+@keyframes p3hPush {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.02); opacity: 0.8; }
+}
+
+/* --- gaze lock --- */
+body.p3h-gaze-lock .p3h-gaze-eye,
+.p3h-gaze-eye {
+  animation: p3hGaze 2.5s ease-in-out infinite !important;
+  filter: contrast(1.45) brightness(0.95) saturate(0.5) !important;
+}
+@keyframes p3hGaze {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.06) translate(0, -2%); }
+}
+
+/* --- fake cursor hijack --- */
+body.p3h-cursor-hijack,
+body.p3h-cursor-hijack * {
+  cursor: none !important;
+}
+.p3h-fake-cursor {
+  position: fixed;
+  width: 14px;
+  height: 18px;
+  margin: -2px 0 0 -2px;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(135deg, #fff 0 35%, transparent 35%),
+    linear-gradient(225deg, #fff 0 28%, transparent 28%);
+  filter: drop-shadow(1px 1px 0 #000);
+  transition: left 0.05s linear, top 0.05s linear;
+}
+.p3h-fake-cursor.is-on { opacity: 1; }
+.p3h-fake-cursor.is-slip {
+  transition: left 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* --- tab trap toast --- */
+.p3h-trap-toast {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  z-index: 96;
+  padding: 0.65rem 1.1rem;
+  background: rgba(20, 0, 6, 0.95);
+  border: 1px solid rgba(255, 60, 80, 0.55);
+  color: #ffb0b8;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.p3h-trap-toast.is-on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- ghost terminal --- */
+.p3h-ghost-term {
+  position: fixed;
+  left: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 74;
+  width: min(420px, 92vw);
+  background: rgba(4, 0, 2, 0.92);
+  border: 1px solid rgba(255, 80, 100, 0.35);
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.p3h-ghost-term.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.p3h-gt-head {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.65rem;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #ff8090;
+  border-bottom: 1px solid rgba(255, 60, 80, 0.2);
+  letter-spacing: 0.06em;
+}
+.p3h-gt-body {
+  margin: 0;
+  padding: 0.65rem 0.75rem 0.85rem;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #e8c0c8;
+  min-height: 2.5em;
+  white-space: pre-wrap;
+}
+
+body.p3h-clip-scream {
+  animation: p3hClipFlash 0.35s ease-out;
+}
+@keyframes p3hClipFlash {
+  0% { filter: invert(0.3) hue-rotate(-20deg); }
+  100% { filter: none; }
+}
+
+/* --- teardown stasis --- */
+.p3h-teardown {
+  position: fixed;
+  inset: 0;
+  z-index: 97;
+  background: #020204;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p3h-teardown.is-on {
+  opacity: 1;
+  visibility: visible;
+}
+body.p3h-teardown-lock {
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.p3h-td-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 42%;
+  background: #000;
+  z-index: 1;
+}
+.p3h-td-tear.top {
+  top: 0;
+  transform: translateY(-6%) skewX(-2deg);
+  box-shadow: 0 8px 0 rgba(255, 40, 60, 0.15);
+  animation: p3hTearTop 0.4s steps(2) infinite;
+}
+.p3h-td-tear.bot {
+  bottom: 0;
+  transform: translateY(6%) skewX(2deg);
+  box-shadow: 0 -8px 0 rgba(255, 40, 60, 0.12);
+  animation: p3hTearBot 0.4s steps(2) infinite;
+}
+@keyframes p3hTearTop {
+  50% { transform: translateY(-4%) skewX(1deg) translateX(3px); }
+}
+@keyframes p3hTearBot {
+  50% { transform: translateY(4%) skewX(-1deg) translateX(-3px); }
+}
+.p3h-td-scan {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(255, 255, 255, 0.03) 2px 3px
+  );
+  opacity: 0.6;
+  animation: p3Scan 0.8s linear infinite;
+}
+.p3h-td-center {
+  position: relative;
+  z-index: 3;
+  text-align: left;
+  font-family: "Courier New", ui-monospace, Consolas, monospace;
+  color: #a8a8a8;
+  letter-spacing: 0.12em;
+}
+.p3h-td-line {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  min-height: 1.4em;
+}
+.p3h-td-cursor {
+  color: #c0c0c0;
+  animation: endingBlink 0.9s steps(1) infinite;
+}
+
+body.is-ending .p3h-error-layer,
+body.is-ending .p3h-shadow-grasp,
+body.is-ending .p3h-ghost-term,
+body.is-ending .p3h-teardown,
+body.is-ending .p3h-fake-cursor,
+body.is-ending .p3h-trap-toast,
+body.is-haunting .p3h-error-layer,
+body.is-haunting .p3h-ghost-term {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.p3h-ui-melt .stasis-nav.top,
+  #mainTitle.p3h-beating,
+  .p3h-sg-hand,
+  .p3h-td-tear {
+    animation: none !important;
+  }
 }

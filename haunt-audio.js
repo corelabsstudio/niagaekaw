@@ -27,6 +27,7 @@
       dreadHit: noop,
       metal: noop,
       codeLaugh: noop,
+      binauralWhisper: noop,
       stopAll: noop,
       setMaster: noop,
     };
@@ -687,6 +688,79 @@
     });
   }
 
+  /**
+   * 3페이즈: 바이노럴 속삭임 — 좌우 패닝 교차 저음 보이스
+   */
+  function binauralWhisper(opts) {
+    opts = opts || {};
+    unlock();
+    var c = ensureCtx();
+    if (!c || !unlocked) return;
+    var ms = opts.ms != null ? opts.ms : 4200;
+    var t0 = now();
+    var dur = ms / 1000;
+    try {
+      var pan = c.createStereoPanner ? c.createStereoPanner() : null;
+      var g = c.createGain();
+      var f = c.createBiquadFilter();
+      f.type = "bandpass";
+      f.frequency.value = 420;
+      f.Q.value = 1.4;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(v(0.045), t0 + 0.25);
+      g.gain.setValueAtTime(v(0.04), t0 + dur * 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+      // 두 개의 미세 디튠 사인 = 이질적 보이스
+      var o1 = c.createOscillator();
+      var o2 = c.createOscillator();
+      o1.type = "sine";
+      o2.type = "triangle";
+      o1.frequency.value = 95;
+      o2.frequency.value = 98.5;
+      o1.connect(f);
+      o2.connect(f);
+      f.connect(g);
+      if (pan) {
+        g.connect(pan);
+        pan.connect(out());
+        // 좌↔우 교차 패닝
+        var steps = 12;
+        for (var i = 0; i <= steps; i++) {
+          var t = t0 + (dur * i) / steps;
+          var p = Math.sin((i / steps) * Math.PI * 3) * 0.92;
+          pan.pan.setValueAtTime(p, t);
+        }
+      } else {
+        g.connect(out());
+      }
+      o1.start(t0);
+      o2.start(t0);
+      o1.stop(t0 + dur + 0.05);
+      o2.stop(t0 + dur + 0.05);
+      // 숨/노이즈 레이어
+      playNoise({
+        dur: Math.min(0.8, dur * 0.35),
+        freq: 900,
+        filter: "lowpass",
+        vol: 0.03,
+        q: 0.6,
+      });
+      setTimeout(function () {
+        playNoise({
+          delay: 0,
+          dur: 0.35,
+          freq: 700,
+          filter: "bandpass",
+          vol: 0.025,
+          q: 0.8,
+        });
+      }, ms * 0.4);
+    } catch (e) {
+      whisper();
+    }
+  }
+
   function stopAll() {
     level = 0;
     if (beatTimer) clearTimeout(beatTimer);
@@ -822,6 +896,7 @@
     dreadHit: dreadHit,
     metal: metal,
     codeLaugh: codeLaugh,
+    binauralWhisper: binauralWhisper,
     stopAll: stopAll,
     setMaster: setMaster,
   };
