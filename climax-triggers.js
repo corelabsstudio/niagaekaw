@@ -798,8 +798,14 @@
       hint: "깜빡이는 점 더블클릭 (초 짝수)",
       arm: function (done) {
         window.__hauntHitPulseMode = true;
+        document.body.classList.add("hit-pulse-mode");
+        document.documentElement.classList.add("hit-pulse-mode");
+        var clk = document.getElementById("clock");
+        if (clk) clk.classList.add("hit-pulse-clock");
         document.addEventListener("haunt-hit-success", function onHit() {
           document.removeEventListener("haunt-hit-success", onHit);
+          document.body.classList.remove("hit-pulse-mode");
+          document.documentElement.classList.remove("hit-pulse-mode");
           done();
         });
       },
@@ -935,7 +941,7 @@
     feat_hold: "Features 카드 제목. 길게.",
     quote_hold:
       "아래로 스크롤 → Features/UI 아래 어두운 카드(// do_not_trust). 맨 아랫줄 서명(— … / Esc 안내). 길게.",
-    hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 더블클릭.",
+    hit_pulse: "상단 시계가 짝수 초(·GO)일 때, 빨간 깜빡 점을 더블클릭.",
   };
   var MISSION_MOBILE = {
     type_kill: "‘Team’ 요금 카드. 일곱 번 탭.",
@@ -946,7 +952,7 @@
     badge_hold: "큰 제목. 길게 누르고 있어.",
     quote_hold:
       "아래로 스크롤 → 어두운 카드 맨 아랫줄(서명/Esc 안내). 길게 누르기.",
-    hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 두 번 탭.",
+    hit_pulse: "상단 시계 ·GO 일 때, 빨간 깜빡 점을 두 번 탭.",
     idle_haunt: "손 떼고 가만히. 조금만.",
   };
   if (isMobileHaunt() && MISSION_MOBILE[active.id]) {

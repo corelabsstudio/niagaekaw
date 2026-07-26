@@ -56,47 +56,49 @@
     if (p === "mobile") {
       return {
         name: "mobile",
-        minDwellMs: 18000,
+        minDwellMs: 4000,
         deepNeed: 0.85,
         midLo: 0.12,
         midHi: 0.42,
         midHoldMs: 3000,
         ritualSettleMs: 2000,
         midDecay: 80,
-        hitSize: 44,
-        hitPad: 12,
-        hitMaxYRatio: 0.82,
-        edgeWeight: 0.75,
-        moveDelayMin: 1100,
-        moveDelaySpan: 500,
-        pulseLiveMin: 1100,
-        pulseLiveSpan: 350,
-        pulseGapMin: 6000,
-        pulseGapSpan: 5000,
-        dblWindowMs: 480,
+        // hit_pulse: 찾을 수 있게 (깨는 난이도 X)
+        hitSize: 52,
+        hitPad: 16,
+        hitMaxYRatio: 0.88,
+        edgeWeight: 0.35,
+        moveDelayMin: 2200,
+        moveDelaySpan: 1200,
+        pulseLiveMin: 2800,
+        pulseLiveSpan: 1600,
+        pulseGapMin: 2800,
+        pulseGapSpan: 2200,
+        dblWindowMs: 520,
         microGlitchChance: 0.04,
       };
     }
     return {
       name: "desktop",
-      minDwellMs: 22000,
+      minDwellMs: 4000,
       deepNeed: 0.9,
       midLo: 0.12,
       midHi: 0.38,
       midHoldMs: 3500,
       ritualSettleMs: 2500,
       midDecay: 120,
-      hitSize: 16,
-      hitPad: 8,
+      // hit_pulse: 눈에 띄는 점 + 충분히 오래 머묾
+      hitSize: 28,
+      hitPad: 20,
       hitMaxYRatio: 1,
-      edgeWeight: 0.85,
-      moveDelayMin: 900,
-      moveDelaySpan: 400,
-      pulseLiveMin: 750,
-      pulseLiveSpan: 200,
-      pulseGapMin: 6000,
-      pulseGapSpan: 5000,
-      dblWindowMs: 380,
+      edgeWeight: 0.3,
+      moveDelayMin: 2000,
+      moveDelaySpan: 1400,
+      pulseLiveMin: 3200,
+      pulseLiveSpan: 1800,
+      pulseGapMin: 2500,
+      pulseGapSpan: 2000,
+      dblWindowMs: 420,
       microGlitchChance: 0.06,
     };
   }
@@ -128,13 +130,30 @@
     if (debug) console.log("[haunt] profile →", profile, SPEC);
   }
 
-  // ----- clock -----
+  // ----- clock (hit_pulse: 짝수 초 강조) -----
   function tickClock() {
     if (!clock) return;
-    clock.textContent = new Date().toTimeString().slice(0, 8);
+    var d = new Date();
+    clock.textContent = d.toTimeString().slice(0, 8);
+    var sec = d.getSeconds();
+    var even = sec % 2 === 0;
+    var pulseMode = !!window.__hauntHitPulseMode;
+    clock.classList.toggle("is-even-sec", pulseMode && even);
+    clock.classList.toggle("is-odd-sec", pulseMode && !even);
+    clock.classList.toggle("hit-pulse-clock", pulseMode);
+    if (pulseMode) {
+      // 초 자리만 살짝 강조 표기: 12:34:56 → 초 가독
+      clock.setAttribute("data-sec", sec < 10 ? "0" + sec : String(sec));
+      clock.title = even
+        ? "짝수 초 — 지금 점을 더블클릭"
+        : "홀수 초 — 짝수 초를 기다려";
+    } else {
+      clock.removeAttribute("data-sec");
+      clock.removeAttribute("title");
+    }
   }
   tickClock();
-  setInterval(tickClock, 1000);
+  setInterval(tickClock, 250);
 
   var traps = [
     "파일을 찾을 수 없습니다. (error 0xDEAD) — 그런데 누가 계속 읽고 있지?",
@@ -185,13 +204,14 @@
     return ritualDone && Date.now() - ritualDoneAt >= SPEC.ritualSettleMs;
   }
   function softReady() {
-    // hit_pulse 트리거 세션에서만 고전 의식 사용 (climax-triggers.js 가 플래그)
+    // hit_pulse 세션에서만 점 출현 (climax-triggers.js 가 플래그)
     if (!window.__hauntHitPulseMode) return false;
     // 2페이즈 게이트: 일기 발견 + stage≥2
     if (!window.__hauntDiaryDiscovered) return false;
     var st = typeof window.__hauntStage === "function" ? window.__hauntStage() : 0;
     if (st < 2) return false;
-    return dwellOk() && hasDeep && midOk() && ritualSettled();
+    // 풀 수 있게: 긴 스크롤/플랜 의식 없이 짧은 체류만
+    return Date.now() - pageReadyAt >= (SPEC.minDwellMs || 4000);
   }
 
   function logDebug() {
@@ -332,26 +352,35 @@
     if (SPEC.hitMaxYRatio < 1) {
       maxY = Math.max(pad, Math.floor(window.innerHeight * SPEC.hitMaxYRatio) - h);
     }
+    // 중앙 근처 제외한 보이기 쉬운 밴드 (너무 구석에만 숨기지 않음)
     var edge = Math.random() < SPEC.edgeWeight;
     var x, y;
     if (edge) {
       var side = Math.floor(Math.random() * 4);
       if (side === 0) {
-        x = pad + Math.random() * 28;
-        y = pad + Math.random() * maxY;
+        x = pad + Math.random() * 48;
+        y = pad + Math.random() * Math.max(1, maxY - pad);
       } else if (side === 1) {
-        x = maxX - Math.random() * 28;
-        y = pad + Math.random() * maxY;
+        x = maxX - Math.random() * 48;
+        y = pad + Math.random() * Math.max(1, maxY - pad);
       } else if (side === 2) {
-        x = pad + Math.random() * maxX;
-        y = pad + Math.random() * 28;
+        x = pad + Math.random() * Math.max(1, maxX - pad);
+        y = pad + Math.random() * 48;
       } else {
-        x = pad + Math.random() * maxX;
-        y = maxY - Math.random() * 28;
+        x = pad + Math.random() * Math.max(1, maxX - pad);
+        y = maxY - Math.random() * 48;
       }
     } else {
-      x = pad + Math.random() * (maxX - pad);
-      y = pad + Math.random() * (maxY - pad);
+      // 화면 중~가장자리 밴드: 읽기 영역 한가운데 가리지 않되 찾기 쉽게
+      var band = 0.12 + Math.random() * 0.76;
+      var along = Math.random();
+      if (along < 0.5) {
+        x = pad + Math.random() * Math.max(1, maxX - pad);
+        y = pad + band * Math.max(1, maxY - pad);
+      } else {
+        x = pad + band * Math.max(1, maxX - pad);
+        y = pad + Math.random() * Math.max(1, maxY - pad);
+      }
     }
     hit.style.left = Math.round(x) + "px";
     hit.style.top = Math.round(y) + "px";
@@ -410,6 +439,8 @@
   function disarmPulse() {
     armedForHit = false;
     pulseOn = false;
+    document.body.classList.remove("hit-pulse-armed");
+    document.documentElement.classList.remove("hit-pulse-armed");
     if (pulseTimer) {
       clearTimeout(pulseTimer);
       pulseTimer = null;
@@ -427,12 +458,15 @@
   function evaluateArm() {
     if (hauntActive) return;
     var ok = softReady();
+    document.body.classList.toggle("hit-pulse-armed", ok);
+    document.documentElement.classList.toggle("hit-pulse-armed", ok);
     if (ok && !armedForHit) {
       armedForHit = true;
       if (pulseTimer) clearTimeout(pulseTimer);
+      // 바로 점이 보이도록 짧게
       pulseTimer = setTimeout(function () {
         if (armedForHit && !hauntActive) startPulseBurst();
-      }, 2000 + Math.random() * 3000);
+      }, 600 + Math.random() * 900);
     } else if (!ok && armedForHit) {
       disarmPulse();
     }
