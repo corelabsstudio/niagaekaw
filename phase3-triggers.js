@@ -307,12 +307,35 @@
     },
     {
       id: "monitor_quad",
-      hint: "모니터 프레임 4번",
+      hint: "Live preview 카드 4번",
       arm: function (done) {
-        var el =
-          document.querySelector(".monitor-frame") ||
+        // 3페이즈에선 .monitor-frame 이 display:none (OVER 패널로 교체) → 숨은 요소에 붙이면 클리어 불가
+        function isVisible(el) {
+          if (!el) return false;
+          try {
+            var cs = getComputedStyle(el);
+            if (cs.display === "none" || cs.visibility === "hidden") return false;
+            if (el.offsetParent === null && el !== document.body) {
+              // fixed 등 예외 제외 — 여기선 카드/프레임만
+              if (cs.position !== "fixed") return false;
+            }
+            return true;
+          } catch (e) {
+            return !!el;
+          }
+        }
+        var frame = document.querySelector(".monitor-frame");
+        var card =
           document.querySelector(".stasis-monitor-card") ||
+          document.querySelector("article.stasis-card-dark") ||
           document.querySelector(".stasis-card-dark");
+        var over = document.getElementById("p3AutopsyOver");
+        // 보이는 대상 우선: 카드 전체 > OVER 패널 > 모니터 프레임
+        var el = null;
+        if (card && isVisible(card)) el = card;
+        else if (over && isVisible(over)) el = over;
+        else if (frame && isVisible(frame)) el = frame;
+        else el = card || over || frame;
         armTapEl(el, 4, 3000, done);
       },
     },
@@ -655,7 +678,8 @@
     pro_spam: "‘Pro’ 요금 카드를 일곱 번 클릭하세요.",
     docs_triple: "상단 내비 ‘Docs’를 세 번 클릭하세요.",
     pricing_hold: "상단 내비 ‘Pricing’을 길게 누르세요.",
-    monitor_quad: "모니터/다크 카드 프레임을 네 번 클릭하세요.",
+    monitor_quad:
+      "아래로 스크롤 → Features 옆(오른쪽) 어두운 카드 ‘Live preview / UI section’(3페이즈에선 OVER)을 네 번 클릭하세요.",
     badge_mash: "상태 뱃지(또는 큰 제목)를 다섯 번 클릭하세요.",
     title_hold: "큰 제목을 길게 누르세요.",
     beta_hold: "맨 아래 푸터 beta를 길게 누르세요.",
@@ -679,6 +703,8 @@
     badge_mash: "큰 제목을 빠르게 다섯 번 탭하세요.",
     quote_double: "어두운 인용 배너를 두 번 탭하세요.",
     long_idle: "손 떼고 가만히. 힌트 후 약 15초.",
+    monitor_quad:
+      "아래로 스크롤 → Features 옆 어두운 Live preview 카드(OVER)를 네 번 탭하세요.",
   };
   if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
     active.mission = MISSION_MOBILE[active.id];
