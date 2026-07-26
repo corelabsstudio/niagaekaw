@@ -27,14 +27,20 @@
   var p2BgmUseWA = false; // Web Audio 경로 성공 시 true
   var p2BgmLastErr = "";
 
-  // 3페이즈 BGM — Iron_Chest_Cavity (HTMLAudio 루프, 안정 우선)
+  // 3페이즈 BGM — Iron_Chest_Cavity (WebAudio 우선 + HTML 폴백, P2와 동일 전략)
   var P3_BGM_REL = "assets/audio/Iron_Chest_Cavity.mp3";
-  var P3_BGM_VOL = 0.28;
+  var P3_BGM_VOL = 0.36;
   var p3BgmEl = null;
   var p3BgmWanted = false;
   var p3BgmFadeTimer = null;
   var p3BgmPlaying = false;
   var p3BgmLastErr = "";
+  var p3BgmBuffer = null;
+  var p3BgmLoadPromise = null;
+  var p3BgmSource = null;
+  var p3BgmGainNode = null;
+  var p3BgmUseWA = false;
+  var p3BgmStarting = false;
 
   function resolveAudioUrl(rel) {
     try {
@@ -57,12 +63,14 @@
       if (!document.body) return false;
       if (document.body.classList.contains("is-haunting")) return false;
       if (document.body.classList.contains("is-ending")) return false;
-      if (window.__hauntPhase3Active) return true;
+      if (window.__hauntPhase3Active === true) return true;
       if (document.body.classList.contains("phase-3-active")) return true;
       try {
-        if (sessionStorage.getItem("haunt_phase3") === "1") {
-          // 복구 직후 플래그 지연 대비
-          return !!window.__hauntDiaryDiscovered;
+        if (
+          sessionStorage.getItem("haunt_phase3") === "1" &&
+          window.__hauntDiaryDiscovered
+        ) {
+          return true;
         }
       } catch (e0) {}
       return false;
@@ -74,17 +82,16 @@
   function ensureP3BgmEl() {
     if (p3BgmEl) return p3BgmEl;
     try {
-      p3BgmEl = new Audio();
-      p3BgmEl.src = p3BgmSrc();
+      p3BgmEl = new Audio(p3BgmSrc());
       p3BgmEl.loop = true;
       p3BgmEl.preload = "auto";
-      p3BgmEl.volume = 0;
+      p3BgmEl.volume = 0.12;
       p3BgmEl.setAttribute("playsinline", "");
       p3BgmEl.setAttribute("aria-hidden", "true");
       p3BgmEl.addEventListener("error", function () {
-        p3BgmLastErr = "html-audio-error";
-        if (window.console && /[?&]debug=1/.test(location.search || "")) {
-          console.warn("[p3-bgm] load error", p3BgmSrc(), p3BgmEl && p3BgmEl.error);
+        p3BgmLastErr = "html-audio-error code=" + (p3BgmEl.error && p3BgmEl.error.code);
+        if (window.console) {
+          console.warn("[p3-bgm] load error", p3BgmSrc(), p3BgmEl.error);
         }
       });
       try {
@@ -105,16 +112,20 @@
       p3BgmFadeTimer = null;
     }
     var from = typeof el.volume === "number" ? el.volume : 0;
-    var steps = Math.max(6, Math.floor((ms || 1000) / 50));
+    var steps = Math.max(4, Math.floor((ms || 800) / 40));
     var i = 0;
     p3BgmFadeTimer = setInterval(function () {
       i++;
       var t = Math.min(1, i / steps);
-      el.volume = Math.max(0, Math.min(1, from + (target - from) * t));
+      try {
+        el.volume = Math.max(0, Math.min(1, from + (target - from) * t));
+      } catch (eV) {}
       if (i >= steps) {
         clearInterval(p3BgmFadeTimer);
         p3BgmFadeTimer = null;
-        el.volume = Math.max(0, Math.min(1, target));
+        try {
+          el.volume = Math.max(0, Math.min(1, target));
+        } catch (eV2) {}
         if (target <= 0.001) {
           try {
             el.pause();
@@ -122,94 +133,296 @@
           p3BgmPlaying = false;
         }
       }
-    }, 50);
+    }, 40);
+  }
+
+  function killP2BgmHard() {
+    // 2페이즈 트랙 즉시 절단 (페이드 대기 없이)
+    p2BgmWanted = false;
+    if (p2BgmFadeTimer) {
+      clearInterval(p2BgmFadeTimer);
+      p2BgmFadeTimer = null;
+    }
+    if (p2BgmSource) {
+      try {
+        p2BgmSource.stop();
+      } catch (e1) {}
+      try {
+        p2BgmSource.disconnect();
+      } catch (e2) {}
+      p2BgmSource = null;
+    }
+    p2BgmUseWA = false;
+    p2BgmPlaying = false;
+    if (p2BgmGainNode) {
+      try {
+        p2BgmGainNode.gain.value = 0.0001;
+      } catch (e3) {}
+    }
+    if (p2BgmEl) {
+      try {
+        p2BgmEl.pause();
+        p2BgmEl.volume = 0;
+        p2BgmEl.currentTime = 0;
+      } catch (e4) {}
+    }
+  }
+
+  function loadP3BgmBuffer() {
+    if (p3BgmBuffer) return Promise.resolve(p3BgmBuffer);
+    if (p3BgmLoadPromise) return p3BgmLoadPromise;
+    var url = p3BgmSrc();
+    p3BgmLoadPromise = fetch(url)
+      .then(function (r) {
+        if (!r.ok) throw new Error("p3-bgm-http-" + r.status);
+        return r.arrayBuffer();
+      })
+      .then(function (ab) {
+        if (typeof ensureCtx !== "function") throw new Error("no-ensureCtx");
+        var c = ensureCtx();
+        if (!c) throw new Error("no-audio-ctx");
+        return new Promise(function (resolve, reject) {
+          var p = c.decodeAudioData(ab.slice(0), resolve, reject);
+          if (p && typeof p.then === "function") p.then(resolve, reject);
+        });
+      })
+      .then(function (buf) {
+        p3BgmBuffer = buf;
+        return buf;
+      })
+      .catch(function (err) {
+        p3BgmLastErr = String(err && err.message ? err.message : err);
+        p3BgmLoadPromise = null;
+        if (window.console) console.warn("[p3-bgm] decode fail", p3BgmLastErr, url);
+        throw err;
+      });
+    return p3BgmLoadPromise;
+  }
+
+  function startP3WebBgm() {
+    if (typeof ensureCtx !== "function") {
+      return Promise.reject(new Error("no-ensureCtx"));
+    }
+    var c = ensureCtx();
+    if (!c) return Promise.reject(new Error("no-ctx"));
+    if (c.state === "suspended") {
+      try {
+        c.resume();
+      } catch (eR) {}
+    }
+    return loadP3BgmBuffer().then(function (buf) {
+      if (!p3BgmReady() || !p3BgmWanted) return false;
+      if (p3BgmSource && p3BgmUseWA && p3BgmGainNode) {
+        var t = c.currentTime;
+        p3BgmGainNode.gain.cancelScheduledValues(t);
+        p3BgmGainNode.gain.setValueAtTime(
+          Math.max(0.0001, p3BgmGainNode.gain.value),
+          t
+        );
+        p3BgmGainNode.gain.linearRampToValueAtTime(P3_BGM_VOL, t + 0.6);
+        p3BgmPlaying = true;
+        return true;
+      }
+      if (p3BgmSource) {
+        try {
+          p3BgmSource.stop();
+        } catch (e0) {}
+        p3BgmSource = null;
+      }
+      p3BgmGainNode = c.createGain();
+      p3BgmGainNode.gain.value = 0.0001;
+      p3BgmGainNode.connect(c.destination);
+      p3BgmSource = c.createBufferSource();
+      p3BgmSource.buffer = buf;
+      p3BgmSource.loop = true;
+      p3BgmSource.connect(p3BgmGainNode);
+      p3BgmSource.start(0);
+      var t0 = c.currentTime;
+      p3BgmGainNode.gain.linearRampToValueAtTime(P3_BGM_VOL, t0 + 0.8);
+      p3BgmUseWA = true;
+      p3BgmPlaying = true;
+      if (p3BgmEl) {
+        try {
+          p3BgmEl.pause();
+        } catch (e1) {}
+      }
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.log("[p3-bgm] WebAudio playing", p3BgmSrc(), "vol", P3_BGM_VOL);
+      }
+      return true;
+    });
+  }
+
+  function startP3HtmlBgm() {
+    var el = ensureP3BgmEl();
+    if (!el) return Promise.reject(new Error("no-el"));
+    try {
+      el.volume = Math.max(0.18, el.volume || 0);
+    } catch (e) {}
+    var p = el.play();
+    if (p && typeof p.then === "function") {
+      return p.then(function () {
+        p3BgmPlaying = true;
+        fadeP3HtmlTo(P3_BGM_VOL, 700);
+        if (window.console && /[?&]debug=1/.test(location.search || "")) {
+          console.log("[p3-bgm] HTMLAudio playing", p3BgmSrc(), "vol", P3_BGM_VOL);
+        }
+        return true;
+      });
+    }
+    p3BgmPlaying = true;
+    fadeP3HtmlTo(P3_BGM_VOL, 700);
+    return Promise.resolve(true);
   }
 
   function startPhase3Bgm() {
     p3BgmWanted = true;
     if (!p3BgmReady()) {
       if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[p3-bgm] not ready");
+        console.log("[p3-bgm] not ready", {
+          p3: !!window.__hauntPhase3Active,
+          cls: document.body && document.body.className,
+        });
       }
       return false;
     }
-    // 2페이즈 트랙 정리
+    // 2페이즈 즉시 끔
     try {
-      stopPhase2Bgm(true);
-    } catch (eS) {}
+      killP2BgmHard();
+    } catch (eK) {
+      try {
+        stopPhase2Bgm(true);
+      } catch (eS) {}
+    }
 
+    // 이미 재생 중
+    if (p3BgmPlaying && p3BgmUseWA && p3BgmSource) return true;
     if (
       p3BgmPlaying &&
       p3BgmEl &&
       !p3BgmEl.paused &&
-      p3BgmEl.volume >= P3_BGM_VOL * 0.35
+      p3BgmEl.volume >= P3_BGM_VOL * 0.3
     ) {
       return true;
     }
+    if (p3BgmStarting) return true;
+    p3BgmStarting = true;
 
-    var el = ensureP3BgmEl();
-    if (!el) return false;
-    try {
-      el.volume = Math.max(el.volume || 0, 0.1);
-    } catch (eV) {}
-    var play = function () {
-      var p = el.play();
-      if (p && typeof p.then === "function") {
-        p.then(function () {
-          p3BgmPlaying = true;
-          fadeP3HtmlTo(P3_BGM_VOL, 1400);
-          if (window.console && /[?&]debug=1/.test(location.search || "")) {
-            console.log("[p3-bgm] playing", p3BgmSrc(), "vol", P3_BGM_VOL);
-          }
-        }).catch(function (err) {
-          p3BgmLastErr = String(err && err.message ? err.message : err);
-          p3BgmPlaying = false;
-          if (window.console && /[?&]debug=1/.test(location.search || "")) {
-            console.warn("[p3-bgm] play blocked", p3BgmLastErr);
-          }
-        });
-      } else {
-        p3BgmPlaying = true;
-        fadeP3HtmlTo(P3_BGM_VOL, 1400);
-      }
+    var done = function () {
+      p3BgmStarting = false;
     };
-    // 로드 전이면 canplay 후 재생
-    if (el.readyState >= 2) play();
-    else {
-      var once = function () {
-        el.removeEventListener("canplay", once);
-        play();
-      };
-      el.addEventListener("canplay", once);
+
+    // WebAudio 우선 (P2와 동일 — 이미 사용자 제스처 후면 잘 됨)
+    if (!reduced && typeof ensureCtx === "function") {
       try {
-        el.load();
-      } catch (eL2) {}
-      // 폴백 재시도
-      setTimeout(function () {
-        if (p3BgmWanted && p3BgmReady() && (!p3BgmPlaying || (p3BgmEl && p3BgmEl.paused))) {
-          play();
-        }
-      }, 600);
+        ensureCtx();
+        if (ctx && ctx.state === "suspended") ctx.resume();
+      } catch (eC) {}
+      if (ctx) {
+        startP3WebBgm()
+          .then(done)
+          .catch(function () {
+            return startP3HtmlBgm()
+              .then(done)
+              .catch(function (err) {
+                p3BgmLastErr = String(err && err.message ? err.message : err);
+                p3BgmPlaying = false;
+                done();
+                if (window.console) {
+                  console.warn("[p3-bgm] all paths failed", p3BgmLastErr);
+                }
+              });
+          });
+        return true;
+      }
     }
+
+    startP3HtmlBgm()
+      .then(done)
+      .catch(function (err) {
+        p3BgmLastErr = String(err && err.message ? err.message : err);
+        p3BgmPlaying = false;
+        done();
+      });
     return true;
   }
 
   function stopPhase3Bgm(fast) {
     p3BgmWanted = false;
-    if (p3BgmEl) fadeP3HtmlTo(0, fast ? 350 : 1000);
+    p3BgmStarting = false;
+    if (p3BgmFadeTimer) {
+      clearInterval(p3BgmFadeTimer);
+      p3BgmFadeTimer = null;
+    }
+    if (p3BgmSource) {
+      try {
+        if (p3BgmGainNode && ctx) {
+          var t0 = ctx.currentTime;
+          p3BgmGainNode.gain.cancelScheduledValues(t0);
+          p3BgmGainNode.gain.setValueAtTime(
+            Math.max(0.0001, p3BgmGainNode.gain.value),
+            t0
+          );
+          p3BgmGainNode.gain.linearRampToValueAtTime(
+            0.0001,
+            t0 + (fast ? 0.2 : 0.8)
+          );
+        }
+      } catch (eG) {}
+      setTimeout(
+        function () {
+          try {
+            p3BgmSource.stop();
+          } catch (e1) {}
+          try {
+            p3BgmSource.disconnect();
+          } catch (e2) {}
+          p3BgmSource = null;
+          p3BgmUseWA = false;
+          p3BgmPlaying = false;
+        },
+        fast ? 220 : 900
+      );
+    }
+    if (p3BgmEl) {
+      if (fast) {
+        try {
+          p3BgmEl.pause();
+          p3BgmEl.volume = 0;
+        } catch (e3) {}
+        p3BgmPlaying = false;
+      } else {
+        fadeP3HtmlTo(0, 900);
+      }
+    }
   }
 
   function syncPhase3Bgm() {
     if (p3BgmReady()) {
-      var ok =
-        p3BgmPlaying &&
-        p3BgmEl &&
-        !p3BgmEl.paused &&
-        p3BgmEl.volume > 0.03;
+      var ok = false;
+      if (p3BgmUseWA && p3BgmSource) ok = true;
+      if (p3BgmEl && !p3BgmEl.paused && p3BgmEl.volume > 0.05) ok = true;
       if (!ok) startPhase3Bgm();
-    } else if (p3BgmPlaying || (p3BgmEl && !p3BgmEl.paused)) {
+    } else if (
+      p3BgmPlaying ||
+      p3BgmSource ||
+      (p3BgmEl && !p3BgmEl.paused)
+    ) {
       stopPhase3Bgm(false);
     }
+  }
+
+  // 2페이즈 중에 3페이즈 트랙 미리 로드
+  function preloadP3Bgm() {
+    try {
+      ensureP3BgmEl();
+      if (!reduced && typeof ensureCtx === "function") {
+        try {
+          ensureCtx();
+        } catch (e) {}
+        loadP3BgmBuffer().catch(function () {});
+      }
+    } catch (e2) {}
   }
 
   function p2BgmReady() {
@@ -559,8 +772,14 @@
       }, 500);
     });
     document.addEventListener("haunt-phase3", function () {
-      stopPhase2Bgm(true);
+      try {
+        killP2BgmHard();
+      } catch (e) {
+        stopPhase2Bgm(true);
+      }
       startPhase3Bgm();
+      setTimeout(startPhase3Bgm, 300);
+      setTimeout(startPhase3Bgm, 900);
     });
     document.addEventListener(
       "pointerdown",
@@ -581,7 +800,7 @@
     setInterval(function () {
       syncPhase2Bgm();
       syncPhase3Bgm();
-    }, 1500);
+    }, 1200);
     return;
   }
 
@@ -1618,6 +1837,7 @@
       setLevel(2, { force: true });
       // 제스처 직후가 아닐 수 있어 즉시 + 재시도
       startPhase2Bgm();
+      preloadP3Bgm();
       setTimeout(function () {
         startPhase2Bgm();
       }, 400);
@@ -1636,13 +1856,22 @@
   });
 
   document.addEventListener("haunt-phase3", function () {
-    stopPhase2Bgm(true);
+    try {
+      killP2BgmHard();
+    } catch (e) {
+      stopPhase2Bgm(true);
+    }
+    // 즉시 + 재시도 (디코드/제스처 타이밍)
+    startPhase3Bgm();
     setTimeout(function () {
       startPhase3Bgm();
-    }, 120);
+    }, 200);
     setTimeout(function () {
       startPhase3Bgm();
-    }, 800);
+    }, 700);
+    setTimeout(function () {
+      startPhase3Bgm();
+    }, 1600);
   });
 
   document.addEventListener("haunt-mood", function (ev) {
@@ -1703,8 +1932,12 @@
       stopAll();
     }
     if (document.body.classList.contains("phase-3-active")) {
-      stopPhase2Bgm(true);
-      if (p3BgmReady()) startPhase3Bgm();
+      try {
+        killP2BgmHard();
+      } catch (e) {
+        stopPhase2Bgm(true);
+      }
+      startPhase3Bgm();
     }
     if (
       document.body.classList.contains("phase-2-active") &&
@@ -1773,12 +2006,19 @@
       return {
         ready: p3BgmReady(),
         playing: p3BgmPlaying,
+        useWA: p3BgmUseWA,
         src: p3BgmSrc(),
         err: p3BgmLastErr,
         vol: P3_BGM_VOL,
         elPaused: p3BgmEl ? p3BgmEl.paused : null,
         elVol: p3BgmEl ? p3BgmEl.volume : null,
+        hasSource: !!p3BgmSource,
       };
     },
   };
+
+  // 페이지 로드 시 파일 존재 확인 (디버그)
+  if (window.console && /[?&]debug=1/.test(location.search || "")) {
+    console.log("[p3-bgm] src", p3BgmSrc());
+  }
 })();
