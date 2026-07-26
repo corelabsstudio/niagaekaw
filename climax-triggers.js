@@ -230,7 +230,7 @@
       if (chrome) chrome.classList.add("is-phase3");
     } catch (eU) {}
 
-    // 히어로 — 녹아내린 헤드라인
+    // 히어로 — 실제 DOM UI만 (배경 이미지 카피 사용 금지)
     try {
       var t1 = document.getElementById("titleL1");
       var t2 = document.getElementById("titleL2");
@@ -244,14 +244,32 @@
       }
       var lede = document.getElementById("lede");
       if (lede) {
-        lede.classList.add("p3-lede");
-        // 레데는 녹은 경고로 대체 느낌
-        lede.classList.add("p3-lede-melt");
+        lede.classList.add("p3-lede", "p3-lede-melt");
+        // morph 잔여 텍스트 정리 — 경고 한 줄만
+        var morphs = lede.querySelectorAll(".morph");
+        if (morphs.length) {
+          morphs.forEach(function (m, i) {
+            if (i === 0) {
+              m.innerHTML =
+                "구경만 하던 화면이, 이제 살과 회로로 대답한다.";
+            } else {
+              m.textContent = "";
+              m.setAttribute("aria-hidden", "true");
+            }
+          });
+        }
+        var wh = document.getElementById("whisper");
+        if (wh) {
+          wh.textContent = "탈출구는 없다.";
+          wh.style.opacity = "0.85";
+        }
       }
       var mainTitle = document.getElementById("mainTitle");
       if (mainTitle) {
         mainTitle.classList.add("p3-title", "p3-title-melt");
       }
+      var hero = document.querySelector(".stasis-hero");
+      if (hero) hero.classList.add("p3-hero-ui");
       document.querySelectorAll(".plan-btn.plan-card").forEach(function (c) {
         c.classList.add("p3-plan-ready");
       });
