@@ -534,43 +534,52 @@
 
   <button type="button" id="hauntHit" class="haunt-hit" aria-label="unknown" title=""></button>
 
+  <!-- 클라이맥스 25초: 안심 → 감지 → 압박 → 붕괴 -->
   <div id="haunt" class="haunt" hidden aria-hidden="true" data-climax-phase="0">
     <div class="haunt-noise" aria-hidden="true"></div>
     <div class="haunt-flash" aria-hidden="true"></div>
     <div class="haunt-scan" aria-hidden="true"></div>
     <div class="haunt-blood" aria-hidden="true"></div>
-    <div class="haunt-faces" id="hauntFaces" aria-hidden="true"></div>
-    <div class="haunt-rain" id="hauntRain" aria-hidden="true"></div>
-    <div class="haunt-wake-storm" id="hauntWakeStorm" aria-hidden="true"></div>
+    <div class="haunt-tear" id="hauntTear" aria-hidden="true"></div>
+    <div class="haunt-monster" id="hauntMonster" aria-hidden="true">
+      <img class="hm-face" src="assets/faces/face-1.jpg" alt="" />
+      <img class="hm-face" src="assets/faces/face-4.jpg" alt="" />
+      <img class="hm-face" src="assets/faces/face-7.jpg" alt="" />
+    </div>
 
+    <!-- 0–5s: 평범한 스크린세이버 (방심) -->
     <div class="haunt-phase" data-phase="1" id="hauntP1" hidden>
-      <p class="hp-mono hp-blink">SIGNAL INTERRUPT</p>
-      <p class="hp-big">연결이 끊기지 않았다</p>
-      <p class="hp-mono dim">carrier lost · rebinding…</p>
+      <div class="ss-safe" id="ssSafe">
+        <div class="ss-logo">Stasis</div>
+        <div class="ss-clock" id="ssClock">00:00:00</div>
+        <p class="ss-hint">Moving Pictures Screensaver</p>
+        <div class="ss-orb"></div>
+      </div>
     </div>
 
+    <!-- 5–12s: 이상 징후 로그 -->
     <div class="haunt-phase" data-phase="2" id="hauntP2" hidden>
-      <p class="hp-mono">ZOMBIE PROCESS LIST</p>
-      <ul class="haunt-list" id="hauntList"></ul>
-      <p class="haunt-sub" id="hauntSub">WakeAgain · still running</p>
+      <div class="ss-safe ss-dim">
+        <div class="ss-logo">Stasis</div>
+        <div class="ss-clock" id="ssClock2">00:00:00</div>
+      </div>
+      <div class="ss-log" id="ssLog" aria-live="polite"></div>
     </div>
 
+    <!-- 12–18s: 심리적 압박 타이핑 -->
     <div class="haunt-phase" data-phase="3" id="hauntP3" hidden>
-      <p class="hp-mono red">VIEWPORT CORRUPT</p>
-      <p class="hp-big glitch-title">화면이 당신을 보고 있다</p>
-      <p class="hp-mono dim">do not look away_</p>
+      <div class="ss-pressure">
+        <p class="ss-type" id="ssType1"></p>
+        <p class="ss-type" id="ssType2"></p>
+      </div>
     </div>
 
+    <!-- 18–25s: 붕괴 클라이맥스 -->
     <div class="haunt-phase" data-phase="4" id="hauntP4" hidden>
-      <p class="hp-brand" id="hauntBrand">WakeAgain</p>
-      <p class="hp-mono dim">imprint · remember this name</p>
-    </div>
-
-    <div class="haunt-phase" data-phase="5" id="hauntP5" hidden>
-      <p class="haunt-tag" id="hauntTag">PROCESS_NOT_DEAD</p>
-      <h2 class="haunt-title" id="hauntTitle">당신이 버린 것이<br />당신을 호출한다</h2>
-      <p class="hp-mono">종료할 수 없습니다</p>
-      <p class="haunt-exit" id="hauntExit">[ 신호 종료 대기… ]</p>
+      <div class="ss-collapse">
+        <p class="ss-final" id="ssFinal"></p>
+        <p class="ss-override" id="ssOverride">[SYSTEM OVERRIDE - YOU CANNOT ESCAPE]</p>
+      </div>
     </div>
   </div>
 

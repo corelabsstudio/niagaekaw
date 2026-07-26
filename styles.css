@@ -3425,8 +3425,10 @@ html.is-mobile .haunt-hit.is-hot {
   pointer-events: none;
   z-index: 1;
 }
-.haunt.climax-p1 .haunt-noise { opacity: 0.55; }
-.haunt.climax-p3 .haunt-noise { opacity: 0.4; }
+.haunt.climax-p1 .haunt-noise { opacity: 0.12; }
+.haunt.climax-p2 .haunt-noise { opacity: 0.22; }
+.haunt.climax-p3 .haunt-noise { opacity: 0.38; }
+.haunt.climax-p4 .haunt-noise { opacity: 0.55; }
 @keyframes noiseMove {
   0% { transform: translate(0, 0); }
   50% { transform: translate(-2%, 1%); }
@@ -3441,11 +3443,17 @@ html.is-mobile .haunt-hit.is-hot {
   mix-blend-mode: screen;
   z-index: 2;
 }
-.haunt.climax-p1 .haunt-flash {
-  animation: flash 0.55s steps(1) 3;
+.haunt.ss-blink-in .haunt-flash {
+  animation: flash 0.5s steps(1) 2;
+}
+.haunt.ss-micro-glitch .haunt-flash {
+  animation: flash 0.15s steps(1) 1;
 }
 .haunt.climax-p3 .haunt-flash {
-  animation: flash 0.4s steps(1) infinite;
+  animation: flash 0.55s steps(1) infinite;
+}
+.haunt.climax-p4 .haunt-flash {
+  animation: flash 0.28s steps(1) infinite;
 }
 @keyframes flash {
   0%, 100% { opacity: 0; }
