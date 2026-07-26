@@ -363,14 +363,18 @@
     phase = 0;
     clearAllTimers();
     hideAllPhases();
+    // 클라이맥스 오버레이 즉시 제거 → 암전 엔딩
+    if (haunt) {
+      haunt.hidden = true;
+      haunt.setAttribute("aria-hidden", "true");
+      haunt.className = "haunt";
+      haunt.setAttribute("data-climax-phase", "0");
+    }
+    document.body.classList.remove("is-haunting");
+    document.body.removeAttribute("data-climax-phase");
     if (typeof window.__hauntGoToEnding === "function") {
       window.__hauntGoToEnding();
     } else if (typeof window.__hauntStartEnding === "function") {
-      if (haunt) {
-        haunt.hidden = true;
-        haunt.setAttribute("aria-hidden", "true");
-      }
-      document.body.classList.remove("is-haunting");
       window.__hauntStartEnding();
     }
   }
