@@ -178,6 +178,11 @@
     "diary-fx-conflict-merge",
     "diary-fx-flee-cursor",
     "diary-fx-tremor",
+    "diary-fx-heartbeat",
+    "diary-fx-disk-scratch",
+    "diary-fx-remote-hijack",
+    "diary-fx-compiler-scream",
+    "diary-fx-final-session",
   ];
 
   function clearDiaryFx() {
@@ -186,6 +191,7 @@
       if (panel) panel.classList.remove(cls);
       if (sheet) sheet.classList.remove(cls);
     });
+    if (sheet) sheet.classList.remove("diary-warn-flood");
   }
 
   function applyDiaryFx(fx) {
@@ -207,6 +213,11 @@
       conflict_merge: "diary-fx-conflict-merge",
       flee_cursor: "diary-fx-flee-cursor",
       tremor: "diary-fx-tremor",
+      heartbeat: "diary-fx-heartbeat",
+      disk_scratch: "diary-fx-disk-scratch",
+      remote_hijack: "diary-fx-remote-hijack",
+      compiler_scream: "diary-fx-compiler-scream",
+      final_session: "diary-fx-final-session",
     };
     var cls = map[fx];
     if (!cls) return;
@@ -228,9 +239,13 @@
     var flee = !!opts.flee;
     var tremor = !!opts.tremor;
     var clone = !!opts.clone;
+    var heartbeat = !!opts.heartbeat;
+    var disk = !!opts.disk;
+    var remote = !!opts.remote;
     var hostP = opts.hostP || null;
     var i = 0;
     var lastClone = 0;
+    var beatPhase = 0;
 
     return new Promise(function (resolve) {
       function tick() {
@@ -269,7 +284,7 @@
         var ch = text.charAt(i);
         textNode.textContent += ch;
         i++;
-        clickForChar(ch, hard || system || manic || mad || tremor);
+        clickForChar(ch, hard || system || manic || mad || tremor || disk);
         if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
 
         // redirect: 중간중간 복제 고스트 라인
@@ -289,8 +304,33 @@
           }, 40);
         }
 
-        if ((rogue || mad || tremor) && caret && !flee) {
-          var amp = mad ? 22 : tremor ? 16 : 18;
+        // compiler scream: 경고 조각 뿌리기
+        if (opts.scream && liveType && i % 36 === 0 && i > 0) {
+          var warn = document.createElement("div");
+          warn.className = "diary-scream-chip";
+          warn.setAttribute("aria-hidden", "true");
+          warn.textContent = [
+            "WARNING",
+            "C0RRUPT",
+            "ID_LEAK",
+            "RUN?",
+            "████",
+          ][Math.floor(Math.random() * 5)];
+          warn.style.left = 8 + Math.random() * 70 + "%";
+          warn.style.top = 12 + Math.random() * 60 + "%";
+          if (sheet) {
+            if (getComputedStyle(sheet).position === "static") {
+              sheet.style.position = "relative";
+            }
+            sheet.appendChild(warn);
+            setTimeout(function () {
+              if (warn.parentNode) warn.parentNode.removeChild(warn);
+            }, 900 + Math.random() * 500);
+          }
+        }
+
+        if ((rogue || mad || tremor || disk) && caret && !flee && !remote) {
+          var amp = mad ? 22 : disk ? 14 : tremor ? 16 : 18;
           var jx = (Math.random() - 0.5) * amp;
           var jy = (Math.random() - 0.5) * (mad ? 14 : tremor ? 12 : 10);
           caret.style.transform =
@@ -303,32 +343,66 @@
           }
         }
 
-        // flee: 타이핑 진행률에 따라 캐럿이 우측 하단으로 도망
-        if (flee && caret) {
+        // flee / remote hijack: 캐럿이 구석·닫기 버튼 쪽으로 도망
+        if ((flee || remote) && caret) {
           var prog = i / Math.max(1, text.length);
-          var fx = 8 + prog * 72;
-          var fy = 4 + prog * 48;
+          var fxOff = remote
+            ? 10 + Math.sin(prog * 12) * 30 + prog * 50
+            : 8 + prog * 72;
+          var fyOff = remote
+            ? 6 + Math.cos(prog * 9) * 24 + prog * 40
+            : 4 + prog * 48;
           caret.style.transform =
             "translate(" +
-            fx.toFixed(1) +
+            fxOff.toFixed(1) +
             "px," +
-            fy.toFixed(1) +
+            fyOff.toFixed(1) +
             "px) scale(" +
-            (1 - prog * 0.25).toFixed(2) +
+            (1 - prog * 0.22).toFixed(2) +
             ")";
-          caret.classList.add("is-fleeing");
+          caret.classList.add(remote ? "is-remote-flee" : "is-fleeing");
         }
 
+        // heartbeat: 쿵-쿵 리듬 (짧은 쌍 비트)
         var base = 1000 / cps;
         var jitter = (Math.random() - 0.35) * base * (manic ? 0.25 : 0.55);
         var extra = 0;
-        if (stutter) {
+        if (heartbeat) {
+          beatPhase = (beatPhase + 1) % 8;
+          // 0,1 = 쿵쿵 / 2-7 = 긴 쉼
+          if (beatPhase === 0) {
+            base = 55;
+            extra = 0;
+            if (sheet) sheet.classList.add("diary-beat");
+            setTimeout(function () {
+              if (sheet) sheet.classList.remove("diary-beat");
+            }, 90);
+            try {
+              var au = audio();
+              if (au && au.termBeep) au.termBeep(110);
+            } catch (eH) {}
+          } else if (beatPhase === 1) {
+            base = 55;
+            extra = 0;
+            try {
+              var au2 = audio();
+              if (au2 && au2.termBeep) au2.termBeep(90);
+            } catch (eH2) {}
+          } else if (beatPhase === 2) {
+            extra = 280 + Math.random() * 120;
+          } else {
+            extra = 40 + Math.random() * 80;
+          }
+        } else if (stutter) {
           if (Math.random() > 0.78) extra += 220 + Math.random() * 480;
           if (Math.random() > 0.92) extra += 600 + Math.random() * 700;
           base *= 1.15 + Math.random() * 0.9;
         } else if (tremor) {
           if (Math.random() > 0.75) extra += 80 + Math.random() * 160;
           base *= 1.05 + Math.random() * 0.35;
+        } else if (disk) {
+          if (Math.random() > 0.85) base *= 0.3;
+          if (Math.random() > 0.9) extra += 30;
         } else if (!manic) {
           if (ch === "." || ch === "…" || ch === "?" || ch === "!") extra = 140 + Math.random() * 160;
           if (ch === ",") extra = 50;
@@ -336,13 +410,16 @@
           if (Math.random() > 0.88) base *= 0.35;
         }
         if (mad && Math.random() > 0.9) base *= 0.4;
-        if (system && !manic && !stutter) {
+        if (system && !manic && !stutter && !heartbeat) {
           base *= 0.85;
           jitter *= 0.4;
         }
         setTimeout(
           tick,
-          Math.max(manic ? 10 : stutter ? 20 : 16, base + jitter + extra)
+          Math.max(
+            manic || disk ? 10 : stutter ? 20 : heartbeat ? 18 : 16,
+            base + jitter + extra
+          )
         );
       }
       tick();
@@ -497,7 +574,10 @@
             step.fx === "smash" ||
             step.fx === "session_warn" ||
             step.fx === "redirect_clone" ||
-            step.fx === "conflict_merge") &&
+            step.fx === "conflict_merge" ||
+            step.fx === "compiler_scream" ||
+            step.fx === "final_session" ||
+            step.fx === "disk_scratch") &&
           sheet
         ) {
           sheet.classList.add("diary-manic-burst");
@@ -505,10 +585,16 @@
             if (sheet) sheet.classList.remove("diary-manic-burst");
           }, 420);
         }
+        if (step.fx === "compiler_scream" && sheet) {
+          sheet.classList.add("diary-warn-flood");
+        }
         if (
           (step.fx === "session_warn" ||
             step.fx === "conflict_merge" ||
-            step.fx === "port_force") &&
+            step.fx === "port_force" ||
+            step.fx === "compiler_scream" ||
+            step.fx === "disk_scratch" ||
+            step.fx === "final_session") &&
           a
         ) {
           try {
@@ -525,6 +611,13 @@
                   a.termBeep(90);
                 } catch (e3) {}
               }, 240);
+            }
+            if (step.fx === "disk_scratch" && a.termBeep) {
+              setTimeout(function () {
+                try {
+                  a.termBeep(60);
+                } catch (e4) {}
+              }, 80);
             }
           } catch (eW) {}
         }
@@ -586,17 +679,24 @@
         var hard = !!step.hardKeys;
         var fx = step.fx || "";
         var manic =
-          fx === "manic_flash" || fx === "smash" || fx === "session_warn";
-        var rogue = fx === "rogue_cursor";
-        var mad = fx === "mad_rewrite";
-        var rough = fx === "rough_backspace" && !step.system;
+          fx === "manic_flash" ||
+          fx === "smash" ||
+          fx === "session_warn" ||
+          fx === "redirect_clone";
+        var rogue = fx === "rogue_cursor" || fx === "port_force";
+        var mad = fx === "mad_rewrite" || fx === "conflict_merge";
+        var rough =
+          (fx === "rough_backspace" || fx === "port_force") && !step.system;
         var gothic = fx === "backspace_gothic" && !step.system;
-        var rewrite = mad && !step.system;
+        var rewrite = (mad || fx === "conflict_merge") && !step.system;
         var auto =
           (fx === "autocomplete" || fx === "tab_complete") && !step.system;
         var stutter = fx === "stutter";
+        var flee = fx === "flee_cursor" && !step.system;
+        var tremor = fx === "tremor";
+        var clone = fx === "redirect_clone" && !step.system;
 
-        if (manic && sheet && !reduced) {
+        if ((manic || fx === "conflict_merge") && sheet && !reduced) {
           sheet.classList.add("diary-manic-burst");
           setTimeout(function () {
             if (sheet) sheet.classList.remove("diary-manic-burst");
@@ -606,7 +706,8 @@
         function ensureCaret(clsExtra) {
           if (!caret.parentNode) {
             caret = document.createElement("span");
-            caret.className = "diary-inline-caret" + (clsExtra ? " " + clsExtra : "");
+            caret.className =
+              "diary-inline-caret" + (clsExtra ? " " + clsExtra : "");
             caret.textContent = "█";
             p.appendChild(caret);
           } else if (clsExtra) {
@@ -625,8 +726,9 @@
               hard: hard || mad,
               system: false,
               manic: false,
-              rogue: mad,
+              rogue: mad || fx === "port_force",
               mad: mad,
+              hostP: p,
             },
             token
           );
@@ -658,6 +760,9 @@
           if (gothic) {
             p.classList.add("diary-gothic");
             ensureCaret("diary-gothic-caret");
+          } else if (fx === "conflict_merge") {
+            p.classList.add("diary-conflict");
+            ensureCaret("is-mad");
           } else {
             p.classList.add("diary-mad-rewrite");
             ensureCaret("is-mad");
@@ -673,6 +778,7 @@
               manic: rewrite,
               rogue: rewrite,
               mad: rewrite,
+              hostP: p,
             },
             token
           );
@@ -706,6 +812,10 @@
               mad: mad,
               rough: rough,
               stutter: stutter,
+              flee: flee,
+              tremor: tremor,
+              clone: clone,
+              hostP: p,
             },
             token
           );

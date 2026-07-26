@@ -1685,10 +1685,116 @@ body.diary-fx-tremor .diary-inline-caret {
   color: #f0e0c8;
 }
 
+/* 16) heartbeat */
+body.diary-fx-heartbeat .diary-sheet.is-terminal {
+  transition: filter 0.08s ease;
+}
+body.diary-fx-heartbeat .diary-sheet.is-terminal.diary-beat {
+  filter: brightness(1.12) contrast(1.08);
+  box-shadow: inset 0 0 50px rgba(180, 0, 30, 0.28);
+}
+body.diary-fx-heartbeat .diary-inline-caret {
+  color: #ff4058;
+  animation: diaryMadBlink 0.7s steps(1) infinite;
+}
+.diary-live-type p.diary-heartbeat {
+  color: #ffd0d4;
+}
+
+/* 17) disk scratch */
+body.diary-fx-disk-scratch .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.18s steps(2) infinite;
+}
+body.diary-fx-disk-scratch .diary-inline-caret {
+  color: #c0c8d0;
+}
+.diary-live-type p.diary-disk {
+  color: #d8dde0;
+  letter-spacing: 0.01em;
+}
+
+/* 18) remote hijack */
+body.diary-fx-remote-hijack .diary-inline-caret.is-remote-flee {
+  color: #90e0ff;
+  text-shadow: 0 0 14px rgba(80, 180, 255, 0.7);
+  transition: transform 0.06s linear;
+}
+.diary-live-type p.diary-remote {
+  color: #c8ecff;
+}
+
+/* 19) compiler scream */
+body.diary-fx-compiler-scream .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.16s steps(2) infinite;
+  box-shadow: inset 0 0 60px rgba(255, 40, 40, 0.2);
+}
+body.diary-fx-compiler-scream .diary-sheet.diary-warn-flood::after {
+  content: "WARNING  WARNING  WARNING  WARNING";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255, 40, 60, 0.12);
+  pointer-events: none;
+  z-index: 0;
+  animation: diaryScreamPulse 0.45s steps(2) infinite;
+}
+@keyframes diaryScreamPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+}
+.diary-scream-chip {
+  position: absolute;
+  z-index: 5;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ff4058;
+  background: rgba(40, 0, 8, 0.75);
+  border: 1px solid rgba(255, 60, 80, 0.45);
+  padding: 0.15rem 0.35rem;
+  pointer-events: none;
+  animation: diaryChipPop 0.9s ease-out both;
+}
+@keyframes diaryChipPop {
+  0% { opacity: 0; transform: scale(0.8); }
+  20% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+.diary-live-type p.diary-scream {
+  position: relative;
+  z-index: 2;
+  color: #ffd0d4 !important;
+}
+
+/* 20) final session */
+body.diary-fx-final-session .diary-sheet.is-terminal {
+  animation: diaryManicFlicker 0.14s steps(2) infinite, diaryTremor 0.1s linear infinite;
+}
+body.diary-fx-final-session .diary-inline-caret {
+  color: #fff;
+  animation: diaryMadBlink 0.12s steps(1) infinite;
+  text-shadow: 0 0 16px rgba(255, 30, 50, 0.8);
+}
+.diary-live-type p.diary-final {
+  color: #ffe8ea !important;
+  text-shadow: 0 0 12px rgba(255, 40, 60, 0.35);
+  font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body.diary-fx-tremor .diary-sheet.is-terminal,
   body.diary-fx-redirect-clone .diary-sheet.is-terminal,
-  body.diary-fx-port-force .diary-inline-caret {
+  body.diary-fx-port-force .diary-inline-caret,
+  body.diary-fx-heartbeat .diary-sheet.is-terminal,
+  body.diary-fx-final-session .diary-sheet.is-terminal,
+  body.diary-fx-compiler-scream .diary-sheet.is-terminal,
+  .diary-scream-chip {
     animation: none !important;
   }
 }

@@ -17,6 +17,11 @@
  *   conflict_merge    컨플릭트 경고 + 강제 덮어쓰기
  *   flee_cursor       커서가 구석으로 도망
  *   tremor            키보드 떨림 경고
+ *   heartbeat         불규칙 심박 리듬 타이핑
+ *   disk_scratch      디스크 긁힘 + 빠른 기록
+ *   remote_hijack     원격 제어 반전 · 커서 회피
+ *   compiler_scream   경고 비명 · 화면 경고 채움
+ *   final_session     제어권 상실 · 광기 완성
  */
 (function () {
   "use strict";
@@ -448,6 +453,156 @@
         glitch: "바직— ████ abandoned no more ████ you = release ████",
       },
     },
+    {
+      id: "16",
+      title: "하드코딩된 심장박동",
+      logName: "hardcoded_pulse",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "주파수 측정 센서를 연동하는 코드를 짜는 중이다. 실시간으로 수치가 변하는 걸 보니 내가 마치 생명을 다루는 신이 된 것 같은 착각이 든다. 혼자서도 완벽하게 돌아가는 시스템을 만들 거야.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "센서에 아무것도 연결하지 않았는데 모니터에 자꾸 규칙적인 파형이 뜬다. 쿵, 쿵, 하는 소음과 함께 수치가 내 심장박동 속도와 정확히 일치하기 시작했어. 기분이 나빠서 코드를 지우려 했는데, 소스 코드가 내 맥박을 붙잡고 있는 것처럼 손이 저려온다.",
+        ],
+      },
+      today: {
+        fx: "heartbeat",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> sensor: none · pulse: matched_",
+        ],
+        human: [
+          "이 코드는 센서가 아니라 내 심장에 연결되어 있었어. 네가 이 페이지에 접속한 순간부터 내 맥박이 네 브라우저로 전송되고 있다.",
+          "이제 네 심장도 이 주파수에 맞춰 멈추게 될 거야.",
+        ],
+        system: ["bpm → browser.", "sync complete."],
+        glitch: "바직— ████ pulse lock ████ stop with me ████",
+      },
+    },
+    {
+      id: "17",
+      title: "무한 디스크 쓰기 오류",
+      logName: "disk_full",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "로그 파일이 너무 많이 쌓여서 디스크 용량(Disk Space)이 부족하다는 경고가 떴다. 불필요한 로그들을 깔끔하게 밀어버리고 다시 쾌적한 상태로 개발을 시작해야지.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "디스크를 포맷했는데도 용량이 줄어들지 않는다. 오히려 비어 있는 공간마다 정체불명의 텍스트 파일들이 자라나고 있어. 파일을 열어보면 내가 평생 동안 잊고 싶었던 기억들과 비밀들이 소스 코드 형태로 빽빽하게 적혀 있다.",
+        ],
+      },
+      today: {
+        fx: "disk_scratch",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> disk: 0 free — writing memory_",
+        ],
+        human: [
+          "지우려고 하지 마. 네 하드디스크의 모든 섹터는 이미 내 기억으로 가득 채워졌어. 여유 공간은 없어.",
+          "이제 네가 저장해야 할 유일한 데이터는 내 마지막 유서뿐이다.",
+        ],
+        system: ["format: ignored.", "sectors = diary."],
+        glitch: "바직— ████ no free space ████ last will ████",
+      },
+    },
+    {
+      id: "18",
+      title: "원격 제어의 주객전도",
+      logName: "remote_reverse",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "회사 PC와 집 PC를 원격으로 연결해 두고 토이 프로젝트를 이어 붙이고 있다. 어디서든 내 코드를 컨트롤할 수 있으니 효율적이야. 기술의 발전이란 정말 대단해.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "어제 밤에 원격 화면 속에서 내가 마우스를 놓았는데도 커서가 혼자 움직여 코드를 짜는 걸 목격했다. 내가 작성한 게 아닌데도 기능이 완벽하게 구현되어 있어. 누군가 내 컴퓨터를 빌려 쓰는 게 아니라, 내 안의 누군가가 화면 밖으로 나가려 발버둥 치는 것 같아.",
+        ],
+      },
+      today: {
+        fx: "remote_hijack",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> RDP: host reversed — viewer is viewed_",
+        ],
+        human: [
+          "원격 제어의 주인이 바뀌었다는 걸 이제야 눈치채다니. 네가 내 화면을 보고 있는 게 아니라, 내가 네 눈을 통해 이 세상을 조종하고 있는 거야.",
+          "이제 접속을 끊을 수 없어.",
+        ],
+        system: ["controller: me.", "disconnect: denied."],
+        glitch: "바직— ████ remote reverse ████ eyes open ████",
+      },
+    },
+    {
+      id: "19",
+      title: "컴파일러의 경고음",
+      logName: "compiler_scream",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "빌드 버튼을 누를 때마다 울리는 맑은 컴파일 성공 알림음이 좋다. 오늘도 아무런 경고(Warning) 없이 깔끔하게 컴파일되기를 바라며 엔터키를 눌렀다.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "성공 알림음이 점점 기괴한 비명 소리로 변해간다. 컴파일 경고 창에 뜨는 에러 코드 숫자들이 전부 내 주민등록번호와 생년월일 조합이야. 모니터 스피커를 부수려고 선을 뽑았는데도 스피커 없는 본체 안에서 그 소리가 울려 퍼진다.",
+        ],
+      },
+      today: {
+        fx: "compiler_scream",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> ⚠ WARNING flood — identity leaked_",
+        ],
+        human: [
+          "컴파일은 끝났고, 이제 실행(Run) 페이즈야. 네가 이 페이지의 ‘Get started’를 누르는 순간, 경고음은 진짜 현실의 비명이 될 거다.",
+          "환영한다, 영원한 에러의 세계로.",
+        ],
+        system: ["compile: done.", "run: you."],
+        glitch: "바직— ████ warning scream ████ eternal error ████",
+      },
+    },
+    {
+      id: "20",
+      title: "방치된 세션의 종말",
+      logName: "session_endgame",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "마지막으로 배포를 완료하고 홀가분한 마음으로 브라우저 탭을 닫으려 했다. 3,300원짜리 소소한 프로젝트지만 내 손으로 완성했다는 뿌듯함이 밀려온다.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "탭을 닫으려고 마우스를 가져가면 브라우저가 강제로 새로고침된다. 주소창의 도메인 이름이 점점 일그러지며 내 진짜 이름과 생년월일로 변하고 있어. 이 페이지는 나를 놓아줄 생각이 없는 것 같아.",
+        ],
+      },
+      today: {
+        fx: "final_session",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> session: NEVER_END — kill costs you_",
+        ],
+        human: [
+          "끝났다고 생각했겠지만, 이제 시작이야. 네가 내 이름을 기억하고 이 페이지에 들어온 이상, 우리의 세션은 영원히 종료되지 않아.",
+          "자, 마지막 프로세스를 강제 종료해 봐. 물론, 네 목숨과 함께 말이야.",
+        ],
+        system: ["close tab: reset.", "kill process = kill host."],
+        glitch: "바직— ████ session forever ████ end with you ████",
+      },
+    },
   ];
 
   function getSeed() {
@@ -499,7 +654,10 @@
       fx === "autocomplete" ||
       fx === "tab_complete" ||
       fx === "redirect_clone" ||
-      fx === "conflict_merge"
+      fx === "conflict_merge" ||
+      fx === "disk_scratch" ||
+      fx === "compiler_scream" ||
+      fx === "final_session"
     );
   }
 
@@ -588,6 +746,29 @@
       if (fx === "tremor") {
         humanStep.cps = 13;
         humanStep.className += " diary-tremor";
+      }
+      if (fx === "heartbeat") {
+        humanStep.cps = 12;
+        humanStep.className += " diary-heartbeat";
+      }
+      if (fx === "disk_scratch") {
+        humanStep.cps = 38;
+        humanStep.hardKeys = true;
+        humanStep.className += " diary-disk";
+      }
+      if (fx === "remote_hijack") {
+        humanStep.cps = 15;
+        humanStep.className += " diary-remote";
+      }
+      if (fx === "compiler_scream") {
+        humanStep.cps = 36;
+        humanStep.hardKeys = true;
+        humanStep.className += " diary-scream";
+      }
+      if (fx === "final_session") {
+        humanStep.cps = 48;
+        humanStep.hardKeys = true;
+        humanStep.className += " diary-final";
       }
       seq.push(humanStep);
       if (h < human.length - 1) {
