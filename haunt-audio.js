@@ -598,6 +598,9 @@
       approachLaugh: noop,
       binauralWhisper: noop,
       muffledHeartbeat: noop,
+      heartbeatBurst: noop,
+      startHauntHeartbeats: noop,
+      stopHauntHeartbeats: noop,
       stopAll: function () {
         stopPhase2Bgm(true);
         stopPhase3Bgm(true);
@@ -1648,11 +1651,195 @@
     }
   }
 
+  /**
+   * 심박 효과음 버스트 — 기본 4초
+   * opts.loud: true 크게 / false 작게 / 생략 시 랜덤
+   * opts.ms: 지속시간 (기본 4000)
+   */
+  function heartbeatBurst(opts) {
+    opts = opts || {};
+    unlock();
+    var c = ensureCtx();
+    if (!c || !unlocked) return false;
+    var ms = opts.ms != null ? opts.ms : 4000;
+    var loud =
+      opts.loud != null ? !!opts.loud : Math.random() > 0.48;
+    // 작음 ~ 큼 게인 배수 (SFX 경로 기준 원 볼륨)
+    var mult = loud
+      ? 0.95 + Math.random() * 0.45
+      : 0.22 + Math.random() * 0.2;
+    var t0 = now();
+    var dur = ms / 1000;
+    var interval = 0.62 + Math.random() * 0.16; // lub-dub 간격 불규칙
+    try {
+      // 저음 패드 (크게/작게)
+      var pad = c.createOscillator();
+      var pad2 = c.createOscillator();
+      var pg = c.createGain();
+      var pf = c.createBiquadFilter();
+      pad.type = "sine";
+      pad2.type = "sine";
+      pad.frequency.value = loud ? 46 : 40;
+      pad2.frequency.value = loud ? 51 : 44;
+      pf.type = "lowpass";
+      pf.frequency.value = loud ? 200 : 140;
+      var padPeak = v((loud ? 0.07 : 0.028) * mult);
+      pg.gain.setValueAtTime(0.0001, t0);
+      pg.gain.exponentialRampToValueAtTime(padPeak, t0 + 0.25);
+      pg.gain.setValueAtTime(padPeak * 0.9, t0 + dur * 0.8);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.05);
+      pad.connect(pf);
+      pad2.connect(pf);
+      pf.connect(pg);
+      pg.connect(out());
+      pad.start(t0);
+      pad2.start(t0);
+      pad.stop(t0 + dur + 0.08);
+      pad2.stop(t0 + dur + 0.08);
+
+      var beats = Math.max(4, Math.floor(dur / interval));
+      for (var i = 0; i < beats; i++) {
+        (function (i) {
+          // 박마다 미세 불규칙
+          var t = t0 + 0.2 + i * interval + (Math.random() * 0.04 - 0.02);
+          var lubV = v((loud ? 0.16 : 0.055) * mult * (0.85 + Math.random() * 0.3));
+          var dubV = v((loud ? 0.12 : 0.04) * mult * (0.85 + Math.random() * 0.3));
+          // lub
+          var b1 = c.createOscillator();
+          var bg1 = c.createGain();
+          b1.type = "sine";
+          b1.frequency.setValueAtTime(loud ? 58 : 50, t);
+          b1.frequency.exponentialRampToValueAtTime(26, t + 0.12);
+          bg1.gain.setValueAtTime(0.0001, t);
+          bg1.gain.exponentialRampToValueAtTime(lubV, t + 0.015);
+          bg1.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+          b1.connect(bg1);
+          bg1.connect(out());
+          b1.start(t);
+          b1.stop(t + 0.2);
+          // dub
+          var t2 = t + 0.13 + Math.random() * 0.03;
+          var b2 = c.createOscillator();
+          var bg2 = c.createGain();
+          b2.type = loud ? "triangle" : "sine";
+          b2.frequency.setValueAtTime(loud ? 44 : 38, t2);
+          b2.frequency.exponentialRampToValueAtTime(20, t2 + 0.14);
+          bg2.gain.setValueAtTime(0.0001, t2);
+          bg2.gain.exponentialRampToValueAtTime(dubV, t2 + 0.012);
+          bg2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.2);
+          b2.connect(bg2);
+          bg2.connect(out());
+          b2.start(t2);
+          b2.stop(t2 + 0.22);
+        })(i);
+      }
+      // 크게일 때 체스트 럼블 한 겹
+      if (loud) {
+        playNoise({
+          delay: 0.15,
+          dur: Math.min(1.4, dur * 0.35),
+          freq: 120,
+          filter: "lowpass",
+          vol: 0.05 * mult,
+          q: 0.5,
+        });
+      }
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.log("[haunt-hb]", loud ? "LOUD" : "soft", ms + "ms");
+      }
+      return true;
+    } catch (e) {
+      pulse(loud ? "heavy" : "soft");
+      return false;
+    }
+  }
+
+  // —— 2페이즈 ~ 클라이맥스: 불규칙 심박 버스트 스케줄러 ——
+  var hauntHbTimer = null;
+  var hauntHbOn = false;
+
+  function hauntHeartbeatZone() {
+    try {
+      if (!document.body) return false;
+      if (document.body.classList.contains("is-ending")) return false;
+      // 클라이맥스
+      if (document.body.classList.contains("is-haunting")) return true;
+      // 3페이즈
+      if (
+        window.__hauntPhase3Active ||
+        document.body.classList.contains("phase-3-active")
+      ) {
+        return true;
+      }
+      // 2페이즈
+      if (document.body.classList.contains("phase-2-active")) return true;
+      if (
+        document.body.classList.contains("stage-corrupt") ||
+        document.body.classList.contains("stage-dread")
+      ) {
+        return true;
+      }
+      if (!window.__hauntDiaryDiscovered) return false;
+      var st = 0;
+      if (typeof window.__hauntStage === "function") st = window.__hauntStage();
+      else st = parseInt(document.body.getAttribute("data-stage") || "0", 10) || 0;
+      return st >= 2;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function stopHauntHeartbeats() {
+    hauntHbOn = false;
+    if (hauntHbTimer) {
+      clearTimeout(hauntHbTimer);
+      hauntHbTimer = null;
+    }
+  }
+
+  function startHauntHeartbeats() {
+    if (hauntHbOn) return;
+    hauntHbOn = true;
+    function tick() {
+      if (!hauntHbOn) return;
+      if (!hauntHeartbeatZone()) {
+        // 아직 2페이즈 전이면 대기
+        hauntHbTimer = setTimeout(tick, 2500 + Math.random() * 2000);
+        return;
+      }
+      if (document.hidden) {
+        hauntHbTimer = setTimeout(tick, 3000);
+        return;
+      }
+      // 작게 / 크게 불규칙
+      var loud = Math.random() > 0.45;
+      // 가끔 아주 작게, 가끔 아주 크게
+      if (Math.random() > 0.82) loud = true;
+      if (Math.random() > 0.88) loud = false;
+      heartbeatBurst({ ms: 4000, loud: loud });
+      // 다음 발동: 버스트 4초 끝난 뒤 + 불규칙 공백 (2.5s ~ 16s)
+      var gap = 4000 + 2500 + Math.random() * 13500;
+      // 클라이맥스에선 조금 더 자주
+      if (document.body.classList.contains("is-haunting")) {
+        gap = 4000 + 1800 + Math.random() * 7000;
+      } else if (
+        window.__hauntPhase3Active ||
+        document.body.classList.contains("phase-3-active")
+      ) {
+        gap = 4000 + 2200 + Math.random() * 10000;
+      }
+      hauntHbTimer = setTimeout(tick, gap);
+    }
+    // 첫 발동도 불규칙 지연
+    hauntHbTimer = setTimeout(tick, 1500 + Math.random() * 4000);
+  }
+
   function stopAll() {
     level = 0;
     if (beatTimer) clearTimeout(beatTimer);
     beatTimer = null;
     stopDrone();
+    stopHauntHeartbeats();
     stopPhase2Bgm(true);
     stopPhase3Bgm(true);
   }
@@ -1703,6 +1890,7 @@
       setLevel(2, { force: true });
       // 제스처 직후가 아닐 수 있어 즉시 + 재시도
       startPhase2Bgm();
+      startHauntHeartbeats();
       preloadP3Bgm();
       setTimeout(function () {
         startPhase2Bgm();
@@ -1715,6 +1903,7 @@
       dreadHit();
       setLevel(3, { force: true });
       setTimeout(breath, 400);
+      startHauntHeartbeats();
       // stage 3(dread) 도 아직 2페이즈 구간이면 BGM 유지
       if (p2BgmReady()) startPhase2Bgm();
       else stopPhase2Bgm(false);
@@ -1727,6 +1916,7 @@
     } catch (e) {
       stopPhase2Bgm(true);
     }
+    startHauntHeartbeats();
     // 즉시 + 재시도 (디코드/제스처 타이밍)
     startPhase3Bgm();
     setTimeout(function () {
@@ -1793,6 +1983,7 @@
       setLevel(3, { force: true });
       stopPhase2Bgm(true);
       stopPhase3Bgm(true);
+      startHauntHeartbeats();
     }
     if (document.body.classList.contains("is-ending")) {
       stopAll();
@@ -1804,6 +1995,7 @@
         stopPhase2Bgm(true);
       }
       startPhase3Bgm();
+      startHauntHeartbeats();
     }
     if (
       document.body.classList.contains("phase-2-active") &&
@@ -1811,6 +2003,7 @@
       !p3BgmReady()
     ) {
       startPhase2Bgm();
+      startHauntHeartbeats();
     }
   });
   mo.observe(document.body, { attributes: true, attributeFilter: ["class"] });
@@ -1821,6 +2014,7 @@
     // BGM은 매 제스처마다 재시도 (자동재생 차단 대비)
     if (p3BgmReady()) startPhase3Bgm();
     else if (p2BgmReady()) startPhase2Bgm();
+    if (hauntHeartbeatZone()) startHauntHeartbeats();
   }
   document.addEventListener("pointerdown", gest, true);
   document.addEventListener("keydown", gest, true);
