@@ -2270,6 +2270,30 @@ body:not(.stage-clean) .p2-trig-hot {
   outline: 1px solid rgba(255, 80, 120, 0.4);
   box-shadow: 0 0 14px rgba(255, 40, 80, 0.25);
 }
+/* quote_hold: Features/UI 아래 어두운 인용 배너 + 서명 줄 */
+body.stage-corrupt .stasis-quote.p2-trig-banner,
+body.stage-dread .stasis-quote.p2-trig-banner {
+  outline: 1px solid rgba(255, 120, 140, 0.22);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(120, 20, 40, 0.2) !important;
+}
+body:not(.stage-clean) .stasis-quote-by.p2-trig-signature,
+body:not(.stage-clean) .stasis-quote-by.p2-trig-hot {
+  display: block;
+  margin-top: 0.85rem;
+  padding: 0.55rem 0.35rem;
+  min-height: 40px;
+  color: rgba(255, 190, 200, 0.72) !important;
+  font-size: 0.9rem !important;
+  border-top: 1px solid rgba(255, 100, 120, 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+}
+html.is-mobile body:not(.stage-clean) .stasis-quote-by.p2-trig-signature {
+  min-height: 48px;
+  padding: 0.75rem 0.5rem;
+}
 /* 푸터 마이크로 — 2페이즈에서도 클릭 가능 */
 body:not(.stage-clean) .foot-micro {
   pointer-events: auto;

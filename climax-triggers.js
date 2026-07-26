@@ -508,7 +508,15 @@
         var el =
           document.querySelector(".stasis-quote-by") ||
           document.querySelector("[data-find='readme']");
-        if (el) el.classList.add("p2-trig-hot");
+        // 배너 자체도 보이게 표시 (힌트: Features/UI 아래 스크롤)
+        var ban =
+          document.getElementById("cardWarn") ||
+          document.querySelector(".stasis-quote");
+        if (ban) ban.classList.add("p2-trig-banner");
+        if (el) {
+          el.classList.add("p2-trig-hot", "p2-trig-signature");
+          el.style.pointerEvents = "auto";
+        }
         armHold(el, 2200, done);
       },
     },
