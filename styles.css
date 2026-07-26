@@ -3468,10 +3468,10 @@ kbd {
   position: fixed !important;
   /* 가짜 크롬(9990) 바로 아래, 일반 UI 위 */
   z-index: 9980 !important;
-  /* 우측 Get started와 겹치지 않게 좌측 상단 */
-  top: calc(var(--fake-chrome-h, 42px) + 0.55rem) !important;
-  left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
-  right: auto !important;
+  /* 로고·Get started 아래, 우측 여백 — PC에서 한눈에 */
+  top: calc(var(--fake-chrome-h, 42px) + 4.35rem) !important;
+  right: max(0.85rem, env(safe-area-inset-right, 0px)) !important;
+  left: auto !important;
   bottom: auto !important;
   display: inline-flex !important;
   align-items: center;
@@ -3614,10 +3614,10 @@ body.ending-active .presence-hud {
   z-index: 10040 !important;
 }
 
-/* 모바일: 상단 중앙 */
+/* 모바일: 상단 중앙 (로고 아래) */
 @media (max-width: 720px) {
   .presence-hud {
-    top: calc(var(--fake-chrome-h, 44px) + 0.4rem) !important;
+    top: calc(var(--fake-chrome-h, 44px) + 3.6rem) !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
