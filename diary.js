@@ -1579,34 +1579,5 @@
 
   scheduleFindHints();
 
-  // 제작자 전용: ?diary=1 즉시 오픈 / ?debug=1 경로 배지
-  try {
-    if (/[?&]diary=1/.test(location.search || "")) {
-      setTimeout(function () {
-        openDiary();
-      }, 300);
-    }
-    // 제작자 배지 UI는 admin-pass.js 통합. 여기선 플래그만 기억
-    if (
-      /[?&](debug|creator|admin)=1/.test(location.search || "") ||
-      localStorage.getItem("haunt_creator") === "1"
-    ) {
-      if (/[?&](creator|admin)=1/.test(location.search || "")) {
-        try {
-          localStorage.setItem("haunt_creator", "1");
-          localStorage.setItem("haunt_admin", "1");
-        } catch (eMem) {}
-      }
-      try {
-        window.__hauntOpenDiary = openDiary;
-        window.__hauntFindPath = findPath;
-      } catch (eExp) {}
-    }
-    // 항상 관리자 훅용 export
-    try {
-      window.__hauntOpenDiary = openDiary;
-    } catch (e2) {}
-  } catch (e) {}
-
   setBoost();
 })();

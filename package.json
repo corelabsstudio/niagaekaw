@@ -1,0 +1,24 @@
+{
+  "name": "niagaekaw-site",
+  "version": "1.0.0",
+  "description": "방치된 사이드 프로젝트 → 일기 → 이상현상 → 클라이맥스 → `wakeagain... no signal...`",
+  "main": "address-bar.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/corelabsstudio/niagaekaw.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/corelabsstudio/niagaekaw/issues"
+  },
+  "homepage": "https://github.com/corelabsstudio/niagaekaw#readme",
+  "dependencies": {
+    "playwright": "^1.62.0"
+  }
+}

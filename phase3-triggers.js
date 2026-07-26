@@ -3,7 +3,7 @@
  * - 별도 20종 풀 (2페이즈 게이트 트리거와 분리)
  * - phase3Ready: __hauntPhase3Active (2페이즈 게이트 통과 후)
  * - 힌트: 3페이즈 진입 후 5분 (300s). ?hintfast=1 이면 8초
- * - 제작자: ?p3fire=1 · Shift+Alt+4
+ * - 공개 빌드 (관리자 프리패스 없음)
  */
 (function () {
   "use strict";
@@ -899,32 +899,7 @@
     }
   }, 1500);
 
-  // 제작자 표시 — 배지는 admin-pass.js 통합. 여기서는 fire API 만 유지
-  function isCreator() {
-    try {
-      if (/[?&](debug|creator|summon|admin)=1/.test(location.search || "")) return true;
-      if (localStorage.getItem("haunt_creator") === "1") return true;
-      if (localStorage.getItem("haunt_admin") === "1") return true;
-    } catch (e) {}
-    return false;
-  }
-
-  if (/[?&]p3fire=1/.test(location.search || "")) {
-    setTimeout(function () {
-      window.__hauntPhase3Active = true;
-      document.body.classList.add("phase-3-active");
-      onDone();
-    }, 700);
-  }
-
-  document.addEventListener("keydown", function (e) {
-    if (e.shiftKey && e.altKey && (e.key === "4" || e.code === "Digit4")) {
-      e.preventDefault();
-      window.__hauntPhase3Active = true;
-      document.body.classList.add("phase-3-active");
-      onDone();
-    }
-  });
+  // 공개 빌드: 관리자 프리패스 / p3fire / 단축키 제거
 
   if (window.console && /[?&]debug=1/.test(location.search || "")) {
     console.log(

@@ -5,7 +5,7 @@
  * 리사이즈·방향 전환 시 레이아웃 클래스 + 발동 수치를 다시 적용한다.
  *
  * 발동 의식(순서)은 동일, 수치·히트존 크기만 프로필별로 다름.
- * ?summon=1 / ?debug=1
+ * ?debug=1
  */
 (function () {
   "use strict";
@@ -676,14 +676,7 @@
     );
   }
 
-  // 외부(클라이맥스 트리거·제작자 패스)용
+  // 클라이맥스 시퀀스 연동
   window.__hauntSummon = summon;
   window.__hauntBanish = banish;
-
-  // ?summon=1 은 climax-triggers.js 에서도 처리 (중복 소환 가드 있음)
-  try {
-    if (/[?&]summon=1/.test(location.search) && !window.__hauntClimax) {
-      setTimeout(summon, 450);
-    }
-  } catch (e) {}
 })();

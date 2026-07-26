@@ -3,7 +3,7 @@
  * - 약 20종 풀, 세션마다 1개만 활성
  * - phase2Ready: 일기 발견 + stage ≥ 2
  * - 발동 시 클라이맥스가 아니라 **3페이즈 진입** (클라이맥스는 phase3-triggers.js)
- * - 제작자: ?summon=1 · ?debug=1 · ?creator=1 · Shift+Alt+3
+ * - 공개 빌드 (관리자 프리패스 없음)
  */
 (function () {
   "use strict";
@@ -1295,48 +1295,8 @@
     }
   }, 3000);
 
-  // 제작자 프리패스 — UI는 admin-pass.js 통합 패널 사용
-  function isCreator() {
-    try {
-      if (/[?&](debug|creator|summon|admin)=1/.test(location.search || "")) return true;
-      if (localStorage.getItem("haunt_creator") === "1") return true;
-      if (localStorage.getItem("haunt_admin") === "1") return true;
-    } catch (e) {}
-    return false;
-  }
-
-  window.__hauntCreatorPass = isCreator();
-
-  if (window.__hauntCreatorPass) {
-    try {
-      if (/[?&](creator|admin)=1/.test(location.search || "")) {
-        localStorage.setItem("haunt_creator", "1");
-        localStorage.setItem("haunt_admin", "1");
-      }
-    } catch (e) {}
-  }
-
-  // Shift+Alt+3 = freepass climax (admin-pass 와 동일)
-  document.addEventListener("keydown", function (e) {
-    if (e.shiftKey && e.altKey && (e.key === "3" || e.code === "Digit3")) {
-      e.preventDefault();
-      window.__hauntCreatorPass = true;
-      window.__hauntDiaryDiscovered = true;
-      if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
-      if (!window.__hauntPhase3Active) enterPhase3();
-      summon();
-    }
-  });
-
-  if (/[?&]summon=1/.test(location.search || "")) {
-    setTimeout(function () {
-      window.__hauntCreatorPass = true;
-      window.__hauntDiaryDiscovered = true;
-      if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
-      if (!window.__hauntPhase3Active) enterPhase3();
-      summon();
-    }, 500);
-  }
+  // 공개 빌드: 관리자/프리패스 UI·단축키 없음
+  window.__hauntCreatorPass = false;
 
   // 새로고침 시 이미 3페이즈였으면 복구
   try {
