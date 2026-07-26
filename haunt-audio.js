@@ -9,15 +9,35 @@
   var reduced =
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // 2페이즈 BGM (prefers-reduced-motion 이어도 조용히 루프 가능)
-  var P2_BGM_SRC = "assets/audio/Stalled_Rotor.mp3";
-  var P2_BGM_VOL = 0.11; // 작게 깔림
+  // ensureCtx 보다 앞에 선언 (BGM 경로에서 참조)
+  var ctx = null;
+  var master = null;
+  var comp = null;
+  // 2페이즈 BGM — Stalled_Rotor 루프 (HTMLAudio + WebAudio 이중)
+  var P2_BGM_REL = "assets/audio/Stalled_Rotor.mp3";
+  var P2_BGM_VOL = 0.26; // 작게 깔되 들릴 정도
   var p2BgmEl = null;
   var p2BgmWanted = false;
   var p2BgmFadeTimer = null;
+  var p2BgmPlaying = false;
+  var p2BgmLoadPromise = null;
+  var p2BgmBuffer = null;
+  var p2BgmSource = null;
+  var p2BgmGainNode = null;
+  var p2BgmUseWA = false; // Web Audio 경로 성공 시 true
+  var p2BgmLastErr = "";
+
+  function p2BgmSrc() {
+    try {
+      return new URL(P2_BGM_REL, location.href).href;
+    } catch (e) {
+      return P2_BGM_REL;
+    }
+  }
 
   function p2BgmReady() {
     try {
+      if (!document.body) return false;
       if (document.body.classList.contains("is-haunting")) return false;
       if (document.body.classList.contains("is-ending")) return false;
       if (
@@ -25,6 +45,14 @@
         document.body.classList.contains("phase-3-active")
       ) {
         return false;
+      }
+      // 2페이즈 UI 플래그
+      if (document.body.classList.contains("phase-2-active")) return true;
+      if (
+        document.body.classList.contains("stage-corrupt") ||
+        document.body.classList.contains("stage-dread")
+      ) {
+        return true;
       }
       if (!window.__hauntDiaryDiscovered) return false;
       var st = 0;
@@ -36,36 +64,48 @@
     }
   }
 
-  function ensureP2Bgm() {
+  function ensureP2BgmEl() {
     if (p2BgmEl) return p2BgmEl;
     try {
-      p2BgmEl = new Audio(P2_BGM_SRC);
+      p2BgmEl = new Audio();
+      p2BgmEl.src = p2BgmSrc();
       p2BgmEl.loop = true;
       p2BgmEl.preload = "auto";
       p2BgmEl.volume = 0;
+      p2BgmEl.crossOrigin = "anonymous";
       p2BgmEl.setAttribute("playsinline", "");
       p2BgmEl.setAttribute("aria-hidden", "true");
+      // 로드 실패 로그
+      p2BgmEl.addEventListener("error", function () {
+        p2BgmLastErr = "html-audio-error";
+        if (window.console && /[?&]debug=1/.test(location.search || "")) {
+          console.warn("[p2-bgm] HTMLAudio load error", p2BgmSrc(), p2BgmEl.error);
+        }
+      });
+      try {
+        p2BgmEl.load();
+      } catch (eL) {}
     } catch (e) {
       p2BgmEl = null;
+      p2BgmLastErr = String(e && e.message ? e.message : e);
     }
     return p2BgmEl;
   }
 
-  function fadeP2BgmTo(target, ms) {
-    var el = ensureP2Bgm();
+  function fadeHtmlBgmTo(target, ms) {
+    var el = ensureP2BgmEl();
     if (!el) return;
     if (p2BgmFadeTimer) {
       clearInterval(p2BgmFadeTimer);
       p2BgmFadeTimer = null;
     }
-    var from = el.volume;
-    var steps = Math.max(8, Math.floor((ms || 1200) / 40));
+    var from = typeof el.volume === "number" ? el.volume : 0;
+    var steps = Math.max(6, Math.floor((ms || 1000) / 50));
     var i = 0;
     p2BgmFadeTimer = setInterval(function () {
       i++;
-      var t = i / steps;
-      var v = from + (target - from) * t;
-      el.volume = Math.max(0, Math.min(1, v));
+      var t = Math.min(1, i / steps);
+      el.volume = Math.max(0, Math.min(1, from + (target - from) * t));
       if (i >= steps) {
         clearInterval(p2BgmFadeTimer);
         p2BgmFadeTimer = null;
@@ -74,52 +114,217 @@
           try {
             el.pause();
           } catch (e0) {}
+          p2BgmPlaying = false;
         }
       }
-    }, 40);
+    }, 50);
+  }
+
+  function stopWebBgm(fast) {
+    if (p2BgmGainNode && ctx) {
+      try {
+        var t0 = ctx.currentTime;
+        p2BgmGainNode.gain.cancelScheduledValues(t0);
+        p2BgmGainNode.gain.setValueAtTime(p2BgmGainNode.gain.value, t0);
+        p2BgmGainNode.gain.linearRampToValueAtTime(0.0001, t0 + (fast ? 0.25 : 1.0));
+      } catch (e) {}
+    }
+    setTimeout(
+      function () {
+        if (p2BgmSource) {
+          try {
+            p2BgmSource.stop();
+          } catch (e2) {}
+          try {
+            p2BgmSource.disconnect();
+          } catch (e3) {}
+          p2BgmSource = null;
+        }
+        p2BgmUseWA = false;
+        p2BgmPlaying = false;
+      },
+      fast ? 280 : 1100
+    );
+  }
+
+  function loadP2BgmBuffer() {
+    if (p2BgmBuffer) return Promise.resolve(p2BgmBuffer);
+    if (p2BgmLoadPromise) return p2BgmLoadPromise;
+    p2BgmLoadPromise = fetch(p2BgmSrc())
+      .then(function (r) {
+        if (!r.ok) throw new Error("bgm-http-" + r.status);
+        return r.arrayBuffer();
+      })
+      .then(function (ab) {
+        var c = ensureCtx();
+        if (!c) throw new Error("no-audio-ctx");
+        return new Promise(function (resolve, reject) {
+          var p = c.decodeAudioData(ab.slice(0), resolve, reject);
+          if (p && typeof p.then === "function") p.then(resolve, reject);
+        });
+      })
+      .then(function (buf) {
+        p2BgmBuffer = buf;
+        return buf;
+      })
+      .catch(function (err) {
+        p2BgmLastErr = String(err && err.message ? err.message : err);
+        p2BgmLoadPromise = null;
+        if (window.console && /[?&]debug=1/.test(location.search || "")) {
+          console.warn("[p2-bgm] decode fail", p2BgmLastErr, p2BgmSrc());
+        }
+        throw err;
+      });
+    return p2BgmLoadPromise;
+  }
+
+  function startWebBgm() {
+    var c = ensureCtx();
+    if (!c) return Promise.reject(new Error("no-ctx"));
+    if (c.state === "suspended") {
+      try {
+        c.resume();
+      } catch (e) {}
+    }
+    return loadP2BgmBuffer().then(function (buf) {
+      if (!p2BgmReady()) return false;
+      // 이미 재생 중이면 게인만 맞춤
+      if (p2BgmSource && p2BgmUseWA) {
+        if (p2BgmGainNode) {
+          var t = c.currentTime;
+          p2BgmGainNode.gain.cancelScheduledValues(t);
+          p2BgmGainNode.gain.setValueAtTime(
+            Math.max(0.0001, p2BgmGainNode.gain.value),
+            t
+          );
+          p2BgmGainNode.gain.linearRampToValueAtTime(P2_BGM_VOL, t + 1.2);
+        }
+        p2BgmPlaying = true;
+        return true;
+      }
+      if (p2BgmSource) {
+        try {
+          p2BgmSource.stop();
+        } catch (e0) {}
+        p2BgmSource = null;
+      }
+      p2BgmGainNode = c.createGain();
+      p2BgmGainNode.gain.value = 0.0001;
+      // 마스터 컴프 거치지 않고 destination 직결 → SFX에 파묻히지 않음
+      p2BgmGainNode.connect(c.destination);
+      p2BgmSource = c.createBufferSource();
+      p2BgmSource.buffer = buf;
+      p2BgmSource.loop = true;
+      p2BgmSource.connect(p2BgmGainNode);
+      p2BgmSource.start(0);
+      var t0 = c.currentTime;
+      p2BgmGainNode.gain.linearRampToValueAtTime(P2_BGM_VOL, t0 + 1.4);
+      p2BgmUseWA = true;
+      p2BgmPlaying = true;
+      // HTML 쪽은 중지
+      if (p2BgmEl) {
+        try {
+          p2BgmEl.pause();
+        } catch (e1) {}
+      }
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.log("[p2-bgm] WebAudio playing", p2BgmSrc(), "vol", P2_BGM_VOL);
+      }
+      return true;
+    });
+  }
+
+  function startHtmlBgm() {
+    var el = ensureP2BgmEl();
+    if (!el) return Promise.reject(new Error("no-el"));
+    // 들릴 정도로 바로 살짝 올린 뒤 목표 볼륨으로
+    try {
+      el.volume = Math.max(el.volume, 0.08);
+    } catch (e) {}
+    var p = el.play();
+    if (p && typeof p.then === "function") {
+      return p.then(function () {
+        p2BgmPlaying = true;
+        fadeHtmlBgmTo(P2_BGM_VOL, 1200);
+        if (window.console && /[?&]debug=1/.test(location.search || "")) {
+          console.log("[p2-bgm] HTMLAudio playing", p2BgmSrc(), "vol", P2_BGM_VOL);
+        }
+        return true;
+      });
+    }
+    p2BgmPlaying = true;
+    fadeHtmlBgmTo(P2_BGM_VOL, 1200);
+    return Promise.resolve(true);
   }
 
   function startPhase2Bgm() {
     p2BgmWanted = true;
-    if (!p2BgmReady()) return false;
-    var el = ensureP2Bgm();
-    if (!el) return false;
-    try {
-      var p = el.play();
-      if (p && typeof p.then === "function") {
-        p.then(function () {
-          fadeP2BgmTo(P2_BGM_VOL, 1800);
-        }).catch(function () {
-          // 자동재생 차단 — 다음 제스처에서 재시도
-        });
-      } else {
-        fadeP2BgmTo(P2_BGM_VOL, 1800);
+    if (!p2BgmReady()) {
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.log("[p2-bgm] not ready (need phase2)");
       }
-    } catch (e) {}
+      return false;
+    }
+    // 이미 잘 재생 중
+    if (p2BgmPlaying && p2BgmUseWA && p2BgmSource) return true;
+    if (p2BgmPlaying && p2BgmEl && !p2BgmEl.paused && p2BgmEl.volume >= P2_BGM_VOL * 0.4) {
+      return true;
+    }
+
+    // 1) Web Audio 우선 (reduced 모션은 HTML 만)
+    if (!reduced && typeof ensureCtx === "function") {
+      try {
+        ensureCtx();
+      } catch (eC) {}
+      if (ctx) {
+        startWebBgm().catch(function () {
+          return startHtmlBgm().catch(function (err) {
+            p2BgmLastErr = String(err && err.message ? err.message : err);
+            p2BgmPlaying = false;
+            if (window.console && /[?&]debug=1/.test(location.search || "")) {
+              console.warn("[p2-bgm] all play paths failed", p2BgmLastErr);
+            }
+          });
+        });
+        return true;
+      }
+    }
+
+    // 2) HTMLAudio 폴백 (reduced / ctx 실패)
+    startHtmlBgm().catch(function (err) {
+      p2BgmLastErr = String(err && err.message ? err.message : err);
+      p2BgmPlaying = false;
+    });
     return true;
   }
 
   function stopPhase2Bgm(fast) {
     p2BgmWanted = false;
-    if (!p2BgmEl) return;
-    fadeP2BgmTo(0, fast ? 400 : 1400);
+    if (p2BgmUseWA || p2BgmSource) {
+      stopWebBgm(!!fast);
+    }
+    if (p2BgmEl) {
+      fadeHtmlBgmTo(0, fast ? 350 : 1000);
+    }
   }
 
   function syncPhase2Bgm() {
     if (p2BgmReady()) {
-      if (!p2BgmEl || p2BgmEl.paused || p2BgmEl.volume < P2_BGM_VOL * 0.5) {
-        startPhase2Bgm();
-      }
-    } else {
-      if (p2BgmEl && !p2BgmEl.paused) stopPhase2Bgm(false);
+      var ok = p2BgmPlaying;
+      if (p2BgmUseWA && p2BgmSource) ok = true;
+      if (p2BgmEl && !p2BgmEl.paused && p2BgmEl.volume > 0.02) ok = true;
+      if (!ok) startPhase2Bgm();
+    } else if (p2BgmPlaying || (p2BgmEl && !p2BgmEl.paused) || p2BgmSource) {
+      stopPhase2Bgm(false);
     }
   }
 
   if (reduced) {
     var noop = function () {};
+    // reduced: HTMLAudio만 (ensureCtx 없음)
     window.__hauntAudio = {
       unlock: function () {
-        if (p2BgmWanted || p2BgmReady()) startPhase2Bgm();
+        if (p2BgmReady()) startPhase2Bgm();
       },
       setLevel: noop,
       pulse: noop,
@@ -144,24 +349,46 @@
       setMaster: noop,
       startPhase2Bgm: startPhase2Bgm,
       stopPhase2Bgm: stopPhase2Bgm,
+      p2BgmStatus: function () {
+        return {
+          ready: p2BgmReady(),
+          playing: p2BgmPlaying,
+          src: p2BgmSrc(),
+          err: p2BgmLastErr,
+          vol: P2_BGM_VOL,
+        };
+      },
     };
     document.addEventListener("haunt-stage", function (ev) {
       var s = ev && ev.detail && ev.detail.stage;
       if (s >= 2) startPhase2Bgm();
     });
+    document.addEventListener("haunt-diary", function () {
+      setTimeout(function () {
+        if (p2BgmReady()) startPhase2Bgm();
+      }, 500);
+    });
     document.addEventListener("haunt-phase3", function () {
       stopPhase2Bgm(false);
     });
-    document.addEventListener("pointerdown", function once() {
-      if (p2BgmReady()) startPhase2Bgm();
-    }, true);
-    setInterval(syncPhase2Bgm, 2000);
+    document.addEventListener(
+      "pointerdown",
+      function () {
+        if (p2BgmReady()) startPhase2Bgm();
+      },
+      true
+    );
+    document.addEventListener(
+      "keydown",
+      function () {
+        if (p2BgmReady()) startPhase2Bgm();
+      },
+      true
+    );
+    setInterval(syncPhase2Bgm, 1500);
     return;
   }
 
-  var ctx = null;
-  var master = null;
-  var comp = null;
   var unlocked = false;
   var level = 0; // 0 off · 1 soft · 2 mid · 3 heavy
   var beatTimer = null;
@@ -1169,6 +1396,13 @@
       setTimeout(function () {
         if (level < 2) setLevel(2);
       }, 200);
+      // 오늘 페이지 → 곧 stage2 — 미리 버퍼 로드 + 시도
+      setTimeout(function () {
+        try {
+          loadP2BgmBuffer();
+        } catch (e) {}
+        if (p2BgmReady()) startPhase2Bgm();
+      }, 800);
     }
   });
 
@@ -1184,13 +1418,20 @@
         rumble(1.4);
       }, 100);
       setLevel(2, { force: true });
+      // 제스처 직후가 아닐 수 있어 즉시 + 재시도
       startPhase2Bgm();
+      setTimeout(function () {
+        startPhase2Bgm();
+      }, 400);
+      setTimeout(function () {
+        startPhase2Bgm();
+      }, 1500);
     } else if (s >= 3) {
       unlock();
       dreadHit();
       setLevel(3, { force: true });
       setTimeout(breath, 400);
-      // stage 3 이어도 클라이맥스 전엔 2페이즈 취급일 수 있음 — BGM 유지
+      // stage 3(dread) 도 아직 2페이즈 구간이면 BGM 유지
       if (p2BgmReady()) startPhase2Bgm();
       else stopPhase2Bgm(false);
     }
@@ -1268,14 +1509,14 @@
   // 첫 상호작용에서 unlock (오디오 정책)
   function gest() {
     unlock();
-    document.removeEventListener("pointerdown", gest, true);
-    document.removeEventListener("keydown", gest, true);
+    // BGM은 매 제스처마다 재시도 (자동재생 차단 대비)
+    if (p2BgmReady()) startPhase2Bgm();
   }
   document.addEventListener("pointerdown", gest, true);
   document.addEventListener("keydown", gest, true);
 
   // 2페이즈 진입 누락 대비 폴링
-  setInterval(syncPhase2Bgm, 2500);
+  setInterval(syncPhase2Bgm, 1500);
 
   window.__hauntAudio = {
     unlock: unlock,
@@ -1300,5 +1541,17 @@
     setMaster: setMaster,
     startPhase2Bgm: startPhase2Bgm,
     stopPhase2Bgm: stopPhase2Bgm,
+    p2BgmStatus: function () {
+      return {
+        ready: p2BgmReady(),
+        playing: p2BgmPlaying,
+        useWA: p2BgmUseWA,
+        src: p2BgmSrc(),
+        err: p2BgmLastErr,
+        vol: P2_BGM_VOL,
+        elPaused: p2BgmEl ? p2BgmEl.paused : null,
+        elVol: p2BgmEl ? p2BgmEl.volume : null,
+      };
+    },
   };
 })();
