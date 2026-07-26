@@ -1,0 +1,7 @@
+node_modules/
+.demo-record/
+.demo-shorts/
+package-lock.json
+*.log
+.DS_Store
+diary-stories.LEGACY-backup.js
