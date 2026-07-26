@@ -5359,6 +5359,108 @@ html.is-mobile #staticLayer { opacity: 0.05; }
 html.is-desktop .fake-actions { flex-direction: row; }
 html.is-desktop .fake-actions .btn { width: auto; }
 
+/* ===== 모바일 트리거 최적화: 터치 타깃·더블탭·홀드 ===== */
+html.is-mobile .plan-btn.plan-card,
+html.is-mobile .stasis-cta,
+html.is-mobile .stasis-logo,
+html.is-mobile .pill-link,
+html.is-mobile .foot-micro,
+html.is-mobile .p2-trig-hot,
+html.is-mobile .mobile-trig-alt,
+html.is-mobile .find-hot.find-active.find-hard {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255, 80, 100, 0.12);
+}
+html.is-mobile .plan-btn.plan-card {
+  min-height: 52px;
+  min-width: 44%;
+  padding: 1rem 1.1rem !important;
+}
+html.is-mobile .stasis-cta {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.65rem 1rem !important;
+}
+html.is-mobile .stasis-logo {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.25rem;
+}
+html.is-mobile .stasis-pills .pill-link {
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+html.is-mobile .foot-micro,
+html.is-mobile .foot-beta {
+  min-height: 40px;
+  padding: 0.45rem 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem !important;
+}
+html.is-mobile #fakeChrome.fake-chrome {
+  min-height: 48px;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+html.is-mobile #fakeUrlBar,
+html.is-mobile.climax-fakeurl-live #fakeUrlBar {
+  min-height: 40px;
+  min-width: 48%;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center;
+  padding: 0.35rem 0.55rem !important;
+}
+html.is-mobile body:not(.stage-clean) .stasis-path-hide,
+html.is-mobile body:not(.stage-clean) .stasis-clock-hide {
+  min-height: 36px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.72rem !important;
+  color: rgba(255, 160, 175, 0.55) !important;
+}
+html.is-mobile .stasis-h1.title-horror,
+html.is-mobile #mainTitle {
+  padding: 0.5rem 0.35rem 1rem;
+  /* 탭 영역 확보 */
+  position: relative;
+  z-index: 2;
+}
+html.is-mobile .stasis-lede,
+html.is-mobile #lede {
+  padding: 0.35rem 0.25rem;
+  min-height: 44px;
+}
+html.is-mobile .monitor-frame {
+  min-height: 140px;
+  cursor: pointer;
+}
+html.is-mobile .stasis-quote,
+html.is-mobile #cardWarn {
+  min-height: 72px;
+}
+html.is-mobile .p2-trig-hot.climax-holding,
+html.is-mobile .p3-holding,
+html.is-mobile .find-holding {
+  outline: 2px solid rgba(255, 90, 120, 0.55) !important;
+  box-shadow: 0 0 18px rgba(255, 40, 80, 0.35) !important;
+}
+/* 모바일 네비: 트리거 대상 겹침 줄이기 */
+html.is-mobile .stasis-nav.top {
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  row-gap: 0.45rem;
+}
+html.is-mobile body.stage-corrupt .stasis-cards,
+html.is-mobile body.stage-dread .stasis-cards {
+  grid-template-columns: 1fr !important;
+  gap: 1rem;
+}
+
 /* ============================================================
    2페이즈 UI = 참조 목업 전체 재현
    Gemini_Generated_Image_tdueg6… — 로고 피 / 글리치 타이틀 /

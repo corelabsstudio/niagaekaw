@@ -528,20 +528,54 @@
     type: { hint: "type diary/journal" }
   };
 
+  function isMobileHaunt() {
+    try {
+      if (document.documentElement.classList.contains("is-mobile")) return true;
+      if (document.documentElement.getAttribute("data-device") === "mobile") return true;
+      var w = window.innerWidth || 1024;
+      var coarse = false;
+      try {
+        coarse = window.matchMedia("(pointer: coarse)").matches;
+      } catch (e0) {}
+      return w <= 720 || (coarse && w <= 900);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** 폰: 키보드 입력 경로(type) 제외 — 터치로 가능한 경로만 */
+  function mobileSafePaths() {
+    return FIND_PATHS.filter(function (p) {
+      return p !== "type";
+    });
+  }
+
   function pickFindPath() {
     try {
+      var mobile = isMobileHaunt();
       var forced = /[?&]path=([a-z]+)/.exec(location.search || "");
       if (forced && FIND_PATHS.indexOf(forced[1]) !== -1) {
+        // 강제 type 이라도 모바일은 터치 대체로 유지 (arm에서 처리)
         sessionStorage.setItem("haunt_diary_path", forced[1]);
         return forced[1];
       }
       var saved = sessionStorage.getItem("haunt_diary_path");
-      if (saved && FIND_PATHS.indexOf(saved) !== -1) return saved;
-      var pick = FIND_PATHS[(Math.random() * FIND_PATHS.length) | 0];
+      if (saved && FIND_PATHS.indexOf(saved) !== -1) {
+        if (mobile && saved === "type") {
+          // 예전 세션 type 고정 → 모바일 가능 경로로 재배정
+          var remapped = mobileSafePaths()[(Math.random() * mobileSafePaths().length) | 0];
+          sessionStorage.setItem("haunt_diary_path", remapped);
+          return remapped;
+        }
+        return saved;
+      }
+      var pool = mobile ? mobileSafePaths() : FIND_PATHS.slice();
+      var pick = pool[(Math.random() * pool.length) | 0];
       sessionStorage.setItem("haunt_diary_path", pick);
       return pick;
     } catch (e) {
-      return FIND_PATHS[(Math.random() * FIND_PATHS.length) | 0];
+      var fallback = isMobileHaunt() ? mobileSafePaths() : FIND_PATHS;
+      return fallback[(Math.random() * fallback.length) | 0];
     }
   }
 
@@ -640,6 +674,53 @@
           }
         }
       });
+      // 모바일/터치: 제목 5연타 또는 Free 카드 2초 홀드 대체
+      var title = document.getElementById("mainTitle");
+      var free =
+        document.getElementById("planFree") ||
+        document.querySelector("[data-find='freehold']");
+      if (title) {
+        var tn = 0;
+        var tr = null;
+        title.classList.add("find-hard", "find-active");
+        title.addEventListener("click", function () {
+          if (discovered || reading) return;
+          tn++;
+          clearTimeout(tr);
+          tr = setTimeout(function () {
+            tn = 0;
+          }, 900);
+          if (tn >= 5) {
+            tn = 0;
+            openDiary();
+          }
+        });
+      }
+      if (free) {
+        var ht = null;
+        var armed = false;
+        free.classList.add("find-hard", "find-active");
+        free.addEventListener("pointerdown", function (e) {
+          if (discovered || reading) return;
+          if (e.button != null && e.button !== 0) return;
+          armed = true;
+          free.classList.add("find-holding");
+          ht = setTimeout(function () {
+            if (armed) openDiary();
+            armed = false;
+            free.classList.remove("find-holding");
+          }, 2000);
+        });
+        function clearFreeHold() {
+          armed = false;
+          if (ht) clearTimeout(ht);
+          ht = null;
+          free.classList.remove("find-holding");
+        }
+        free.addEventListener("pointerup", clearFreeHold);
+        free.addEventListener("pointerleave", clearFreeHold);
+        free.addEventListener("pointercancel", clearFreeHold);
+      }
     }
   }
 

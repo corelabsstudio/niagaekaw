@@ -33,6 +33,79 @@
     );
   }
 
+  function isMobileHaunt() {
+    try {
+      if (document.documentElement.classList.contains("is-mobile")) return true;
+      if (document.documentElement.getAttribute("data-device") === "mobile") return true;
+      var w = window.innerWidth || 1024;
+      var coarse = false;
+      try {
+        coarse = window.matchMedia("(pointer: coarse)").matches;
+      } catch (e0) {}
+      return w <= 720 || (coarse && w <= 900);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  var DESKTOP_ONLY_IDS = {
+    type_stasis: 1,
+    type_wakeagain: 1,
+    type_escape: 1,
+    arrow_sigil: 1,
+    space_ritual: 1,
+    select_all_curse: 1,
+  };
+
+  function armHoldEl(el, ms, done, holdClass) {
+    if (!el) return false;
+    var t = null;
+    var cls = holdClass || "p3-holding";
+    function clear() {
+      if (t) clearTimeout(t);
+      t = null;
+      el.classList.remove(cls);
+    }
+    el.addEventListener("pointerdown", function (e) {
+      if (!phase3Ready() || busy()) return;
+      if (e.button != null && e.button !== 0) return;
+      try {
+        e.preventDefault();
+      } catch (err) {}
+      el.classList.add(cls);
+      t = setTimeout(function () {
+        clear();
+        done();
+      }, ms);
+    });
+    el.addEventListener("pointerup", clear);
+    el.addEventListener("pointerleave", clear);
+    el.addEventListener("pointercancel", clear);
+    return true;
+  }
+
+  function armTapEl(el, need, windowMs, done) {
+    if (!el) return false;
+    var n = 0;
+    var reset = null;
+    var win = windowMs || 2500;
+    if (isMobileHaunt()) win = Math.max(win, 3000);
+    el.classList.add("p2-trig-hot", "mobile-trig-alt");
+    el.addEventListener("click", function () {
+      if (!phase3Ready() || busy()) return;
+      n++;
+      clearTimeout(reset);
+      reset = setTimeout(function () {
+        n = 0;
+      }, win);
+      if (n >= need) {
+        n = 0;
+        done();
+      }
+    });
+    return true;
+  }
+
   function summon() {
     if (typeof window.__hauntSummon === "function") {
       window.__hauntSummon();
@@ -47,25 +120,7 @@
       id: "logo_hold",
       hint: "로고 길게",
       arm: function (done) {
-        var el = document.getElementById("topRec");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-          el.classList.remove("p3-holding");
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          el.classList.add("p3-holding");
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 3000);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
-        el.addEventListener("pointercancel", clear);
+        armHoldEl(document.getElementById("topRec"), 3000, done);
       },
     },
     {
@@ -83,6 +138,8 @@
             done();
           }
         });
+        // 모바일: 로고 6연타
+        armTapEl(document.getElementById("topRec"), 6, 3200, done);
       },
     },
     {
@@ -100,6 +157,8 @@
             done();
           }
         });
+        // 모바일: Get started 6연타
+        armTapEl(document.getElementById("navCta"), 6, 3200, done);
       },
     },
     {
@@ -107,23 +166,7 @@
       hint: "Get started 길게",
       arm: function (done) {
         var btn = document.getElementById("navCta");
-        if (!btn) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-          btn.classList.remove("p3-holding");
-        }
-        btn.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          btn.classList.add("p3-holding");
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2500);
-        });
-        btn.addEventListener("pointerup", clear);
-        btn.addEventListener("pointerleave", clear);
+        armHoldEl(btn, 2500, done);
       },
     },
     {
@@ -180,21 +223,7 @@
       hint: "Pricing 길게",
       arm: function (done) {
         var el = document.querySelector("[data-find='todo']") || document.querySelector(".pill-todo");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2200);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
+        armHoldEl(el, 2200, done);
       },
     },
     {
@@ -227,43 +256,17 @@
       hint: "상단 뱃지 5연타",
       arm: function (done) {
         var el = document.getElementById("eyebrow") || document.querySelector(".stasis-badge");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2000);
-          if (n >= 5) {
-            n = 0;
-            done();
-          }
-        });
+        if (!el || getComputedStyle(el).display === "none" || el.offsetParent === null) {
+          el = document.getElementById("mainTitle") || document.getElementById("topRec");
+        }
+        armTapEl(el, 5, 2500, done);
       },
     },
     {
       id: "title_hold",
       hint: "제목 길게",
       arm: function (done) {
-        var el = document.getElementById("mainTitle");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2800);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
+        armHoldEl(document.getElementById("mainTitle"), 2800, done);
       },
     },
     {
@@ -273,21 +276,7 @@
         var el =
           document.querySelector("[data-find='wip']") ||
           document.querySelector(".foot-beta");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2000);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
+        armHoldEl(el, 2000, done);
       },
     },
     {
@@ -359,6 +348,11 @@
             done();
           }
         });
+        // 모바일: Free 카드 8연타
+        var free =
+          document.getElementById("planFree") ||
+          document.querySelector("[data-fake='2']");
+        armTapEl(free, 8, 3500, done);
       },
     },
     {
@@ -386,6 +380,29 @@
             }
           }
         });
+        // 모바일: Free → Free → Team → Team 탭 시퀀스
+        var seqM = [];
+        var needM = ["2", "2", "3", "3"];
+        document.querySelectorAll("[data-fake]").forEach(function (btn) {
+          btn.classList.add("mobile-trig-alt");
+          btn.addEventListener("click", function () {
+            if (!phase3Ready() || busy()) return;
+            var id = btn.getAttribute("data-fake");
+            if (id !== "2" && id !== "3") return;
+            seqM.push(id);
+            if (seqM.length > 4) seqM.shift();
+            if (
+              seqM.length === 4 &&
+              seqM[0] === needM[0] &&
+              seqM[1] === needM[1] &&
+              seqM[2] === needM[2] &&
+              seqM[3] === needM[3]
+            ) {
+              seqM = [];
+              done();
+            }
+          });
+        });
       },
     },
     {
@@ -397,7 +414,6 @@
         document.addEventListener("keydown", function (e) {
           if (!phase3Ready() || busy()) return;
           if (e.code !== "Space" && e.key !== " ") return;
-          // 스크롤 방해 최소화 — prevent only when close
           n++;
           clearTimeout(t);
           t = setTimeout(function () {
@@ -408,6 +424,8 @@
             done();
           }
         });
+        // 모바일: 제목 12연타
+        armTapEl(document.getElementById("mainTitle"), 12, 5000, done);
       },
     },
     {
@@ -417,21 +435,7 @@
         var el =
           document.querySelector("[data-find='features']") ||
           document.getElementById("h2log");
-        if (!el) return;
-        var t = null;
-        function clear() {
-          if (t) clearTimeout(t);
-          t = null;
-        }
-        el.addEventListener("pointerdown", function () {
-          if (!phase3Ready() || busy()) return;
-          t = setTimeout(function () {
-            clear();
-            done();
-          }, 2000);
-        });
-        el.addEventListener("pointerup", clear);
-        el.addEventListener("pointerleave", clear);
+        armHoldEl(el, 2000, done);
       },
     },
     {
@@ -442,11 +446,13 @@
           document.getElementById("cardWarn") ||
           document.querySelector(".stasis-quote");
         if (!el) return;
+        el.classList.add("mobile-trig-alt");
         var last = 0;
+        var dblMs = isMobileHaunt() ? 650 : 420;
         el.addEventListener("click", function () {
           if (!phase3Ready() || busy()) return;
           var now = Date.now();
-          if (now - last < 400) {
+          if (now - last < dblMs) {
             last = 0;
             done();
           } else last = now;
@@ -460,10 +466,15 @@
         document.addEventListener("keydown", function (e) {
           if (!phase3Ready() || busy()) return;
           if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
-            // 기본 전체선택은 유지하되 트리거 발동
             done();
           }
         });
+        // 모바일: 다크 배너 길게
+        var quote =
+          document.getElementById("cardWarn") ||
+          document.querySelector(".stasis-quote") ||
+          document.getElementById("mainTitle");
+        armHoldEl(quote, 2500, done);
       },
     },
     {
@@ -522,14 +533,22 @@
     return used;
   }
 
+  function filterMobilePool(list) {
+    if (!isMobileHaunt()) return list.slice();
+    return list.filter(function (t) {
+      return !DESKTOP_ONLY_IDS[t.id];
+    });
+  }
+
   function unusedPool() {
     var used = readUsed();
-    var pool = TRIGGERS.filter(function (t) {
+    var base = filterMobilePool(TRIGGERS);
+    var pool = base.filter(function (t) {
       return used.indexOf(t.id) === -1;
     });
     if (!pool.length) {
       writeUsed([]);
-      return TRIGGERS.slice();
+      return filterMobilePool(TRIGGERS);
     }
     return pool;
   }
@@ -561,7 +580,8 @@
       } catch (e2) {}
       return pick;
     } catch (e) {
-      return TRIGGERS[(Math.random() * TRIGGERS.length) | 0];
+      var fb = filterMobilePool(TRIGGERS);
+      return fb[(Math.random() * fb.length) | 0];
     }
   }
 
@@ -592,7 +612,22 @@
     select_all_curse: "전부 선택해 봐. (Ctrl+A)",
     long_idle: "아무 것도 하지 마. 더 오래.",
   };
-  active.mission = MISSION[active.id] || active.hint || "마지막 조건을 찾아라.";
+  var MISSION_MOBILE = {
+    type_stasis: "왼쪽 위 로고. 여섯 번 탭.",
+    type_wakeagain: "Get started. 여섯 번 탭.",
+    type_escape: "Free 요금 카드. 여덟 번 탭.",
+    arrow_sigil: "Free → Free → Team → Team 순서.",
+    space_ritual: "큰 제목. 열두 번 탭.",
+    select_all_curse: "어두운 인용 배너. 길게 누르고 있어.",
+    badge_mash: "큰 제목. 빠르게 다섯 번.",
+    quote_double: "어두운 인용 배너. 빠르게 두 번 탭.",
+    long_idle: "손 떼고 더 오래 가만히.",
+  };
+  if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
+    active.mission = MISSION_MOBILE[active.id];
+  } else {
+    active.mission = MISSION[active.id] || active.hint || "마지막 조건을 찾아라.";
+  }
 
   function onDone() {
     if (fired || busy()) return;

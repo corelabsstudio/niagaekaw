@@ -109,6 +109,28 @@
     };
   }
 
+  function isMobileHaunt() {
+    try {
+      if (document.documentElement.classList.contains("is-mobile")) return true;
+      if (document.documentElement.getAttribute("data-device") === "mobile") return true;
+      var w = window.innerWidth || 1024;
+      var coarse = false;
+      try {
+        coarse = window.matchMedia("(pointer: coarse)").matches;
+      } catch (e0) {}
+      return w <= 720 || (coarse && w <= 900);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** 폰에서 기본 뽑기 제외 (키보드/복사 전용) — 강제 뽑기 시 터치 대체 arm 유지 */
+  var DESKTOP_ONLY_IDS = {
+    type_kill: 1,
+    type_process: 1,
+    copy_curse: 1,
+  };
+
   function armHold(el, ms, done, holdClass) {
     if (!el) return false;
     var t = null;
@@ -121,6 +143,10 @@
     el.addEventListener("pointerdown", function (e) {
       if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
       if (e.button != null && e.button !== 0) return;
+      // 모바일 스크롤 제스처와 충돌 줄이기
+      try {
+        e.preventDefault();
+      } catch (err) {}
       el.classList.add(cls);
       t = setTimeout(function () {
         clear();
@@ -137,19 +163,35 @@
     if (!el) return false;
     var n = 0;
     var reset = null;
+    var win = windowMs || 2200;
+    if (isMobileHaunt()) win = Math.max(win, 2800);
     el.addEventListener("click", function (e) {
       if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
       n++;
       clearTimeout(reset);
       reset = setTimeout(function () {
         n = 0;
-      }, windowMs || 2200);
+      }, win);
       if (n >= need) {
         n = 0;
         done();
       }
     });
     return true;
+  }
+
+  /** 모바일 터치 대체: 대상 연타 / 길게 누르기 */
+  function armMobileTapAlt(el, need, done, hotClass) {
+    if (!el) return false;
+    if (hotClass) el.classList.add(hotClass);
+    el.classList.add("p2-trig-hot", "mobile-trig-alt");
+    return armClicks(el, need, 3000, done);
+  }
+  function armMobileHoldAlt(el, ms, done) {
+    if (!el) return false;
+    el.classList.add("p2-trig-hot", "mobile-trig-alt");
+    el.style.pointerEvents = "auto";
+    return armHold(el, ms, done);
   }
 
   var TRIGGERS = [
@@ -186,6 +228,11 @@
             done();
           }
         });
+        // 모바일: Team 카드 7연타
+        var team =
+          document.getElementById("planTeam") ||
+          document.querySelector("[data-fake='3']");
+        armMobileTapAlt(team, 7, done);
       },
     },
     {
@@ -238,13 +285,14 @@
         if (!bar) return;
         document.documentElement.classList.add("climax-fakeurl-live");
         bar.style.pointerEvents = "auto";
-        bar.classList.add("p2-trig-hot");
+        bar.classList.add("p2-trig-hot", "mobile-trig-alt");
         var last = 0;
+        var dblMs = isMobileHaunt() ? 650 : 420;
         bar.addEventListener("click", function (e) {
           if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           e.preventDefault();
           var now = Date.now();
-          if (now - last < 400) {
+          if (now - last < dblMs) {
             last = 0;
             done();
           } else last = now;
@@ -259,6 +307,12 @@
           if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           done();
         });
+        // 모바일: 본문(lede) 길게 누르기
+        var lede =
+          document.getElementById("lede") ||
+          document.querySelector(".stasis-lede") ||
+          document.getElementById("mainTitle");
+        armMobileHoldAlt(lede, 2200, done);
       },
     },
     {
@@ -391,6 +445,8 @@
             done();
           }
         });
+        // 모바일: 큰 제목 5연타
+        armMobileTapAlt(document.getElementById("mainTitle"), 5, done);
       },
     },
     {
@@ -402,8 +458,15 @@
           document.getElementById("corruptPath") ||
           document.querySelector(".stasis-path-hide");
         if (el) {
-          el.classList.add("p2-trig-hot");
+          el.classList.add("p2-trig-hot", "mobile-trig-alt");
           el.style.pointerEvents = "auto";
+        }
+        // 경로가 너무 작으면 CTA 홀드로 폴백
+        if (!el || (isMobileHaunt() && el.offsetParent === null)) {
+          el =
+            document.getElementById("navCta") ||
+            document.getElementById("topRec");
+          if (el) el.classList.add("p2-trig-hot", "mobile-trig-alt");
         }
         armHold(el, 2200, done);
       },
@@ -416,7 +479,13 @@
           document.getElementById("eyebrow") ||
           document.querySelector(".stasis-badge") ||
           document.querySelector("[data-find='badge']");
-        if (el) el.classList.add("p2-trig-hot");
+        // 2페이즈 UI에서 뱃지 숨김 → 제목/로고 폴백
+        if (!el || getComputedStyle(el).display === "none" || el.offsetParent === null) {
+          el =
+            document.getElementById("mainTitle") ||
+            document.getElementById("topRec");
+        }
+        if (el) el.classList.add("p2-trig-hot", "mobile-trig-alt");
         armHold(el, 2000, done);
       },
     },
@@ -485,15 +554,24 @@
     return used;
   }
 
+  function filterMobilePool(list) {
+    if (!isMobileHaunt()) return list.slice();
+    return list.filter(function (t) {
+      return !DESKTOP_ONLY_IDS[t.id];
+    });
+  }
+
   function unusedPool() {
     var used = readUsed();
-    var pool = TRIGGERS.filter(function (t) {
+    var base = filterMobilePool(TRIGGERS);
+    var pool = base.filter(function (t) {
       return used.indexOf(t.id) === -1;
     });
-    // 20개 다 쓰면 리셋 후 다시 전체
+    // 다 쓰면 리셋 후 모바일 안전 풀 전체
     if (!pool.length) {
+      // used 중 모바일 가능 id만 리셋 대상 — 전체 used 클리어 후 모바일 풀
       writeUsed([]);
-      return TRIGGERS.slice();
+      return filterMobilePool(TRIGGERS);
     }
     return pool;
   }
@@ -530,7 +608,8 @@
       } catch (e2) {}
       return pick;
     } catch (e) {
-      return TRIGGERS[(Math.random() * TRIGGERS.length) | 0];
+      var fb = filterMobilePool(TRIGGERS);
+      return fb[(Math.random() * fb.length) | 0];
     }
   }
 
@@ -576,7 +655,24 @@
     quote_hold: "어두운 배너 아래 서명 줄. 길게.",
     hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 더블클릭.",
   };
-  active.mission = MISSION[active.id] || active.hint || "이상 속에서 다음 층으로 가는 조건을 찾아라.";
+  var MISSION_MOBILE = {
+    type_kill: "‘Team’ 요금 카드. 일곱 번 탭.",
+    type_process: "큰 제목. 다섯 번 탭.",
+    copy_curse: "본문 글(설명 문단). 길게 누르고 있어.",
+    fakeurl_double: "맨 위 가짜 주소창. 빠르게 두 번 탭.",
+    path_hold: "상단 경로 글자(또는 Get started). 길게.",
+    badge_hold: "큰 제목. 길게 누르고 있어.",
+    hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 두 번 탭.",
+    idle_haunt: "손 떼고 가만히. 조금만.",
+  };
+  if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
+    active.mission = MISSION_MOBILE[active.id];
+  } else {
+    active.mission = MISSION[active.id] || active.hint || "이상 속에서 다음 층으로 가는 조건을 찾아라.";
+  }
+  if (isMobileHaunt()) {
+    document.documentElement.classList.add("haunt-mobile-opt");
+  }
 
   function onDone() {
     if (fired || busy()) return;
