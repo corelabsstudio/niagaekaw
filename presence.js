@@ -3,6 +3,7 @@
  *
  * - 총 방문: counterapi.dev (브라우저당 1회 hit)
  * - 동시접속: 공유 JSON 스토어 heartbeat (GET→merge→PUT, 전원 동일 수치)
+ * - 테스트 트래픽은 총 방문 +1 제외: localhost / ?debug=1 / webdriver 등
  *
  * 페이즈 카피:
  *   P1  접속 중 N · 총 방문자 M
@@ -30,7 +31,52 @@
     total: null,
     ready: false,
     timer: null,
+    testTraffic: false,
   };
+
+  /**
+   * 집계 제외 (총 방문 +1 안 함). 숫자 조회·표시는 함.
+   * - localhost / 127.0.0.1 / ::1 / file:
+   * - ?debug=1 ?nocount=1 ?audit=1
+   * - Playwright 등 navigator.webdriver
+   */
+  function isTestTraffic() {
+    try {
+      var h = (location.hostname || "").toLowerCase();
+      if (
+        h === "localhost" ||
+        h === "127.0.0.1" ||
+        h === "0.0.0.0" ||
+        h === "[::1]" ||
+        h === "::1" ||
+        h.endsWith(".local")
+      ) {
+        return true;
+      }
+      if (location.protocol === "file:") return true;
+    } catch (e0) {}
+
+    try {
+      var q = location.search || "";
+      if (
+        /[?&](debug|nocount|audit|hintfast|p3hint|p2hint)=1(?:&|$)/.test(q) ||
+        /[?&](p3|p3t|path|summon|ending|diary)=/.test(q)
+      ) {
+        // 제작·테스트 쿼리: 집계 제외 (일반 유입 URL에는 안 붙음)
+        return true;
+      }
+    } catch (e1) {}
+
+    try {
+      if (navigator.webdriver === true) return true;
+    } catch (e2) {}
+
+    try {
+      if (window.__hauntNoCount === true) return true;
+    } catch (e3) {}
+
+    return false;
+  }
 
   function $(id) {
     return document.getElementById(id);
@@ -146,11 +192,16 @@
       encodeURIComponent(COUNTER_NS) +
       "/" +
       encodeURIComponent(COUNTER_KEY);
+
+    /* 테스트·로컬·디버그 쿼리: 조회만, +1 금지 */
+    var skipHit = state.testTraffic === true;
     var shouldHit = false;
-    try {
-      shouldHit = !localStorage.getItem(TOTAL_FLAG);
-    } catch (e) {
-      shouldHit = true;
+    if (!skipHit) {
+      try {
+        shouldHit = !localStorage.getItem(TOTAL_FLAG);
+      } catch (e) {
+        shouldHit = true;
+      }
     }
 
     var url = shouldHit ? base + "/up" : base + "/";
@@ -160,7 +211,7 @@
         return r.json();
       })
       .then(function (data) {
-        if (shouldHit) {
+        if (shouldHit && !skipHit) {
           try {
             localStorage.setItem(TOTAL_FLAG, "1");
           } catch (e2) {}
@@ -264,6 +315,7 @@
   }
 
   function init() {
+    state.testTraffic = isTestTraffic();
     ensureHud();
     /* API 대기 전에도 HUD 즉시 노출 (접속 중 1 · 총 —) */
     state.ready = true;
@@ -286,9 +338,16 @@
       getTotal: function () {
         return state.total;
       },
+      isTestTraffic: function () {
+        return !!state.testTraffic;
+      },
       refresh: render,
       beat: heartbeat,
     };
+
+    if (state.testTraffic && window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[presence] test traffic — total +1 skipped");
+    }
   }
 
   if (document.readyState === "loading") {
