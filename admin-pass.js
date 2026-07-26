@@ -73,20 +73,31 @@
     window.__hauntCreatorPass = true;
     if (typeof window.__hauntEnterPhase3 === "function") {
       window.__hauntEnterPhase3();
-      return;
-    }
-    if (window.__hauntClimax && typeof window.__hauntClimax.enterPhase3 === "function") {
+    } else if (window.__hauntClimax && typeof window.__hauntClimax.enterPhase3 === "function") {
       window.__hauntClimax.enterPhase3();
-      return;
+    } else {
+      // 폴백
+      window.__hauntPhase3Active = true;
+      document.body.classList.add("phase-3-active");
+      document.body.classList.remove("phase-2-active");
+      try {
+        sessionStorage.setItem("haunt_phase3", "1");
+        document.dispatchEvent(new CustomEvent("haunt-phase3", { detail: { from: "admin" } }));
+      } catch (e) {}
     }
-    // 폴백
-    window.__hauntPhase3Active = true;
-    document.body.classList.add("phase-3-active");
-    document.body.classList.remove("phase-2-active");
+    // BGM 직접 재시도 (관리자 버튼 = 사용자 제스처 → play 허용)
     try {
-      sessionStorage.setItem("haunt_phase3", "1");
-      document.dispatchEvent(new CustomEvent("haunt-phase3", { detail: { from: "admin" } }));
-    } catch (e) {}
+      var au = window.__hauntAudio;
+      if (au) {
+        if (au.unlock) au.unlock();
+        if (au.startPhase3Bgm) {
+          au.startPhase3Bgm();
+          setTimeout(function () {
+            if (au.startPhase3Bgm) au.startPhase3Bgm();
+          }, 200);
+        }
+      }
+    } catch (eB) {}
   }
 
   function forceClimax() {

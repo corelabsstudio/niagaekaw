@@ -27,20 +27,15 @@
   var p2BgmUseWA = false; // Web Audio 경로 성공 시 true
   var p2BgmLastErr = "";
 
-  // 3페이즈 BGM — Iron_Chest_Cavity (WebAudio 우선 + HTML 폴백, P2와 동일 전략)
+  // 3페이즈 BGM — Iron_Chest_Cavity (DOM #p3BgmTrack 우선, 단순·확실)
   var P3_BGM_REL = "assets/audio/Iron_Chest_Cavity.mp3";
-  var P3_BGM_VOL = 0.36;
+  var P3_BGM_VOL = 0.42;
   var p3BgmEl = null;
   var p3BgmWanted = false;
-  var p3BgmFadeTimer = null;
   var p3BgmPlaying = false;
   var p3BgmLastErr = "";
-  var p3BgmBuffer = null;
-  var p3BgmLoadPromise = null;
-  var p3BgmSource = null;
-  var p3BgmGainNode = null;
   var p3BgmUseWA = false;
-  var p3BgmStarting = false;
+  var p3BgmSource = null; // status 호환용 (DOM 전용)
 
   function resolveAudioUrl(rel) {
     try {
@@ -81,63 +76,50 @@
 
   function ensureP3BgmEl() {
     if (p3BgmEl) return p3BgmEl;
+    // 1) HTML 에 박아 둔 태그 우선
+    p3BgmEl = document.getElementById("p3BgmTrack");
+    if (!p3BgmEl) {
+      try {
+        p3BgmEl = new Audio();
+        p3BgmEl.id = "p3BgmTrack";
+        p3BgmEl.src = p3BgmSrc();
+        p3BgmEl.loop = true;
+        p3BgmEl.preload = "auto";
+        p3BgmEl.setAttribute("playsinline", "");
+        if (document.body) document.body.appendChild(p3BgmEl);
+      } catch (e) {
+        p3BgmEl = null;
+        p3BgmLastErr = String(e && e.message ? e.message : e);
+        return null;
+      }
+    }
     try {
-      p3BgmEl = new Audio(p3BgmSrc());
+      if (!p3BgmEl.getAttribute("src") && !p3BgmEl.src) {
+        p3BgmEl.src = p3BgmSrc();
+      }
       p3BgmEl.loop = true;
       p3BgmEl.preload = "auto";
-      p3BgmEl.volume = 0.12;
-      p3BgmEl.setAttribute("playsinline", "");
-      p3BgmEl.setAttribute("aria-hidden", "true");
-      p3BgmEl.addEventListener("error", function () {
-        p3BgmLastErr = "html-audio-error code=" + (p3BgmEl.error && p3BgmEl.error.code);
-        if (window.console) {
-          console.warn("[p3-bgm] load error", p3BgmSrc(), p3BgmEl.error);
-        }
-      });
+      // crossOrigin 이 로컬/동일 출처에서 문제 되면 제거
       try {
-        p3BgmEl.load();
-      } catch (eL) {}
-    } catch (e) {
-      p3BgmEl = null;
-      p3BgmLastErr = String(e && e.message ? e.message : e);
-    }
+        p3BgmEl.removeAttribute("crossorigin");
+      } catch (eC) {}
+    } catch (e2) {}
+    p3BgmEl.addEventListener(
+      "error",
+      function () {
+        p3BgmLastErr =
+          "audio-error " +
+          (p3BgmEl.error ? p3BgmEl.error.code : "?") +
+          " " +
+          p3BgmSrc();
+        console.warn("[p3-bgm]", p3BgmLastErr);
+      },
+      { once: false }
+    );
     return p3BgmEl;
   }
 
-  function fadeP3HtmlTo(target, ms) {
-    var el = ensureP3BgmEl();
-    if (!el) return;
-    if (p3BgmFadeTimer) {
-      clearInterval(p3BgmFadeTimer);
-      p3BgmFadeTimer = null;
-    }
-    var from = typeof el.volume === "number" ? el.volume : 0;
-    var steps = Math.max(4, Math.floor((ms || 800) / 40));
-    var i = 0;
-    p3BgmFadeTimer = setInterval(function () {
-      i++;
-      var t = Math.min(1, i / steps);
-      try {
-        el.volume = Math.max(0, Math.min(1, from + (target - from) * t));
-      } catch (eV) {}
-      if (i >= steps) {
-        clearInterval(p3BgmFadeTimer);
-        p3BgmFadeTimer = null;
-        try {
-          el.volume = Math.max(0, Math.min(1, target));
-        } catch (eV2) {}
-        if (target <= 0.001) {
-          try {
-            el.pause();
-          } catch (e0) {}
-          p3BgmPlaying = false;
-        }
-      }
-    }, 40);
-  }
-
   function killP2BgmHard() {
-    // 2페이즈 트랙 즉시 절단 (페이드 대기 없이)
     p2BgmWanted = false;
     if (p2BgmFadeTimer) {
       clearInterval(p2BgmFadeTimer);
@@ -163,266 +145,147 @@
       try {
         p2BgmEl.pause();
         p2BgmEl.volume = 0;
-        p2BgmEl.currentTime = 0;
       } catch (e4) {}
     }
-  }
-
-  function loadP3BgmBuffer() {
-    if (p3BgmBuffer) return Promise.resolve(p3BgmBuffer);
-    if (p3BgmLoadPromise) return p3BgmLoadPromise;
-    var url = p3BgmSrc();
-    p3BgmLoadPromise = fetch(url)
-      .then(function (r) {
-        if (!r.ok) throw new Error("p3-bgm-http-" + r.status);
-        return r.arrayBuffer();
-      })
-      .then(function (ab) {
-        if (typeof ensureCtx !== "function") throw new Error("no-ensureCtx");
-        var c = ensureCtx();
-        if (!c) throw new Error("no-audio-ctx");
-        return new Promise(function (resolve, reject) {
-          var p = c.decodeAudioData(ab.slice(0), resolve, reject);
-          if (p && typeof p.then === "function") p.then(resolve, reject);
-        });
-      })
-      .then(function (buf) {
-        p3BgmBuffer = buf;
-        return buf;
-      })
-      .catch(function (err) {
-        p3BgmLastErr = String(err && err.message ? err.message : err);
-        p3BgmLoadPromise = null;
-        if (window.console) console.warn("[p3-bgm] decode fail", p3BgmLastErr, url);
-        throw err;
-      });
-    return p3BgmLoadPromise;
-  }
-
-  function startP3WebBgm() {
-    if (typeof ensureCtx !== "function") {
-      return Promise.reject(new Error("no-ensureCtx"));
-    }
-    var c = ensureCtx();
-    if (!c) return Promise.reject(new Error("no-ctx"));
-    if (c.state === "suspended") {
+    // DOM p2 트랙
+    var p2dom = document.getElementById("p2BgmTrack");
+    if (p2dom) {
       try {
-        c.resume();
-      } catch (eR) {}
+        p2dom.pause();
+        p2dom.volume = 0;
+      } catch (e5) {}
     }
-    return loadP3BgmBuffer().then(function (buf) {
-      if (!p3BgmReady() || !p3BgmWanted) return false;
-      if (p3BgmSource && p3BgmUseWA && p3BgmGainNode) {
-        var t = c.currentTime;
-        p3BgmGainNode.gain.cancelScheduledValues(t);
-        p3BgmGainNode.gain.setValueAtTime(
-          Math.max(0.0001, p3BgmGainNode.gain.value),
-          t
-        );
-        p3BgmGainNode.gain.linearRampToValueAtTime(P3_BGM_VOL, t + 0.6);
-        p3BgmPlaying = true;
-        return true;
-      }
-      if (p3BgmSource) {
-        try {
-          p3BgmSource.stop();
-        } catch (e0) {}
-        p3BgmSource = null;
-      }
-      p3BgmGainNode = c.createGain();
-      p3BgmGainNode.gain.value = 0.0001;
-      p3BgmGainNode.connect(c.destination);
-      p3BgmSource = c.createBufferSource();
-      p3BgmSource.buffer = buf;
-      p3BgmSource.loop = true;
-      p3BgmSource.connect(p3BgmGainNode);
-      p3BgmSource.start(0);
-      var t0 = c.currentTime;
-      p3BgmGainNode.gain.linearRampToValueAtTime(P3_BGM_VOL, t0 + 0.8);
-      p3BgmUseWA = true;
-      p3BgmPlaying = true;
-      if (p3BgmEl) {
-        try {
-          p3BgmEl.pause();
-        } catch (e1) {}
-      }
-      if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[p3-bgm] WebAudio playing", p3BgmSrc(), "vol", P3_BGM_VOL);
-      }
-      return true;
-    });
-  }
-
-  function startP3HtmlBgm() {
-    var el = ensureP3BgmEl();
-    if (!el) return Promise.reject(new Error("no-el"));
-    try {
-      el.volume = Math.max(0.18, el.volume || 0);
-    } catch (e) {}
-    var p = el.play();
-    if (p && typeof p.then === "function") {
-      return p.then(function () {
-        p3BgmPlaying = true;
-        fadeP3HtmlTo(P3_BGM_VOL, 700);
-        if (window.console && /[?&]debug=1/.test(location.search || "")) {
-          console.log("[p3-bgm] HTMLAudio playing", p3BgmSrc(), "vol", P3_BGM_VOL);
-        }
-        return true;
-      });
-    }
-    p3BgmPlaying = true;
-    fadeP3HtmlTo(P3_BGM_VOL, 700);
-    return Promise.resolve(true);
   }
 
   function startPhase3Bgm() {
     p3BgmWanted = true;
     if (!p3BgmReady()) {
-      if (window.console && /[?&]debug=1/.test(location.search || "")) {
-        console.log("[p3-bgm] not ready", {
-          p3: !!window.__hauntPhase3Active,
-          cls: document.body && document.body.className,
-        });
-      }
+      console.log("[p3-bgm] skip — not in phase3", {
+        flag: window.__hauntPhase3Active,
+        cls: document.body && document.body.className,
+      });
       return false;
     }
-    // 2페이즈 즉시 끔
+
     try {
       killP2BgmHard();
     } catch (eK) {
       try {
-        stopPhase2Bgm(true);
+        if (typeof stopPhase2Bgm === "function") stopPhase2Bgm(true);
       } catch (eS) {}
     }
 
-    // 이미 재생 중
-    if (p3BgmPlaying && p3BgmUseWA && p3BgmSource) return true;
-    if (
-      p3BgmPlaying &&
-      p3BgmEl &&
-      !p3BgmEl.paused &&
-      p3BgmEl.volume >= P3_BGM_VOL * 0.3
-    ) {
+    // AudioContext 깨우기 (다른 SFX 와 같이)
+    try {
+      if (typeof ensureCtx === "function") {
+        var c = ensureCtx();
+        if (c && c.state === "suspended") c.resume();
+      }
+    } catch (eCtx) {}
+
+    var el = ensureP3BgmEl();
+    if (!el) {
+      console.warn("[p3-bgm] no audio element");
+      return false;
+    }
+
+    // 이미 재생 중이면 볼륨만 보정
+    if (!el.paused && !el.ended && el.currentTime > 0) {
+      try {
+        el.volume = P3_BGM_VOL;
+        el.muted = false;
+      } catch (eV) {}
+      p3BgmPlaying = true;
       return true;
     }
-    if (p3BgmStarting) return true;
-    p3BgmStarting = true;
 
-    var done = function () {
-      p3BgmStarting = false;
-    };
-
-    // WebAudio 우선 (P2와 동일 — 이미 사용자 제스처 후면 잘 됨)
-    if (!reduced && typeof ensureCtx === "function") {
+    try {
+      el.muted = false;
+      el.loop = true;
+      el.volume = P3_BGM_VOL;
+      // 처음부터
       try {
-        ensureCtx();
-        if (ctx && ctx.state === "suspended") ctx.resume();
-      } catch (eC) {}
-      if (ctx) {
-        startP3WebBgm()
-          .then(done)
-          .catch(function () {
-            return startP3HtmlBgm()
-              .then(done)
-              .catch(function (err) {
-                p3BgmLastErr = String(err && err.message ? err.message : err);
-                p3BgmPlaying = false;
-                done();
-                if (window.console) {
-                  console.warn("[p3-bgm] all paths failed", p3BgmLastErr);
-                }
-              });
-          });
-        return true;
-      }
-    }
+        if (el.currentTime > 0.5) el.currentTime = 0;
+      } catch (eT) {}
+    } catch (eSet) {}
 
-    startP3HtmlBgm()
-      .then(done)
-      .catch(function (err) {
-        p3BgmLastErr = String(err && err.message ? err.message : err);
-        p3BgmPlaying = false;
-        done();
-      });
+    var attempt = function (n) {
+      n = n || 0;
+      var p = el.play();
+      if (p && typeof p.then === "function") {
+        p.then(function () {
+          p3BgmPlaying = true;
+          try {
+            el.volume = P3_BGM_VOL;
+            el.muted = false;
+          } catch (e2) {}
+          console.log("[p3-bgm] PLAYING", p3BgmSrc(), "vol", el.volume);
+        }).catch(function (err) {
+          p3BgmLastErr = String(err && err.message ? err.message : err);
+          p3BgmPlaying = false;
+          console.warn("[p3-bgm] play() failed", p3BgmLastErr, "try", n);
+          if (n < 5) {
+            setTimeout(function () {
+              if (p3BgmWanted && p3BgmReady()) attempt(n + 1);
+            }, 400 + n * 300);
+          }
+        });
+      } else {
+        p3BgmPlaying = !el.paused;
+      }
+    };
+    attempt(0);
     return true;
   }
 
   function stopPhase3Bgm(fast) {
     p3BgmWanted = false;
-    p3BgmStarting = false;
-    if (p3BgmFadeTimer) {
-      clearInterval(p3BgmFadeTimer);
-      p3BgmFadeTimer = null;
-    }
-    if (p3BgmSource) {
+    var el = p3BgmEl || document.getElementById("p3BgmTrack");
+    if (!el) return;
+    if (fast) {
       try {
-        if (p3BgmGainNode && ctx) {
-          var t0 = ctx.currentTime;
-          p3BgmGainNode.gain.cancelScheduledValues(t0);
-          p3BgmGainNode.gain.setValueAtTime(
-            Math.max(0.0001, p3BgmGainNode.gain.value),
-            t0
-          );
-          p3BgmGainNode.gain.linearRampToValueAtTime(
-            0.0001,
-            t0 + (fast ? 0.2 : 0.8)
-          );
-        }
-      } catch (eG) {}
-      setTimeout(
-        function () {
-          try {
-            p3BgmSource.stop();
-          } catch (e1) {}
-          try {
-            p3BgmSource.disconnect();
-          } catch (e2) {}
-          p3BgmSource = null;
-          p3BgmUseWA = false;
-          p3BgmPlaying = false;
-        },
-        fast ? 220 : 900
-      );
+        el.pause();
+        el.volume = 0;
+      } catch (e) {}
+      p3BgmPlaying = false;
+      return;
     }
-    if (p3BgmEl) {
-      if (fast) {
+    // 짧은 페이드
+    var from = el.volume || P3_BGM_VOL;
+    var steps = 8;
+    var i = 0;
+    var iv = setInterval(function () {
+      i++;
+      try {
+        el.volume = Math.max(0, from * (1 - i / steps));
+      } catch (e2) {}
+      if (i >= steps) {
+        clearInterval(iv);
         try {
-          p3BgmEl.pause();
-          p3BgmEl.volume = 0;
+          el.pause();
+          el.volume = 0;
         } catch (e3) {}
         p3BgmPlaying = false;
-      } else {
-        fadeP3HtmlTo(0, 900);
       }
-    }
+    }, 40);
   }
 
   function syncPhase3Bgm() {
     if (p3BgmReady()) {
-      var ok = false;
-      if (p3BgmUseWA && p3BgmSource) ok = true;
-      if (p3BgmEl && !p3BgmEl.paused && p3BgmEl.volume > 0.05) ok = true;
+      var el = ensureP3BgmEl();
+      var ok = el && !el.paused && el.volume > 0.05;
       if (!ok) startPhase3Bgm();
-    } else if (
-      p3BgmPlaying ||
-      p3BgmSource ||
-      (p3BgmEl && !p3BgmEl.paused)
-    ) {
-      stopPhase3Bgm(false);
+    } else {
+      var el2 = p3BgmEl || document.getElementById("p3BgmTrack");
+      if (el2 && !el2.paused) stopPhase3Bgm(true);
     }
   }
 
-  // 2페이즈 중에 3페이즈 트랙 미리 로드
   function preloadP3Bgm() {
     try {
-      ensureP3BgmEl();
-      if (!reduced && typeof ensureCtx === "function") {
-        try {
-          ensureCtx();
-        } catch (e) {}
-        loadP3BgmBuffer().catch(function () {});
-      }
-    } catch (e2) {}
+      var el = ensureP3BgmEl();
+      if (el && el.load) el.load();
+    } catch (e) {}
   }
 
   function p2BgmReady() {
@@ -457,24 +320,25 @@
   function ensureP2BgmEl() {
     if (p2BgmEl) return p2BgmEl;
     try {
-      p2BgmEl = new Audio();
-      p2BgmEl.src = p2BgmSrc();
+      p2BgmEl = document.getElementById("p2BgmTrack");
+      if (!p2BgmEl) {
+        p2BgmEl = new Audio();
+        p2BgmEl.src = p2BgmSrc();
+        p2BgmEl.loop = true;
+        p2BgmEl.preload = "auto";
+        p2BgmEl.setAttribute("playsinline", "");
+      }
       p2BgmEl.loop = true;
       p2BgmEl.preload = "auto";
-      p2BgmEl.volume = 0;
-      p2BgmEl.crossOrigin = "anonymous";
-      p2BgmEl.setAttribute("playsinline", "");
-      p2BgmEl.setAttribute("aria-hidden", "true");
-      // 로드 실패 로그
+      try {
+        p2BgmEl.removeAttribute("crossorigin");
+      } catch (eC) {}
       p2BgmEl.addEventListener("error", function () {
         p2BgmLastErr = "html-audio-error";
         if (window.console && /[?&]debug=1/.test(location.search || "")) {
           console.warn("[p2-bgm] HTMLAudio load error", p2BgmSrc(), p2BgmEl.error);
         }
       });
-      try {
-        p2BgmEl.load();
-      } catch (eL) {}
     } catch (e) {
       p2BgmEl = null;
       p2BgmLastErr = String(e && e.message ? e.message : e);
@@ -753,12 +617,14 @@
         };
       },
       p3BgmStatus: function () {
+        var el = p3BgmEl || document.getElementById("p3BgmTrack");
         return {
           ready: p3BgmReady(),
           playing: p3BgmPlaying,
+          paused: el ? el.paused : null,
+          vol: el ? el.volume : P3_BGM_VOL,
           src: p3BgmSrc(),
           err: p3BgmLastErr,
-          vol: P3_BGM_VOL,
         };
       },
     };
@@ -2003,22 +1869,26 @@
       };
     },
     p3BgmStatus: function () {
+      var el = p3BgmEl || document.getElementById("p3BgmTrack");
       return {
         ready: p3BgmReady(),
         playing: p3BgmPlaying,
-        useWA: p3BgmUseWA,
-        src: p3BgmSrc(),
+        paused: el ? el.paused : null,
+        currentTime: el ? el.currentTime : null,
+        vol: el ? el.volume : P3_BGM_VOL,
+        src: el ? el.currentSrc || el.src : p3BgmSrc(),
         err: p3BgmLastErr,
-        vol: P3_BGM_VOL,
-        elPaused: p3BgmEl ? p3BgmEl.paused : null,
-        elVol: p3BgmEl ? p3BgmEl.volume : null,
-        hasSource: !!p3BgmSource,
+        readyState: el ? el.readyState : null,
       };
     },
   };
 
-  // 페이지 로드 시 파일 존재 확인 (디버그)
-  if (window.console && /[?&]debug=1/.test(location.search || "")) {
-    console.log("[p3-bgm] src", p3BgmSrc());
+  // DOM 오디오 선연결
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      ensureP3BgmEl();
+    });
+  } else {
+    ensureP3BgmEl();
   }
 })();
