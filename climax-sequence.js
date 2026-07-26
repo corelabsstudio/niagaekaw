@@ -284,6 +284,90 @@
     later(T.pressure, next);
   }
 
+  /**
+   * 얼굴 3개 돌진: 오른쪽 → 왼쪽 → 가운데
+   * 각각 커지며 화면 덮기 + 기계/기괴 웃음
+   */
+  function runMonsterFaceRush(a) {
+    if (!hauntMonster) return;
+    var right = hauntMonster.querySelector(".hm-right");
+    var left = hauntMonster.querySelector(".hm-left");
+    var center = hauntMonster.querySelector(".hm-center");
+    var faces = [right, left, center].filter(Boolean);
+    if (!faces.length) {
+      faces = Array.prototype.slice.call(
+        hauntMonster.querySelectorAll(".hm-face")
+      );
+      // DOM 순서 left,center,right → 우·좌·중
+      if (faces.length >= 3) faces = [faces[2], faces[0], faces[1]];
+    }
+
+    function clearRush() {
+      hauntMonster.classList.remove("is-rushing", "is-flash");
+      Array.prototype.forEach.call(
+        hauntMonster.querySelectorAll(".hm-face"),
+        function (f) {
+          f.classList.remove("is-rush", "is-rush-final");
+        }
+      );
+    }
+
+    function laughBurst(step) {
+      if (!a) return;
+      // step 0,1,2 — 점점 크게
+      var vol = 0.055 + step * 0.035;
+      if (typeof a.approachLaugh === "function") {
+        a.approachLaugh({
+          ms: reduced ? 700 : 950 + step * 80,
+          scareMs: reduced ? 280 : 420,
+        });
+      } else if (a.codeLaugh) {
+        a.codeLaugh({ vol: vol });
+        later(120, function () {
+          if (a.codeLaugh) a.codeLaugh({ vol: vol * 1.35 });
+        });
+      }
+      if (a.staticBurst) a.staticBurst(80 + step * 40);
+      if (step === 2) {
+        later(200, function () {
+          if (a.sting) a.sting("blood");
+          if (a.rumble) a.rumble(2.2);
+        });
+      }
+    }
+
+    function rushOne(face, step, isFinal) {
+      if (!face || phase !== 4) return;
+      clearRush();
+      hauntMonster.classList.add("is-rushing", "is-flash");
+      face.classList.add(isFinal ? "is-rush-final" : "is-rush");
+      if (isFinal) face.classList.add("is-rush");
+      laughBurst(step);
+      later(reduced ? 280 : 320, function () {
+        hauntMonster.classList.remove("is-flash");
+      });
+    }
+
+    // 등장: 세 얼굴 대기 포즈
+    clearRush();
+    hauntMonster.hidden = false;
+    hauntMonster.classList.add("is-on");
+
+    var gap = reduced ? 900 : 1350;
+    // 1) 오른쪽
+    later(reduced ? 200 : 350, function () {
+      rushOne(faces[0], 0, false);
+    });
+    // 2) 왼쪽
+    later(reduced ? 200 : 350 + gap, function () {
+      rushOne(faces[1], 1, false);
+    });
+    // 3) 가운데 (최종 덮침)
+    later(reduced ? 200 : 350 + gap * 2, function () {
+      rushOne(faces[2], 2, true);
+    });
+  }
+
   // ——— 18–25s 붕괴 ———
   function runCollapse(next) {
     setPhase(4);
@@ -307,16 +391,15 @@
       if (a.staticBurst) a.staticBurst(400);
     }
 
-    // 화면 찢김 + 괴물
+    // 화면 찢김
     if (hauntTear) {
       hauntTear.hidden = false;
       hauntTear.classList.add("is-on");
     }
-    if (hauntMonster) {
-      hauntMonster.hidden = false;
-      hauntMonster.classList.add("is-on");
-    }
     haunt.classList.add("climax-shake-on", "ss-collapse-mode");
+
+    // 얼굴 3연 돌진 (우 → 좌 → 중) + 웃음
+    runMonsterFaceRush(a);
 
     typeText(
       ssFinal,
@@ -343,14 +426,25 @@
       haunt.classList.toggle("climax-invert");
     });
 
-    later(T.collapse, function () {
+    // 돌진 3회 끝난 뒤 여유 있게 유지 (약 4.5s + 여운)
+    var collapseMs = Math.max(
+      T.collapse,
+      reduced ? 3200 : 350 + 1350 * 2 + 1800
+    );
+    later(collapseMs, function () {
       haunt.classList.remove("climax-invert", "climax-shake-on", "ss-collapse-mode");
       if (hauntTear) {
         hauntTear.classList.remove("is-on");
         hauntTear.hidden = true;
       }
       if (hauntMonster) {
-        hauntMonster.classList.remove("is-on");
+        hauntMonster.classList.remove("is-on", "is-rushing", "is-flash");
+        Array.prototype.forEach.call(
+          hauntMonster.querySelectorAll(".hm-face"),
+          function (f) {
+            f.classList.remove("is-rush", "is-rush-final");
+          }
+        );
         hauntMonster.hidden = true;
       }
       complete = true;

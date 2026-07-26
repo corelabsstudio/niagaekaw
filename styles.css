@@ -4280,46 +4280,214 @@ html.is-mobile .haunt-hit.is-hot {
   100% { transform: translate(3px, -2px) skewX(0.5deg); }
 }
 
-/* 괴물 덮침 */
+/* 괴물 덮침 — 얼굴 3개, 우→좌→중 순 돌진 */
 .haunt-monster {
   position: absolute;
   inset: 0;
   z-index: 5;
   pointer-events: none;
   opacity: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(40, 0, 10, 0.5), transparent 70%);
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    rgba(40, 0, 10, 0.55),
+    transparent 72%
+  );
   transition: opacity 0.35s ease;
 }
 .haunt-monster.is-on {
   opacity: 1;
-  animation: ssMonsterIn 0.6s ease-out both;
-}
-@keyframes ssMonsterIn {
-  from { transform: scale(1.4); filter: blur(8px); opacity: 0; }
-  to { transform: scale(1); filter: blur(0); opacity: 1; }
 }
 .haunt-monster .hm-face {
-  width: min(28vw, 140px);
-  height: min(28vw, 140px);
+  position: absolute;
+  width: min(26vw, 132px);
+  height: min(26vw, 132px);
   object-fit: cover;
-  object-position: center 28%;
+  object-position: center 26%;
   border-radius: 50%;
-  filter: contrast(1.4) saturate(0.5) brightness(0.75);
-  box-shadow: 0 0 40px rgba(120, 0, 20, 0.7);
-  animation: p3EyeStare 1.2s ease-in-out infinite;
+  filter: contrast(1.4) saturate(0.5) brightness(0.78);
+  /* 얼굴만 — 네모 프레임 제거 */
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 48%,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.75) 55%,
+    transparent 76%
+  );
+  mask-image: radial-gradient(
+    circle at 50% 48%,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.75) 55%,
+    transparent 76%
+  );
+  box-shadow: 0 0 36px rgba(80, 0, 16, 0.55);
+  opacity: 0;
+  transform: scale(0.85);
+  will-change: transform, opacity, filter;
+  z-index: 1;
 }
-.haunt-monster .hm-face:nth-child(2) {
-  width: min(36vw, 180px);
-  height: min(36vw, 180px);
+.haunt-monster.is-on .hm-face {
+  opacity: 0.88;
+  transform: scale(1);
+  animation: hmIdle 1.4s ease-in-out infinite;
+  transition: opacity 0.35s ease, transform 0.4s ease;
+}
+.haunt-monster .hm-face.hm-left {
+  left: 8%;
+  top: 38%;
+  animation-delay: 0.15s;
+}
+.haunt-monster .hm-face.hm-center {
+  left: 50%;
+  top: 34%;
+  width: min(32vw, 168px);
+  height: min(32vw, 168px);
+  margin-left: calc(min(32vw, 168px) / -2);
   z-index: 2;
-  animation-delay: 0.2s;
+  animation-delay: 0.05s;
 }
-.haunt-monster .hm-face:nth-child(3) {
-  animation-delay: 0.4s;
+.haunt-monster .hm-face.hm-right {
+  right: 8%;
+  left: auto;
+  top: 38%;
+  animation-delay: 0.25s;
+}
+@keyframes hmIdle {
+  0%, 100% { filter: contrast(1.35) saturate(0.5) brightness(0.78); }
+  50% { filter: contrast(1.5) saturate(0.6) brightness(0.9); }
+}
+/* 돌진: 커지며 화면 덮음 */
+.haunt-monster .hm-face.is-rush {
+  z-index: 12 !important;
+  animation: hmRushCover 1.15s cubic-bezier(0.12, 0.7, 0.2, 1) forwards !important;
+  opacity: 1 !important;
+  filter: contrast(1.55) saturate(0.65) brightness(0.95) !important;
+  -webkit-mask-image: radial-gradient(
+    ellipse 52% 56% at 50% 48%,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.7) 62%,
+    transparent 86%
+  ) !important;
+  mask-image: radial-gradient(
+    ellipse 52% 56% at 50% 48%,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.7) 62%,
+    transparent 86%
+  ) !important;
+}
+.haunt-monster .hm-face.hm-left.is-rush {
+  transform-origin: 20% 50%;
+}
+.haunt-monster .hm-face.hm-right.is-rush {
+  transform-origin: 80% 50%;
+}
+.haunt-monster .hm-face.hm-center.is-rush {
+  transform-origin: 50% 45%;
+  animation-duration: 1.35s !important;
+}
+.haunt-monster .hm-face.is-rush-final {
+  animation: hmRushFinal 1.5s cubic-bezier(0.1, 0.75, 0.15, 1) forwards !important;
+}
+@keyframes hmRushCover {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0) contrast(1.4) brightness(0.9);
+  }
+  18% {
+    transform: scale(2.2);
+    opacity: 1;
+    filter: blur(0) contrast(1.55) brightness(1.05);
+  }
+  45% {
+    transform: scale(5.5);
+    opacity: 1;
+    filter: contrast(1.7) brightness(1.1);
+  }
+  72% {
+    transform: scale(9.5);
+    opacity: 0.95;
+    filter: contrast(1.85) brightness(0.85);
+  }
+  100% {
+    transform: scale(11);
+    opacity: 0.15;
+    filter: blur(6px) contrast(1.3) brightness(0.5);
+  }
+}
+@keyframes hmRushFinal {
+  0% {
+    transform: scale(1) translateX(-50%);
+    opacity: 1;
+  }
+  15% {
+    transform: scale(2.4) translateX(-50%);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(6) translateX(-50%);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(11) translateX(-50%);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(14) translateX(-50%);
+    opacity: 0.85;
+    filter: contrast(2) brightness(0.7);
+  }
+}
+/* center uses margin-left for centering — final rush needs translateX on transform */
+.haunt-monster .hm-face.hm-center.is-rush,
+.haunt-monster .hm-face.hm-center.is-rush-final {
+  margin-left: 0;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+}
+.haunt-monster .hm-face.hm-center.is-rush {
+  animation: hmRushCoverCenter 1.35s cubic-bezier(0.12, 0.7, 0.2, 1) forwards !important;
+}
+.haunt-monster .hm-face.hm-center.is-rush-final {
+  animation: hmRushFinalCenter 1.55s cubic-bezier(0.1, 0.75, 0.15, 1) forwards !important;
+}
+@keyframes hmRushCoverCenter {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  20% { transform: translateX(-50%) scale(2.4); opacity: 1; }
+  50% { transform: translateX(-50%) scale(6); opacity: 1; }
+  80% { transform: translateX(-50%) scale(10); opacity: 0.95; }
+  100% { transform: translateX(-50%) scale(12); opacity: 0.2; filter: blur(5px); }
+}
+@keyframes hmRushFinalCenter {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  18% { transform: translateX(-50%) scale(2.6); opacity: 1; }
+  45% { transform: translateX(-50%) scale(7); opacity: 1; }
+  75% { transform: translateX(-50%) scale(12); opacity: 1; }
+  100% { transform: translateX(-50%) scale(15); opacity: 0.9; filter: contrast(2) brightness(0.65); }
+}
+.haunt-monster.is-rushing .hm-face:not(.is-rush):not(.is-rush-final) {
+  opacity: 0.2;
+  filter: brightness(0.4) blur(1px);
+  animation: none !important;
+}
+.haunt-monster .hm-rush-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  background: #fff;
+}
+.haunt-monster.is-flash .hm-rush-flash {
+  animation: hmFlash 0.35s ease-out both;
+}
+@keyframes hmFlash {
+  0% { opacity: 0; }
+  20% { opacity: 0.7; }
+  100% { opacity: 0; background: #1a0006; }
 }
 
 .haunt.climax-p4 .haunt-scan {
@@ -4333,9 +4501,14 @@ html.is-mobile .haunt-hit.is-hot {
   .hp-brand,
   .ss-orb,
   .haunt.ss-collapse-mode,
-  .haunt-tear.is-on,
-  .haunt-monster.is-on {
+  .haunt-tear.is-on {
     animation: none !important;
+  }
+  .haunt-monster .hm-face.is-rush,
+  .haunt-monster .hm-face.is-rush-final,
+  .haunt-monster .hm-face.hm-center.is-rush,
+  .haunt-monster .hm-face.hm-center.is-rush-final {
+    animation-duration: 0.45s !important;
   }
   .haunt-rain-word { display: none; }
 }

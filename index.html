@@ -542,9 +542,11 @@
     <div class="haunt-blood" aria-hidden="true"></div>
     <div class="haunt-tear" id="hauntTear" aria-hidden="true"></div>
     <div class="haunt-monster" id="hauntMonster" aria-hidden="true">
-      <img class="hm-face" src="assets/faces/face-1.jpg" alt="" />
-      <img class="hm-face" src="assets/faces/face-4.jpg" alt="" />
-      <img class="hm-face" src="assets/faces/face-7.jpg" alt="" />
+      <!-- 돌진 순서: 오른쪽 → 왼쪽 → 가운데 (JS) -->
+      <img class="hm-face hm-left" src="assets/faces/face-1.jpg" alt="" draggable="false" />
+      <img class="hm-face hm-center" src="assets/faces/face-4.jpg" alt="" draggable="false" />
+      <img class="hm-face hm-right" src="assets/faces/face-7.jpg" alt="" draggable="false" />
+      <div class="hm-rush-flash" aria-hidden="true"></div>
     </div>
 
     <!-- 0–5s: 평범한 스크린세이버 (방심) -->
