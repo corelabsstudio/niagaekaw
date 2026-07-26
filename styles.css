@@ -5614,8 +5614,12 @@ body:not(.phase-2-active) .anom-comment-rail,
 body:not(.phase-2-active) .anom-load-gauge,
 body:not(.phase-2-active) .anom-rising-hands,
 body:not(.phase-2-active) .anom-card-face,
-body:not(.phase-2-active) .anom-card-claws,
-body:not(.phase-2-active) .anom-ring-approach {
+body:not(.phase-2-active) .anom-card-claws {
+  display: none !important;
+  opacity: 0 !important;
+}
+/* 링식 얼굴 접근: 2·3페이즈 모두 (phase-3 진입 시 phase-2-active 제거 대응) */
+body:not(.phase-2-active):not(.phase-3-active) .anom-ring-approach {
   display: none !important;
   opacity: 0 !important;
 }

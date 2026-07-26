@@ -1700,16 +1700,29 @@
     void root.offsetWidth;
     root.classList.add("is-approach");
 
+    // 접근 구간 길이 (느림)
+    var approachMs = opts.approachMs != null ? opts.approachMs : mobile ? 3200 : 4200 + rng() * 800;
+    var scareMs = opts.scareMs != null ? opts.scareMs : 900;
+
+    // 기계·기괴 웃음: 작게 시작 → 화면 덮을 때 크게
     try {
       var au = audio();
       if (au) {
-        if (au.staticBurst) au.staticBurst(80);
-        if (au.whisper) setTimeout(function () { au.whisper(); }, 400);
+        if (typeof au.approachLaugh === "function") {
+          au.approachLaugh({ ms: approachMs, scareMs: scareMs });
+        } else {
+          if (au.staticBurst) au.staticBurst(80);
+          if (au.whisper) setTimeout(function () { au.whisper(); }, 400);
+          if (au.codeLaugh) {
+            au.codeLaugh({ vol: 0.018 });
+            setTimeout(function () {
+              if (au.codeLaugh) au.codeLaugh({ vol: 0.035 });
+            }, Math.floor(approachMs * 0.45));
+          }
+        }
       }
     } catch (e) {}
 
-    // 접근 구간 길이 (느림)
-    var approachMs = opts.approachMs != null ? opts.approachMs : mobile ? 3200 : 4200 + rng() * 800;
     // 점프스케어
     setTimeout(function () {
       if (!root.parentNode) {
@@ -1721,10 +1734,14 @@
       try {
         var au2 = audio();
         if (au2) {
+          // approachLaugh 피크와 겹쳐 한 방 더 (스팅·럼블)
           if (au2.sting) au2.sting("blood");
-          if (au2.staticBurst) au2.staticBurst(220);
-          if (au2.codeLaugh) setTimeout(function () { au2.codeLaugh({ vol: 0.04 }); }, 40);
-          if (au2.rumble) au2.rumble(0.6);
+          if (au2.staticBurst) au2.staticBurst(180);
+          if (au2.rumble) au2.rumble(0.85);
+          // approachLaugh 없을 때만 추가 웃음 피크
+          if (typeof au2.approachLaugh !== "function" && au2.codeLaugh) {
+            au2.codeLaugh({ vol: 0.11 });
+          }
         }
       } catch (e2) {}
       // 짧은 화면 흔들림
@@ -1735,7 +1752,7 @@
     }, approachMs);
 
     // 정리
-    var total = approachMs + (opts.scareMs != null ? opts.scareMs : 900);
+    var total = approachMs + scareMs;
     setTimeout(function () {
       if (!root.parentNode) {
         ringBusy = false;

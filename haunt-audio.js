@@ -27,6 +27,7 @@
       dreadHit: noop,
       metal: noop,
       codeLaugh: noop,
+      approachLaugh: noop,
       binauralWhisper: noop,
       muffledHeartbeat: noop,
       stopAll: noop,
@@ -623,6 +624,175 @@
   }
 
   /**
+   * 링식 얼굴 접근 전용: 기계·기괴 웃음
+   * - 멀리서 아주 작게 → 접근 중 점점 커짐 → 화면 덮을 때 피크
+   * opts.ms: 접근 구간(ms), opts.scareMs: 점프 유지(ms)
+   */
+  function approachLaugh(opts) {
+    opts = opts || {};
+    unlock();
+    var c = ensureCtx();
+    if (!c || !unlocked) return;
+    var approachSec = Math.max(1.2, (opts.ms != null ? opts.ms : 4000) / 1000);
+    var scareSec = Math.max(0.4, (opts.scareMs != null ? opts.scareMs : 900) / 1000);
+    var t0 = now();
+    var total = approachSec + scareSec;
+    try {
+      // 전체 엔벨로프: 작게 → 점점 → 덮을 때 크게
+      var env = c.createGain();
+      env.gain.setValueAtTime(0.0001, t0);
+      env.gain.exponentialRampToValueAtTime(v(0.012), t0 + 0.2);
+      env.gain.exponentialRampToValueAtTime(v(0.028), t0 + approachSec * 0.35);
+      env.gain.exponentialRampToValueAtTime(v(0.055), t0 + approachSec * 0.65);
+      env.gain.exponentialRampToValueAtTime(v(0.095), t0 + approachSec * 0.92);
+      // 화면 덮는 순간 피크
+      env.gain.linearRampToValueAtTime(v(0.2), t0 + approachSec + 0.04);
+      env.gain.setValueAtTime(v(0.16), t0 + approachSec + 0.22);
+      env.gain.exponentialRampToValueAtTime(v(0.05), t0 + approachSec + scareSec * 0.65);
+      env.gain.exponentialRampToValueAtTime(0.0001, t0 + total + 0.15);
+      env.connect(out());
+
+      // 기괴한 기계 드론 베드 (멀리 있음)
+      var drone = c.createOscillator();
+      var drone2 = c.createOscillator();
+      var dG = c.createGain();
+      var dF = c.createBiquadFilter();
+      drone.type = "sawtooth";
+      drone2.type = "square";
+      drone.frequency.setValueAtTime(48, t0);
+      drone.frequency.linearRampToValueAtTime(72, t0 + approachSec);
+      drone2.frequency.setValueAtTime(96.5, t0);
+      drone2.frequency.linearRampToValueAtTime(145, t0 + approachSec);
+      dF.type = "lowpass";
+      dF.frequency.setValueAtTime(180, t0);
+      dF.frequency.linearRampToValueAtTime(900, t0 + approachSec);
+      dG.gain.value = 0.35;
+      drone.connect(dF);
+      drone2.connect(dF);
+      dF.connect(dG);
+      dG.connect(env);
+      drone.start(t0);
+      drone2.start(t0);
+      drone.stop(t0 + total + 0.2);
+      drone2.stop(t0 + total + 0.2);
+
+      // 디지털 정적 레이어 (점점 또렷)
+      var nSrc = c.createBufferSource();
+      nSrc.buffer = noiseBuffer(Math.min(8, total + 0.5));
+      nSrc.loop = true;
+      var nF = c.createBiquadFilter();
+      nF.type = "bandpass";
+      nF.frequency.setValueAtTime(600, t0);
+      nF.frequency.linearRampToValueAtTime(2200, t0 + approachSec);
+      nF.Q.value = 0.7;
+      var nG = c.createGain();
+      nG.gain.value = 0.45;
+      nSrc.connect(nF);
+      nF.connect(nG);
+      nG.connect(env);
+      nSrc.start(t0);
+      nSrc.stop(t0 + total + 0.15);
+
+      // ha-ha-ha 기계 웃음 버스트 — 처음엔 드물고 작게, 끝으로 갈수록 잦고 굵게
+      var t = 0.18;
+      var i = 0;
+      while (t < approachSec + scareSec * 0.55) {
+        (function (tBurst, idx) {
+          var progress = Math.min(1, tBurst / approachSec);
+          // 초반 느리게, 후반 빠르게
+          var o = c.createOscillator();
+          var o2 = c.createOscillator();
+          var g = c.createGain();
+          var f = c.createBiquadFilter();
+          o.type = "square";
+          o2.type = "sawtooth";
+          var base = 220 + progress * 160 + (idx % 3) * 18;
+          o.frequency.setValueAtTime(base, t0 + tBurst);
+          o.frequency.exponentialRampToValueAtTime(base * 1.4, t0 + tBurst + 0.045);
+          o.frequency.exponentialRampToValueAtTime(base * 0.78, t0 + tBurst + 0.11);
+          o2.frequency.setValueAtTime(base * 1.02, t0 + tBurst);
+          f.type = "bandpass";
+          f.frequency.value = 700 + progress * 900;
+          f.Q.value = 2.2 + progress;
+          // 개별 버스트 상대 세기 (env가 전체 크레센도)
+          var peak = 0.35 + progress * 0.85;
+          g.gain.setValueAtTime(0.0001, t0 + tBurst);
+          g.gain.exponentialRampToValueAtTime(peak, t0 + tBurst + 0.012);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + tBurst + 0.12 + (progress > 0.85 ? 0.08 : 0));
+          o.connect(f);
+          o2.connect(f);
+          f.connect(g);
+          g.connect(env);
+          o.start(t0 + tBurst);
+          o2.start(t0 + tBurst);
+          o.stop(t0 + tBurst + 0.16);
+          o2.stop(t0 + tBurst + 0.16);
+        })(t, i);
+        // 간격: 초반 ~0.55s → 후반 ~0.14s
+        var gap = 0.55 - Math.min(0.42, (t / approachSec) * 0.42);
+        if (t >= approachSec) gap = 0.1;
+        t += gap + Math.random() * 0.04;
+        i++;
+      }
+
+      // 화면 덮는 순간: 거친 웃음 다발 + 고음 글리치
+      var peakT = t0 + approachSec;
+      for (var k = 0; k < 6; k++) {
+        (function (k) {
+          var tk = peakT + k * 0.07;
+          var o = c.createOscillator();
+          var g = c.createGain();
+          var f = c.createBiquadFilter();
+          o.type = k % 2 ? "square" : "sawtooth";
+          var p0 = 180 + k * 35 + Math.random() * 40;
+          o.frequency.setValueAtTime(p0, tk);
+          o.frequency.exponentialRampToValueAtTime(p0 * 1.55, tk + 0.05);
+          o.frequency.exponentialRampToValueAtTime(p0 * 0.7, tk + 0.14);
+          f.type = "bandpass";
+          f.frequency.value = 500 + k * 180;
+          f.Q.value = 1.8;
+          g.gain.setValueAtTime(0.0001, tk);
+          g.gain.exponentialRampToValueAtTime(0.9, tk + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, tk + 0.16);
+          o.connect(f);
+          f.connect(g);
+          g.connect(env);
+          o.start(tk);
+          o.stop(tk + 0.18);
+        })(k);
+      }
+      // 피크 노이즈 버스트
+      playNoise({
+        delay: approachSec,
+        dur: 0.28,
+        freq: 1600,
+        filter: "highpass",
+        vol: 0.1,
+        q: 0.9,
+      });
+      playNoise({
+        delay: approachSec + 0.05,
+        dur: 0.18,
+        freq: 3200,
+        filter: "bandpass",
+        vol: 0.08,
+        q: 1.2,
+      });
+    } catch (e) {
+      // 폴백: 짧게 커지는 codeLaugh 연쇄
+      try {
+        codeLaugh({ vol: 0.02 });
+        setTimeout(function () {
+          codeLaugh({ vol: 0.045 });
+        }, approachSec * 400);
+        setTimeout(function () {
+          codeLaugh({ vol: 0.1 });
+        }, approachSec * 900);
+      } catch (e2) {}
+    }
+  }
+
+  /**
    * 2페이즈: 프로그램/기계가 작게 웃는 소리
    * - 비트 깨진 디지털 ha-ha-ha (사각파 + 노이즈)
    * - 작게, 멀리서, 코드 실행되는 느낌
@@ -979,6 +1149,7 @@
     dreadHit: dreadHit,
     metal: metal,
     codeLaugh: codeLaugh,
+    approachLaugh: approachLaugh,
     binauralWhisper: binauralWhisper,
     muffledHeartbeat: muffledHeartbeat,
     stopAll: stopAll,
