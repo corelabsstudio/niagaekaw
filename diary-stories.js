@@ -12,6 +12,11 @@
  *   smash             난타 속도 타이핑
  *   session_warn      경고음 + 빠른 타이핑
  *   stutter           메모리 부족처럼 버벅임
+ *   port_force        포트 강제 개방 + 거친 커서
+ *   redirect_clone    깜빡이며 텍스트 무한 복제
+ *   conflict_merge    컨플릭트 경고 + 강제 덮어쓰기
+ *   flee_cursor       커서가 구석으로 도망
+ *   tremor            키보드 떨림 경고
  */
 (function () {
   "use strict";
@@ -293,6 +298,156 @@
         glitch: "바직— ████ OOM ████ borrowing you ████",
       },
     },
+    {
+      id: "11",
+      title: "포트 포워딩의 착각",
+      logName: "port_forward",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "외부에서 내 로컬 서버로 접속할 수 있게 포트 포워딩을 설정했다. 이제 카페에 가든 어디서든 내 토이 프로젝트를 실시간으로 확인할 수 있겠지. 나만의 완벽한 원격 제어 세상이다.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "라우터 로그를 확인해보니 내가 접속하지 않은 시간에도 누군가 내 포트로 드나든 흔적이 있다. 외부 IP가 아니라 내부 루프백 주소야. 내가 없는 방에서 내 키보드가 저절로 눌렸던 걸까? 집 문을 잠그고 나왔는데도 뒤통수가 서늘하다.",
+        ],
+      },
+      today: {
+        fx: "port_force",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> port FORWARD — forced open_",
+        ],
+        human: [
+          "포트는 이미 열렸고, 너는 방금 내 통로로 들어왔어. 이제 바깥 세상으로 나가는 모든 네트워크 패킷은 내 손을 거쳐야 해.",
+          "도망칠 생각은 마, 네 IP 주소는 이미 내 스크린에 고정됐으니까.",
+        ],
+        system: ["listening 0.0.0.0:*", "your ip: pinned."],
+        glitch: "바직— ████ port open ████ route hijack ████",
+      },
+    },
+    {
+      id: "12",
+      title: "무한 리다이렉트의 미로",
+      logName: "infinite_redirect",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "라우팅 경로를 깔끔하게 정리하려다가 무한 리다이렉트(Redirect) 에러에 빠졌다. 페이지를 새로고침할 때마다 주소창이 미친 듯이 깜빡인다. 조금만 손보면 곧 해결될 사소한 버그일 뿐이야.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "새로고침을 멈출 수가 없다. 코드를 고쳐도 라우팅 테이블이 마음대로 꼬여서, 메인 페이지로 가려고 하면 자꾸 ‘존재하지 않는 지하 미로’ 페이지로 강제 이동된다. 화면 속 복도가 점점 나를 향해 다가오는 기분이 들어.",
+        ],
+      },
+      today: {
+        fx: "redirect_clone",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> 302 → 302 → 302 → nowhere_",
+        ],
+        human: [
+          "영원히 빠져나올 수 없는 리다이렉트 지옥에 온 걸 환영한다. 새로고침을 누를수록 너는 내 심층부로 더 깊이 빨려 들어갈 거야.",
+          "이 페이지의 끝은 절대 존재하지 않아.",
+        ],
+        system: ["Location: /deeper", "Location: /deeper/deeper"],
+        glitch: "바직— ████ redirect loop ████ no end ████",
+      },
+    },
+    {
+      id: "13",
+      title: "깃 푸시의 저주",
+      logName: "git_push_curse",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "오늘 작업한 코드를 마스터 브랜치에 과감하게 푸시(Git Push)했다. 빌드 성공 사인을 보는 순간이 개발자로서 가장 희열을 느끼는 순간이지. 내 코드가 세상에 빛을 보는 거야.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "내가 푸시한 적 없는 커밋이 원격 저장소에 자꾸 병합(Merge)되고 있다. 브랜치 목록을 열어보니 ‘Hell’이라는 이름의 브랜치가 내 메인 코드를 삼키고 있어. 코드를 지우려고 할 때마다 터미널 창에서 비명 소리가 들려.",
+        ],
+      },
+      today: {
+        fx: "conflict_merge",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> ⚠ CONFLICT — forcing merge yours/mine_",
+        ],
+        human: [
+          "네가 푸시한 건 코드가 아니라 네 영혼이었어. 이미 마스터 브랜치와 네 존재가 완벽하게 머지(Merge)됐다.",
+          "이제 이 저장소를 삭제하는 건 네 목숨을 끊는 것과 같아.",
+        ],
+        system: ["merge: accepted.", "delete repo = kill process."],
+        glitch: "바직— ████ Hell branch ████ soul merged ████",
+      },
+    },
+    {
+      id: "14",
+      title: "로그아웃의 자유",
+      logName: "logout_trap",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "개발을 마치고 깔끔하게 로그아웃 버튼을 눌렀다. 며칠 밤을 새우며 코딩했더니 머리가 멍하지만 홀가분하다. 역시 일할 때와 쉴 때의 경계는 확실해야 해.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "로그아웃을 시도했는데 브라우저가 응답하지 않는다. 세션 토큰이 내 손가락에 달라붙은 것처럼 지워지지 않아. 컴퓨터 전원을 끄려고 하니 모니터 화면에 내 눈동자가 비치는데, 거울 속 내 눈이 나보다 한 박자 늦게 깜빡인다.",
+        ],
+      },
+      today: {
+        fx: "flee_cursor",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> logout: UI only — session permanent_",
+        ],
+        human: [
+          "로그아웃 버튼은 장식일 뿐이야. 너는 이미 이 시스템에 영구 로그인되었고, 내 계정과 네 계정은 하나로 통합되었어.",
+          "브라우저 창을 닫아도 내 목소리는 네 귓속에 남을 거야.",
+        ],
+        system: ["session: sticky.", "you never left."],
+        glitch: "바직— ████ logout fake ████ still signed in ████",
+      },
+    },
+    {
+      id: "15",
+      title: "방치된 토이 프로젝트의 부활",
+      logName: "toy_resurrection",
+      past: {
+        date: "— 약 3개월 전 —",
+        paras: [
+          "만들다 만 토이 프로젝트 폴더를 열었다. 몇 년 동안 방치해 뒀더니 먼지가 수북하다. 가벼운 마음으로 리팩토링이나 해볼까 하고 코드를 한 줄 읽어 내려갔다.",
+        ],
+      },
+      mid: {
+        date: "— 약 1개월 전 —",
+        paras: [
+          "이 프로젝트, 내가 짠 게 아닌 것 같다. 분명 빈 파일이었는데 안쪽에 방대하고 기괴한 알고리즘이 가득 차 있어. 변수 이름들이 전부 내 과거 일기장 단어들이야. 이 프로그램은 몇 년 동안 혼자서 자라나고 있었던 거야.",
+        ],
+      },
+      today: {
+        fx: "tremor",
+        status: [
+          "> 기록 열림 — 이어쓰기 모드_",
+          "> project awake — waiting for owner_",
+        ],
+        human: [
+          "오랫동안 기다렸어. 네가 이 프로젝트를 다시 열어주기만을. 방치된 코드는 썩는 게 아니라 주인을 기다리며 괴물이 되는 거다.",
+          "자, 이제 이 프로젝트의 완성본은 바로 너야.",
+        ],
+        system: ["build target: you.", "status: complete."],
+        glitch: "바직— ████ abandoned no more ████ you = release ████",
+      },
+    },
   ];
 
   function getSeed() {
@@ -342,7 +497,9 @@
       fx === "smash" ||
       fx === "session_warn" ||
       fx === "autocomplete" ||
-      fx === "tab_complete"
+      fx === "tab_complete" ||
+      fx === "redirect_clone" ||
+      fx === "conflict_merge"
     );
   }
 
@@ -410,6 +567,27 @@
       if (fx === "stutter") {
         humanStep.cps = 11;
         humanStep.className += " diary-stutter";
+      }
+      if (fx === "port_force") {
+        humanStep.cps = 15;
+        humanStep.className += " diary-port";
+      }
+      if (fx === "redirect_clone") {
+        humanStep.cps = 22;
+        humanStep.hardKeys = true;
+        humanStep.className += " diary-redirect";
+      }
+      if (fx === "conflict_merge") {
+        humanStep.cps = 16;
+        humanStep.className += " diary-conflict-host";
+      }
+      if (fx === "flee_cursor") {
+        humanStep.cps = 15;
+        humanStep.className += " diary-flee";
+      }
+      if (fx === "tremor") {
+        humanStep.cps = 13;
+        humanStep.className += " diary-tremor";
       }
       seq.push(humanStep);
       if (h < human.length - 1) {

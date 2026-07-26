@@ -173,6 +173,11 @@
     "diary-fx-smash",
     "diary-fx-session-warn",
     "diary-fx-stutter",
+    "diary-fx-port-force",
+    "diary-fx-redirect-clone",
+    "diary-fx-conflict-merge",
+    "diary-fx-flee-cursor",
+    "diary-fx-tremor",
   ];
 
   function clearDiaryFx() {
@@ -197,6 +202,11 @@
       smash: "diary-fx-smash",
       session_warn: "diary-fx-session-warn",
       stutter: "diary-fx-stutter",
+      port_force: "diary-fx-port-force",
+      redirect_clone: "diary-fx-redirect-clone",
+      conflict_merge: "diary-fx-conflict-merge",
+      flee_cursor: "diary-fx-flee-cursor",
+      tremor: "diary-fx-tremor",
     };
     var cls = map[fx];
     if (!cls) return;
@@ -215,7 +225,12 @@
     var mad = !!opts.mad;
     var rough = !!opts.rough;
     var stutter = !!opts.stutter;
+    var flee = !!opts.flee;
+    var tremor = !!opts.tremor;
+    var clone = !!opts.clone;
+    var hostP = opts.hostP || null;
     var i = 0;
+    var lastClone = 0;
 
     return new Promise(function (resolve) {
       function tick() {
@@ -254,12 +269,30 @@
         var ch = text.charAt(i);
         textNode.textContent += ch;
         i++;
-        clickForChar(ch, hard || system || manic || mad);
+        clickForChar(ch, hard || system || manic || mad || tremor);
         if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
 
-        if ((rogue || mad) && caret) {
-          var jx = (Math.random() - 0.5) * (mad ? 22 : 18);
-          var jy = (Math.random() - 0.5) * (mad ? 14 : 10);
+        // redirect: 중간중간 복제 고스트 라인
+        if (clone && liveType && i - lastClone > 28 && Math.random() > 0.55) {
+          lastClone = i;
+          var ghost = document.createElement("p");
+          ghost.className = "diary-redirect-ghost";
+          ghost.setAttribute("aria-hidden", "true");
+          ghost.textContent = (textNode.textContent || "").slice(-48);
+          if (hostP && hostP.parentNode) {
+            hostP.parentNode.insertBefore(ghost, hostP.nextSibling);
+          } else {
+            liveType.appendChild(ghost);
+          }
+          setTimeout(function () {
+            ghost.classList.add("is-fade");
+          }, 40);
+        }
+
+        if ((rogue || mad || tremor) && caret && !flee) {
+          var amp = mad ? 22 : tremor ? 16 : 18;
+          var jx = (Math.random() - 0.5) * amp;
+          var jy = (Math.random() - 0.5) * (mad ? 14 : tremor ? 12 : 10);
           caret.style.transform =
             "translate(" + jx.toFixed(1) + "px," + jy.toFixed(1) + "px)";
           if (Math.random() > (mad ? 0.55 : 0.82)) {
@@ -270,14 +303,32 @@
           }
         }
 
+        // flee: 타이핑 진행률에 따라 캐럿이 우측 하단으로 도망
+        if (flee && caret) {
+          var prog = i / Math.max(1, text.length);
+          var fx = 8 + prog * 72;
+          var fy = 4 + prog * 48;
+          caret.style.transform =
+            "translate(" +
+            fx.toFixed(1) +
+            "px," +
+            fy.toFixed(1) +
+            "px) scale(" +
+            (1 - prog * 0.25).toFixed(2) +
+            ")";
+          caret.classList.add("is-fleeing");
+        }
+
         var base = 1000 / cps;
         var jitter = (Math.random() - 0.35) * base * (manic ? 0.25 : 0.55);
         var extra = 0;
         if (stutter) {
-          // 버벅: 가끔 길게 멈춤
           if (Math.random() > 0.78) extra += 220 + Math.random() * 480;
           if (Math.random() > 0.92) extra += 600 + Math.random() * 700;
           base *= 1.15 + Math.random() * 0.9;
+        } else if (tremor) {
+          if (Math.random() > 0.75) extra += 80 + Math.random() * 160;
+          base *= 1.05 + Math.random() * 0.35;
         } else if (!manic) {
           if (ch === "." || ch === "…" || ch === "?" || ch === "!") extra = 140 + Math.random() * 160;
           if (ch === ",") extra = 50;
@@ -289,7 +340,10 @@
           base *= 0.85;
           jitter *= 0.4;
         }
-        setTimeout(tick, Math.max(manic ? 10 : stutter ? 20 : 16, base + jitter + extra));
+        setTimeout(
+          tick,
+          Math.max(manic ? 10 : stutter ? 20 : 16, base + jitter + extra)
+        );
       }
       tick();
     });
@@ -438,12 +492,41 @@
 
       if (step.kind === "fx_start") {
         applyDiaryFx(step.fx);
-        // manic: 시작 섬광 2~3회
-        if (step.fx === "manic_flash" && sheet) {
+        if (
+          (step.fx === "manic_flash" ||
+            step.fx === "smash" ||
+            step.fx === "session_warn" ||
+            step.fx === "redirect_clone" ||
+            step.fx === "conflict_merge") &&
+          sheet
+        ) {
           sheet.classList.add("diary-manic-burst");
           setTimeout(function () {
             if (sheet) sheet.classList.remove("diary-manic-burst");
           }, 420);
+        }
+        if (
+          (step.fx === "session_warn" ||
+            step.fx === "conflict_merge" ||
+            step.fx === "port_force") &&
+          a
+        ) {
+          try {
+            if (a.sting) a.sting("blood");
+            else if (a.termBeep) a.termBeep(step.fx === "port_force" ? 180 : 220);
+            if (step.fx === "port_force" && a.termBeep) {
+              setTimeout(function () {
+                try {
+                  a.termBeep(320);
+                } catch (e2) {}
+              }, 120);
+              setTimeout(function () {
+                try {
+                  a.termBeep(90);
+                } catch (e3) {}
+              }, 240);
+            }
+          } catch (eW) {}
         }
         ok = await wait(reduced ? 80 : 220, token);
         if (!ok) {
@@ -464,12 +547,20 @@
         if (termStatus) {
           termStatus.textContent = step.text;
           termStatus.classList.add("is-flash");
+          if (step.warn) termStatus.classList.add("is-warn");
           setTimeout(function () {
-            if (termStatus) termStatus.classList.remove("is-flash");
-          }, 200);
+            if (termStatus) {
+              termStatus.classList.remove("is-flash");
+              termStatus.classList.remove("is-warn");
+            }
+          }, 320);
         }
-        if (step.beep && a && a.termBeep) a.termBeep(s % 2 ? 990 : 770);
-        else clickForChar(">", true);
+        if (step.beep && a) {
+          try {
+            if (step.warn && a.sting) a.sting("blood");
+            else if (a.termBeep) a.termBeep(s % 2 ? 990 : 770);
+          } catch (eB) {}
+        } else clickForChar(">", true);
         ok = await wait(step.delay || 350, token);
         if (!ok) {
           clearDiaryFx();
@@ -493,11 +584,18 @@
         var text = step.text || "";
         var cps = step.cps || 18;
         var hard = !!step.hardKeys;
-        var manic = step.fx === "manic_flash";
-        var rogue = step.fx === "rogue_cursor";
-        var gothic = step.fx === "backspace_gothic" && !step.system;
+        var fx = step.fx || "";
+        var manic =
+          fx === "manic_flash" || fx === "smash" || fx === "session_warn";
+        var rogue = fx === "rogue_cursor";
+        var mad = fx === "mad_rewrite";
+        var rough = fx === "rough_backspace" && !step.system;
+        var gothic = fx === "backspace_gothic" && !step.system;
+        var rewrite = mad && !step.system;
+        var auto =
+          (fx === "autocomplete" || fx === "tab_complete") && !step.system;
+        var stutter = fx === "stutter";
 
-        // manic 중 단락 시작마다 짧은 섬광
         if (manic && sheet && !reduced) {
           sheet.classList.add("diary-manic-burst");
           setTimeout(function () {
@@ -505,54 +603,89 @@
           }, 160);
         }
 
-        if (gothic && !reduced) {
-          // 1) 일반체로 타이핑
+        function ensureCaret(clsExtra) {
+          if (!caret.parentNode) {
+            caret = document.createElement("span");
+            caret.className = "diary-inline-caret" + (clsExtra ? " " + clsExtra : "");
+            caret.textContent = "█";
+            p.appendChild(caret);
+          } else if (clsExtra) {
+            caret.className = "diary-inline-caret " + clsExtra;
+          }
+          return caret;
+        }
+
+        if ((gothic || rewrite) && !reduced) {
           ok = await typeIntoNode(
             textNode,
             caret,
             text,
-            { cps: cps, hard: hard, system: false, manic: false, rogue: false },
+            {
+              cps: cps,
+              hard: hard || mad,
+              system: false,
+              manic: false,
+              rogue: mad,
+              mad: mad,
+            },
             token
           );
           if (!ok) {
             clearDiaryFx();
             return;
           }
-          ok = await wait(380, token);
+          ok = await wait(rewrite ? 220 : 380, token);
           if (!ok) {
             clearDiaryFx();
             return;
           }
-          // 2) 백스페이스로 전부 지움
-          // caret 다시 붙이기
-          if (!caret.parentNode) {
-            caret = document.createElement("span");
-            caret.className = "diary-inline-caret is-backspacing";
-            caret.textContent = "█";
-            p.appendChild(caret);
+          ensureCaret("is-backspacing");
+          ok = await backspaceNode(
+            textNode,
+            caret,
+            { cps: rewrite ? 70 : 52 },
+            token
+          );
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+          ok = await wait(rewrite ? 160 : 280, token);
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+          if (gothic) {
+            p.classList.add("diary-gothic");
+            ensureCaret("diary-gothic-caret");
           } else {
-            caret.classList.add("is-backspacing");
+            p.classList.add("diary-mad-rewrite");
+            ensureCaret("is-mad");
           }
-          ok = await backspaceNode(textNode, caret, { cps: 52 }, token);
-          if (!ok) {
-            clearDiaryFx();
-            return;
-          }
-          ok = await wait(280, token);
-          if (!ok) {
-            clearDiaryFx();
-            return;
-          }
-          // 3) 고딕체로 다시 타이핑
-          p.classList.add("diary-gothic");
-          caret.classList.remove("is-backspacing");
-          caret.classList.add("diary-gothic-caret");
-          if (!caret.parentNode) p.appendChild(caret);
           ok = await typeIntoNode(
             textNode,
             caret,
             text,
-            { cps: Math.max(12, cps - 2), hard: true, system: true, manic: false, rogue: false },
+            {
+              cps: gothic ? Math.max(12, cps - 2) : Math.max(14, cps),
+              hard: true,
+              system: true,
+              manic: rewrite,
+              rogue: rewrite,
+              mad: rewrite,
+            },
+            token
+          );
+          if (!ok) {
+            clearDiaryFx();
+            return;
+          }
+        } else if (auto && !reduced) {
+          ok = await typeChunks(
+            textNode,
+            caret,
+            text,
+            { tab: fx === "tab_complete" },
             token
           );
           if (!ok) {
@@ -570,6 +703,9 @@
               system: !!step.system,
               manic: manic,
               rogue: rogue,
+              mad: mad,
+              rough: rough,
+              stutter: stutter,
             },
             token
           );
@@ -579,7 +715,20 @@
           }
         }
 
-        ok = await wait(step.system ? (manic ? 120 : 280) : manic ? 160 : 420, token);
+        var pauseMs = step.system
+          ? manic
+            ? 120
+            : stutter
+              ? 360
+              : 280
+          : manic
+            ? 140
+            : stutter
+              ? 480
+              : auto
+                ? 200
+                : 420;
+        ok = await wait(pauseMs, token);
         if (!ok) {
           clearDiaryFx();
           return;
