@@ -628,7 +628,22 @@
     <p id="p3LayerText">2페이즈를 통과했다. 여기는 더 깊다. 화면이 바뀌었다.</p>
   </div>
 
+  <!-- 방문자 / 영혼 카운터 (페이즈별 카피) -->
+  <div id="presenceHud" class="presence-hud" role="status" aria-live="polite" data-phase="1">
+    <span class="presence-dot" aria-hidden="true"></span>
+    <span class="presence-live">
+      <span id="presenceLiveLabel" class="presence-label">접속 중</span>
+      <strong id="presenceLiveCount" class="presence-num">—</strong>
+    </span>
+    <span id="presenceTotalWrap" class="presence-sep" aria-hidden="true">·</span>
+    <span class="presence-total">
+      <span id="presenceTotalLabel" class="presence-label">총 방문자</span>
+      <strong id="presenceTotalCount" class="presence-num">—</strong>
+    </span>
+  </div>
+
   <script src="app.js"></script>
+  <script src="presence.js"></script>
   <script src="haunt-audio.js"></script>
   <script src="diary-stories.js"></script>
   <script src="diary.js"></script>

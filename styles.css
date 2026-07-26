@@ -3463,6 +3463,165 @@ kbd {
   text-shadow: none;
 }
 
+/* ===== 방문자 / 영혼 presence HUD ===== */
+.presence-hud {
+  position: fixed;
+  /* foot(100)·미션칩(91~) 위, 클라이맥스/일기(999x) 아래 */
+  z-index: 150;
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  max-width: min(92vw, 420px);
+  padding: 0.42rem 0.7rem 0.42rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: rgba(30, 28, 26, 0.72);
+  background: rgba(255, 252, 248, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 18px rgba(20, 16, 12, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease,
+    background 0.8s ease,
+    color 0.6s ease,
+    border-color 0.6s ease,
+    box-shadow 0.6s ease;
+  pointer-events: none;
+  user-select: none;
+}
+.presence-hud.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+.presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #2f9e55;
+  box-shadow: 0 0 0 0 rgba(47, 158, 85, 0.45);
+  animation: presence-pulse 2.4s ease-out infinite;
+}
+@keyframes presence-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(47, 158, 85, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(47, 158, 85, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 158, 85, 0); }
+}
+.presence-label {
+  opacity: 0.78;
+  font-weight: 500;
+}
+.presence-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+.presence-sep {
+  opacity: 0.35;
+  margin: 0 0.05rem;
+}
+.presence-live,
+.presence-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  white-space: nowrap;
+}
+
+/* P1 clean: SaaS 상태 칩 */
+body.stage-clean .presence-hud {
+  color: rgba(40, 38, 36, 0.7);
+  background: rgba(255, 253, 250, 0.92);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+/* 2페이즈: 영혼 톤 */
+body.phase-2-active .presence-hud,
+.presence-hud.is-p2 {
+  color: rgba(255, 210, 218, 0.88);
+  background: rgba(18, 4, 10, 0.78);
+  border-color: rgba(255, 50, 80, 0.28);
+  box-shadow: 0 0 20px rgba(120, 0, 30, 0.25);
+}
+body.phase-2-active .presence-dot,
+.presence-hud.is-p2 .presence-dot {
+  background: #ff3a5c;
+  animation-name: presence-pulse-red;
+}
+@keyframes presence-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(255, 40, 70, 0.45); }
+  70% { box-shadow: 0 0 0 9px rgba(255, 40, 70, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 40, 70, 0); }
+}
+body.phase-2-active .presence-label,
+.presence-hud.is-p2 .presence-label {
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}
+body.phase-2-active .presence-num,
+.presence-hud.is-p2 .presence-num {
+  color: #ff8a9a;
+  text-shadow: 0 0 10px rgba(255, 40, 70, 0.35);
+}
+
+/* 3페이즈: 소멸 직전 */
+body.phase-3-active .presence-hud,
+.presence-hud.is-p3 {
+  color: rgba(255, 180, 190, 0.92);
+  background: rgba(8, 0, 4, 0.86);
+  border-color: rgba(255, 30, 50, 0.45);
+  box-shadow:
+    0 0 24px rgba(160, 0, 30, 0.4),
+    inset 0 0 12px rgba(255, 0, 40, 0.08);
+  font-size: 0.7rem;
+}
+body.phase-3-active .presence-dot,
+.presence-hud.is-p3 .presence-dot {
+  background: #ff1028;
+  animation: presence-pulse-red 1.4s ease-out infinite;
+}
+body.phase-3-active .presence-num,
+.presence-hud.is-p3 .presence-num {
+  color: #ff2038;
+  text-shadow: 0 0 14px rgba(255, 20, 40, 0.55);
+  font-size: 0.78rem;
+}
+body.phase-3-active .presence-label,
+.presence-hud.is-p3 .presence-label {
+  opacity: 0.75;
+  filter: contrast(1.05);
+}
+
+/* 미션 칩과 겹치면 중앙 하단으로 */
+@media (max-width: 720px) {
+  .presence-hud {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, 0);
+    bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
+    font-size: 0.62rem;
+    max-width: min(96vw, 380px);
+    justify-content: center;
+  }
+  .presence-hud.is-ready {
+    transform: translate(-50%, 0);
+  }
+  .presence-live,
+  .presence-total {
+    white-space: normal;
+  }
+}
+
 .foot {
   display: flex;
   flex-wrap: wrap;
@@ -5537,12 +5696,6 @@ body.phase-3-active .p2-trig-banner {
   box-shadow: 0 0 16px rgba(160, 40, 200, 0.35) !important;
 }
 
-.creator-pass.creator-p3-climax {
-  top: auto;
-  bottom: 4.5rem;
-  right: 0.6rem;
-  font-size: 0.68rem;
-}
 
 /* ===== WakeAgain 찰나 섬광 (1~2프레임) ===== */
 .wake-flash {
