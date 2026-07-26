@@ -258,46 +258,46 @@ body.stage-uneasy .fake-chrome-url,
 }
 body.stage-corrupt .fake-chrome,
 .fake-chrome.is-corrupt {
-  background: linear-gradient(180deg, rgba(32, 22, 48, 0.96) 0%, rgba(18, 12, 32, 0.98) 100%);
-  border-bottom-color: rgba(140, 90, 200, 0.28);
-  color: #c8b8e0;
-  box-shadow: 0 2px 16px rgba(40, 10, 60, 0.4);
+  background: linear-gradient(180deg, rgba(28, 8, 12, 0.96) 0%, rgba(14, 4, 8, 0.98) 100%);
+  border-bottom-color: rgba(140, 30, 50, 0.35);
+  color: #e0c0c8;
+  box-shadow: 0 2px 16px rgba(40, 0, 12, 0.45);
   backdrop-filter: blur(12px);
 }
 body.stage-corrupt .fake-chrome-url,
 .fake-chrome.is-corrupt .fake-chrome-url {
-  background: rgba(12, 8, 24, 0.9);
-  border-color: rgba(150, 100, 220, 0.3);
-  box-shadow: 0 0 0 1px rgba(120, 60, 200, 0.1), inset 0 0 16px rgba(80, 30, 120, 0.15);
+  background: rgba(12, 4, 8, 0.92);
+  border-color: rgba(160, 40, 60, 0.35);
+  box-shadow: 0 0 0 1px rgba(120, 20, 40, 0.12), inset 0 0 16px rgba(80, 10, 20, 0.18);
 }
 body.stage-corrupt .fake-chrome-url .url-text,
 .fake-chrome.is-corrupt .fake-chrome-url .url-text {
-  color: #e0d0f0;
+  color: #f0d8dc;
 }
 body.stage-corrupt .fake-chrome-nav .nav-btn,
 .fake-chrome.is-corrupt .fake-chrome-nav .nav-btn {
-  color: #a090c0;
+  color: #c09098;
 }
 body.stage-dread .fake-chrome,
 .fake-chrome.is-dread,
 .fake-chrome.is-climax {
-  background: linear-gradient(180deg, rgba(22, 12, 36, 0.98) 0%, rgba(8, 4, 16, 0.99) 100%);
-  border-bottom-color: rgba(160, 70, 180, 0.4);
-  color: #e0b0e8;
-  box-shadow: 0 0 20px rgba(80, 20, 100, 0.35);
+  background: linear-gradient(180deg, rgba(20, 4, 8, 0.98) 0%, rgba(8, 2, 4, 0.99) 100%);
+  border-bottom-color: rgba(160, 30, 50, 0.45);
+  color: #f0c0c8;
+  box-shadow: 0 0 20px rgba(80, 0, 20, 0.4);
   backdrop-filter: blur(14px);
 }
 body.stage-dread .fake-chrome-url,
 .fake-chrome.is-dread .fake-chrome-url,
 .fake-chrome.is-climax .fake-chrome-url {
-  background: rgba(8, 4, 18, 0.95);
-  border-color: rgba(180, 80, 200, 0.45);
-  box-shadow: 0 0 12px rgba(120, 40, 160, 0.25), inset 0 0 14px rgba(60, 10, 80, 0.35);
+  background: rgba(8, 2, 4, 0.95);
+  border-color: rgba(180, 40, 60, 0.45);
+  box-shadow: 0 0 12px rgba(100, 10, 25, 0.3), inset 0 0 14px rgba(50, 0, 12, 0.35);
 }
 body.stage-dread .fake-chrome-url .url-text,
 .fake-chrome.is-dread .fake-chrome-url .url-text,
 .fake-chrome.is-climax .fake-chrome-url .url-text {
-  color: #f0c8f8;
+  color: #ffd0d8;
   letter-spacing: 0.03em;
 }
 .fake-chrome.is-climax .fake-chrome-url .url-text {
@@ -2098,109 +2098,119 @@ body.stage-uneasy .warning-banner p {
 }
 
 /*
- * ===== 2페이즈 배경: 참조 톤 =====
- * 짙은 보라/바이올렛 안개 · 소프트 글로우 · 유리 카드
- * (순수 빨강-블랙 지옥톤 → 잠든 프로젝트 UI 분위기)
+ * ===== 2페이즈 배경: 참조 이미지 그대로 =====
+ * Desktop Gemini_…(1).png → assets/p2-ref-atmosphere.png
+ * 짙은 핏빛/버건디 안개 · 아래에서 올라오는 손 · 옆 실루엣 유령
+ * (보라/바이올렛 톤 금지 — 참조와 불일치)
  */
 body.stage-corrupt {
-  --text: #e8e0f0;
-  --muted: #9a8ab0;
-  --bg: #0c0818;
-  --bg2: #140e24;
-  --accent-p: #a86cff;
-  --accent-r: #ff4d6d;
+  --text: #f0e4e6;
+  --muted: #a88890;
+  --bg: #0a0206;
+  --bg2: #14060a;
+  --accent-p: #ff6a7a;
+  --accent-r: #ff3a50;
   color: var(--text);
   cursor: crosshair;
-  background:
-    radial-gradient(900px 520px at 18% 12%, rgba(120, 40, 180, 0.28) 0%, transparent 55%),
-    radial-gradient(700px 480px at 88% 78%, rgba(160, 30, 90, 0.22) 0%, transparent 50%),
-    radial-gradient(600px 400px at 50% 100%, rgba(60, 20, 100, 0.35) 0%, transparent 55%),
-    radial-gradient(ellipse 120% 80% at 50% 40%, #1a1230 0%, #0c0818 55%, #080612 100%);
+  background-color: #060104;
+  background-image:
+    /* 가독성: 중앙 살짝 어둡게, 가장자리 더 검게 */
+    radial-gradient(ellipse 75% 65% at 50% 42%, rgba(8, 1, 3, 0.28) 0%, rgba(4, 0, 2, 0.55) 70%, rgba(2, 0, 1, 0.78) 100%),
+    linear-gradient(180deg, rgba(10, 0, 4, 0.35) 0%, transparent 28%, transparent 62%, rgba(4, 0, 2, 0.55) 100%),
+    url("assets/p2-ref-atmosphere.png");
+  background-position: center, center, center 42%;
+  background-size: cover, cover, cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed, fixed, fixed;
   transition:
-    background 3.5s ease,
+    background-color 3.5s ease,
     color 2.5s ease;
 }
 body.stage-corrupt #bloodVeil {
   visibility: visible;
-  opacity: 0.22 !important;
+  opacity: 0.18 !important;
   transition: opacity 4s ease;
-  /* 보라 안개 위 옅은 피 기운 */
+  /* 참조 위 옅은 하단 핏빛 — 이미지와 겹치지 않게 약하게 */
   background:
-    radial-gradient(ellipse 90% 55% at 50% 100%, rgba(100, 0, 40, 0.35), transparent 58%),
-    linear-gradient(180deg, rgba(40, 10, 50, 0.2) 0%, transparent 40%) !important;
+    radial-gradient(ellipse 90% 50% at 50% 100%, rgba(90, 0, 18, 0.4), transparent 60%),
+    linear-gradient(180deg, rgba(40, 0, 10, 0.12) 0%, transparent 38%) !important;
   mix-blend-mode: soft-light;
 }
 body[data-mood="3"].stage-corrupt #bloodVeil {
-  opacity: 0.28 !important;
+  opacity: 0.26 !important;
 }
 body[data-mood="4"] #bloodVeil,
 body.stage-dread #bloodVeil {
-  opacity: 0.42 !important;
+  opacity: 0.38 !important;
   transition: opacity 3.5s ease;
 }
 body.stage-corrupt #staticLayer {
   visibility: visible;
-  opacity: 0.035 !important;
+  opacity: 0.03 !important;
 }
 body.stage-corrupt #scanlines {
   visibility: visible;
-  opacity: 0.12 !important;
+  opacity: 0.1 !important;
 }
 body.stage-corrupt #vignette {
   visibility: visible;
-  opacity: 0.75 !important;
-  background: radial-gradient(ellipse at center, transparent 25%, rgba(8, 4, 18, 0.82) 100%) !important;
-  box-shadow: inset 0 0 100px rgba(40, 10, 70, 0.35) !important;
+  opacity: 0.7 !important;
+  background: radial-gradient(ellipse at center, transparent 28%, rgba(4, 0, 2, 0.88) 100%) !important;
+  box-shadow: inset 0 0 100px rgba(40, 0, 12, 0.4) !important;
 }
 body.stage-corrupt .top {
-  background: rgba(18, 12, 32, 0.82);
-  border-bottom-color: rgba(140, 90, 200, 0.22);
-  color: #c0b0d8;
+  background: rgba(12, 4, 8, 0.82);
+  border-bottom-color: rgba(120, 20, 40, 0.28);
+  color: #d8b8c0;
   backdrop-filter: blur(12px);
 }
 body.stage-corrupt .title-horror {
   text-shadow:
-    0 0 28px rgba(160, 80, 220, 0.25),
-    1px 0 rgba(255, 60, 100, 0.2),
-    -1px 0 rgba(120, 80, 255, 0.15);
+    0 0 28px rgba(180, 20, 40, 0.35),
+    1px 0 rgba(255, 50, 70, 0.25),
+    -1px 0 rgba(80, 0, 20, 0.2);
 }
 
-/* ===== STAGE 3: 더 깊은 보라 안개 + 피 기운 ===== */
+/* ===== STAGE dread: 같은 참조 배경, 더 짙은 오버레이 ===== */
 body.stage-dread {
-  --text: #f0e8f8;
-  --muted: #a898b8;
-  --bg: #06040e;
-  --bg2: #100a1c;
-  --accent-p: #c080ff;
-  --accent-r: #ff5a7a;
+  --text: #f6e8ea;
+  --muted: #b09098;
+  --bg: #040102;
+  --bg2: #100408;
+  --accent-p: #ff7080;
+  --accent-r: #ff4058;
   color: var(--text);
   cursor: crosshair;
-  background:
-    radial-gradient(1100px 600px at 20% 8%, rgba(140, 50, 200, 0.38) 0%, transparent 52%),
-    radial-gradient(800px 520px at 92% 85%, rgba(180, 30, 80, 0.28) 0%, transparent 48%),
-    radial-gradient(700px 420px at 50% 55%, rgba(70, 30, 120, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse 100% 90% at 50% 30%, #16102a 0%, #0a0614 50%, #05030c 100%);
+  background-color: #030001;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(6, 0, 2, 0.35) 0%, rgba(3, 0, 1, 0.62) 72%, rgba(1, 0, 0, 0.85) 100%),
+    linear-gradient(180deg, rgba(12, 0, 4, 0.45) 0%, transparent 30%, transparent 58%, rgba(6, 0, 2, 0.65) 100%),
+    url("assets/p2-ref-atmosphere.png");
+  background-position: center, center, center 40%;
+  background-size: cover, cover, cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed, fixed, fixed;
 }
 body.stage-dread .fx-layer {
   visibility: visible;
 }
 body.stage-dread #bloodVeil {
-  opacity: 0.55 !important;
+  opacity: 0.42 !important;
   background:
-    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(120, 0, 40, 0.55), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 20% 30%, rgba(80, 0, 50, 0.2), transparent 60%),
-    linear-gradient(180deg, rgba(40, 10, 40, 0.25) 0%, transparent 35%) !important;
+    radial-gradient(ellipse 100% 55% at 50% 100%, rgba(110, 0, 22, 0.55), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 30%, rgba(70, 0, 18, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(30, 0, 8, 0.22) 0%, transparent 35%) !important;
   mix-blend-mode: soft-light;
 }
-body.stage-dread #staticLayer { opacity: 0.08; }
-body.stage-dread #scanlines { opacity: 0.28; }
+body.stage-dread #staticLayer { opacity: 0.06; }
+body.stage-dread #scanlines { opacity: 0.22; }
 body.stage-dread #vignette {
-  opacity: 1;
-  background: radial-gradient(ellipse at center, transparent 18%, rgba(6, 2, 14, 0.9) 100%) !important;
-  box-shadow: inset 0 0 120px rgba(50, 15, 90, 0.45), inset 0 0 200px rgba(0, 0, 0, 0.5) !important;
+  opacity: 0.95;
+  background: radial-gradient(ellipse at center, transparent 20%, rgba(3, 0, 1, 0.92) 100%) !important;
+  box-shadow: inset 0 0 120px rgba(50, 0, 14, 0.5), inset 0 0 200px rgba(0, 0, 0, 0.55) !important;
 }
 
-/* 떠다니는 보라 입자 느낌 (의사 요소 — body 직접 filter 아님) */
+/* 핏빛 먼지 입자 (보라 금지) */
 body.stage-corrupt::before,
 body.stage-dread::before {
   content: "";
@@ -2209,22 +2219,22 @@ body.stage-dread::before {
   z-index: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(1.5px 1.5px at 12% 22%, rgba(200, 160, 255, 0.35), transparent),
-    radial-gradient(1.5px 1.5px at 78% 18%, rgba(255, 120, 160, 0.2), transparent),
-    radial-gradient(1.2px 1.2px at 45% 70%, rgba(180, 140, 255, 0.25), transparent),
-    radial-gradient(1.5px 1.5px at 88% 55%, rgba(220, 100, 180, 0.18), transparent),
-    radial-gradient(1px 1px at 30% 88%, rgba(160, 120, 255, 0.22), transparent),
-    radial-gradient(1.5px 1.5px at 62% 40%, rgba(255, 150, 200, 0.15), transparent);
-  opacity: 0.55;
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 120, 140, 0.28), transparent),
+    radial-gradient(1.5px 1.5px at 78% 18%, rgba(255, 80, 100, 0.18), transparent),
+    radial-gradient(1.2px 1.2px at 45% 70%, rgba(200, 60, 80, 0.2), transparent),
+    radial-gradient(1.5px 1.5px at 88% 55%, rgba(180, 40, 60, 0.16), transparent),
+    radial-gradient(1px 1px at 30% 88%, rgba(160, 30, 50, 0.18), transparent),
+    radial-gradient(1.5px 1.5px at 62% 40%, rgba(255, 100, 120, 0.12), transparent);
+  opacity: 0.5;
   animation: p2Dust 18s linear infinite;
 }
 body.stage-dread::before {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 @keyframes p2Dust {
-  0% { transform: translateY(0); opacity: 0.45; }
-  50% { opacity: 0.7; }
-  100% { transform: translateY(-12px); opacity: 0.45; }
+  0% { transform: translateY(0); opacity: 0.4; }
+  50% { opacity: 0.65; }
+  100% { transform: translateY(-12px); opacity: 0.4; }
 }
 body.stage-corrupt .wrap,
 body.stage-dread .wrap,
@@ -2248,9 +2258,9 @@ body.stage-dread .stasis-main {
 }
 .p2-decay-layer {
   background:
-    radial-gradient(ellipse 90% 70% at 50% 110%, rgba(80, 20, 100, 0), transparent 55%),
-    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(100, 40, 160, 0), transparent 60%),
-    linear-gradient(180deg, rgba(40, 15, 60, 0) 0%, transparent 40%, rgba(20, 8, 30, 0) 100%);
+    radial-gradient(ellipse 90% 70% at 50% 110%, rgba(80, 0, 18, 0), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(90, 0, 20, 0), transparent 60%),
+    linear-gradient(180deg, rgba(40, 0, 10, 0) 0%, transparent 40%, rgba(20, 0, 6, 0) 100%);
   mix-blend-mode: soft-light;
 }
 .p2-decay-grain {
@@ -2559,21 +2569,21 @@ body.stage-dread .title-bleed {
 }
 body.stage-corrupt .stasis-lede,
 body.stage-dread .stasis-lede {
-  color: #c8b8d8;
+  color: #d0b8bc;
   max-width: 36rem;
 }
 body.stage-corrupt .stasis-lede em,
 body.stage-dread .stasis-lede em {
-  color: #e8a0ff;
+  color: #ff90a0;
   font-style: normal;
-  text-shadow: 0 0 14px rgba(180, 80, 255, 0.4);
+  text-shadow: 0 0 14px rgba(200, 30, 50, 0.4);
 }
 body.stage-corrupt .stasis-badge.eyebrow,
 body.stage-dread .stasis-badge.eyebrow {
-  background: rgba(40, 20, 70, 0.75);
-  color: #d8b8ff !important;
-  border: 1px solid rgba(160, 100, 255, 0.35);
-  box-shadow: 0 0 18px rgba(120, 60, 200, 0.25);
+  background: rgba(40, 8, 14, 0.8);
+  color: #f0c0c8 !important;
+  border: 1px solid rgba(180, 40, 60, 0.4);
+  box-shadow: 0 0 18px rgba(120, 10, 30, 0.3);
   animation: none;
   backdrop-filter: blur(8px);
 }
@@ -2581,70 +2591,70 @@ body.stage-corrupt .stasis-plan-row .btn,
 body.stage-dread .stasis-plan-row .btn,
 body.stage-corrupt .plan-btn,
 body.stage-dread .plan-btn {
-  background: rgba(28, 16, 48, 0.75) !important;
-  border: 1px solid rgba(150, 100, 220, 0.35) !important;
-  color: #efe4f8 !important;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 20px rgba(100, 40, 180, 0.15);
+  background: rgba(28, 8, 12, 0.82) !important;
+  border: 1px solid rgba(160, 40, 60, 0.4) !important;
+  color: #f0e0e4 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 20px rgba(80, 0, 20, 0.2);
   border-radius: 999px;
   backdrop-filter: blur(8px);
 }
 body.stage-corrupt .plan-btn.is-on,
 body.stage-dread .plan-btn.is-on {
-  background: linear-gradient(135deg, rgba(100, 50, 180, 0.9), rgba(160, 40, 100, 0.85)) !important;
-  border-color: rgba(200, 120, 255, 0.5) !important;
+  background: linear-gradient(135deg, rgba(90, 12, 28, 0.95), rgba(140, 20, 40, 0.9)) !important;
+  border-color: rgba(220, 60, 80, 0.55) !important;
   color: #fff !important;
-  box-shadow: 0 0 22px rgba(140, 60, 220, 0.35);
+  box-shadow: 0 0 22px rgba(160, 20, 40, 0.4);
 }
 body.stage-corrupt .plan-btn.danger-btn,
 body.stage-dread .plan-btn.danger-btn {
-  border-color: rgba(255, 80, 120, 0.5) !important;
-  color: #ffc0d0 !important;
+  border-color: rgba(255, 80, 100, 0.55) !important;
+  color: #ffc0c8 !important;
 }
 body.stage-corrupt .btn-note,
 body.stage-dread .btn-note {
   opacity: 0.55;
   font-weight: 500;
 }
-/* 유리/다크 카드 — 참조 이미지 톤 */
+/* 유리/다크 카드 — 참조 이미지 핏빛 톤 */
 body.stage-corrupt .card-horror,
 body.stage-dread .card-horror {
   background:
-    linear-gradient(165deg, rgba(140, 80, 220, 0.08), transparent 45%),
-    rgba(18, 12, 32, 0.78);
-  border: 1px solid rgba(150, 110, 220, 0.22);
+    linear-gradient(165deg, rgba(120, 20, 40, 0.12), transparent 45%),
+    rgba(16, 6, 10, 0.82);
+  border: 1px solid rgba(140, 40, 55, 0.28);
   box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(200, 160, 255, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.2);
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 140, 160, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.25);
   border-radius: 16px;
   backdrop-filter: blur(14px);
 }
 body.stage-corrupt .card-horror h2,
 body.stage-dread .card-horror h2 {
-  color: #d8b8ff;
+  color: #f0c8d0;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 14px rgba(160, 80, 255, 0.3);
+  text-shadow: 0 0 14px rgba(180, 20, 40, 0.35);
 }
 body.stage-corrupt .stasis-nav.top,
 body.stage-dread .stasis-nav.top {
-  background: rgba(14, 10, 28, 0.78);
-  border-bottom: 1px solid rgba(140, 90, 200, 0.2);
+  background: rgba(10, 2, 6, 0.78);
+  border-bottom: 1px solid rgba(120, 20, 40, 0.28);
   backdrop-filter: blur(14px);
 }
 body.stage-corrupt .stasis-logo,
 body.stage-dread .stasis-logo {
-  color: #e0c0ff;
-  text-shadow: 0 0 16px rgba(160, 80, 255, 0.4);
+  color: #f0d0d8;
+  text-shadow: 0 0 16px rgba(180, 20, 40, 0.45);
 }
 body.stage-corrupt .stasis-pills,
 body.stage-dread .stasis-pills {
-  background: rgba(24, 16, 44, 0.75);
-  border: 1px solid rgba(140, 100, 220, 0.2);
+  background: rgba(20, 6, 10, 0.78);
+  border: 1px solid rgba(120, 30, 50, 0.28);
   backdrop-filter: blur(10px);
 }
 body.stage-corrupt .pill-link,
 body.stage-dread .pill-link {
-  color: #b09098 !important;
+  color: #c0a0a8 !important;
 }
 body.stage-corrupt .stasis-cta,
 body.stage-dread .stasis-cta {
