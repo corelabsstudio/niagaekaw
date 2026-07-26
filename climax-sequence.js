@@ -286,50 +286,75 @@
 
   /**
    * 얼굴 3개 돌진: 오른쪽 → 왼쪽 → 가운데
-   * 각각 커지며 화면 덮기 + 기계/기괴 웃음
+   * transform 을 JS 로 직접 키워 화면 덮기 (CSS 애니 충돌 회피)
    */
   function runMonsterFaceRush(a) {
-    if (!hauntMonster) return;
+    if (!hauntMonster) {
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.warn("[climax] hauntMonster missing");
+      }
+      return;
+    }
     var right = hauntMonster.querySelector(".hm-right");
     var left = hauntMonster.querySelector(".hm-left");
     var center = hauntMonster.querySelector(".hm-center");
     var faces = [right, left, center].filter(Boolean);
-    if (!faces.length) {
-      faces = Array.prototype.slice.call(
+    if (faces.length < 3) {
+      var all = Array.prototype.slice.call(
         hauntMonster.querySelectorAll(".hm-face")
       );
-      // DOM 순서 left,center,right → 우·좌·중
-      if (faces.length >= 3) faces = [faces[2], faces[0], faces[1]];
+      if (all.length >= 3) faces = [all[2], all[0], all[1]];
+      else faces = all;
+    }
+
+    function baseTransform(face) {
+      if (!face) return "scale(1)";
+      if (face.classList.contains("hm-center")) return "translateX(-50%) scale(1.08)";
+      return "scale(1)";
+    }
+
+    function rushTransform(face, scale) {
+      if (face.classList.contains("hm-center")) {
+        return "translateX(-50%) scale(" + scale + ")";
+      }
+      return "scale(" + scale + ")";
+    }
+
+    function resetFace(face) {
+      if (!face) return;
+      face.classList.remove("is-rush", "is-rush-final");
+      face.style.transition = "transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease";
+      face.style.transform = baseTransform(face);
+      face.style.opacity = "";
+      face.style.zIndex = "";
+      face.style.filter = "";
     }
 
     function clearRush() {
       hauntMonster.classList.remove("is-rushing", "is-flash");
       Array.prototype.forEach.call(
         hauntMonster.querySelectorAll(".hm-face"),
-        function (f) {
-          f.classList.remove("is-rush", "is-rush-final");
-        }
+        resetFace
       );
     }
 
     function laughBurst(step) {
       if (!a) return;
-      // step 0,1,2 — 점점 크게
-      var vol = 0.055 + step * 0.035;
+      var vol = 0.06 + step * 0.04;
       if (typeof a.approachLaugh === "function") {
         a.approachLaugh({
-          ms: reduced ? 700 : 950 + step * 80,
-          scareMs: reduced ? 280 : 420,
+          ms: reduced ? 650 : 900 + step * 60,
+          scareMs: reduced ? 260 : 400,
         });
       } else if (a.codeLaugh) {
         a.codeLaugh({ vol: vol });
-        later(120, function () {
-          if (a.codeLaugh) a.codeLaugh({ vol: vol * 1.35 });
+        later(100, function () {
+          if (a.codeLaugh) a.codeLaugh({ vol: vol * 1.4 });
         });
       }
-      if (a.staticBurst) a.staticBurst(80 + step * 40);
+      if (a.staticBurst) a.staticBurst(90 + step * 50);
       if (step === 2) {
-        later(200, function () {
+        later(180, function () {
           if (a.sting) a.sting("blood");
           if (a.rumble) a.rumble(2.2);
         });
@@ -338,32 +363,93 @@
 
     function rushOne(face, step, isFinal) {
       if (!face || phase !== 4) return;
-      clearRush();
+      // 다른 얼굴 축소
+      Array.prototype.forEach.call(
+        hauntMonster.querySelectorAll(".hm-face"),
+        function (f) {
+          if (f === face) return;
+          f.classList.remove("is-rush", "is-rush-final");
+          f.style.transition = "transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease";
+          f.style.transform = baseTransform(f);
+          f.style.opacity = "0.18";
+          f.style.filter = "brightness(0.35) blur(1.5px)";
+          f.style.zIndex = "1";
+        }
+      );
+
       hauntMonster.classList.add("is-rushing", "is-flash");
-      face.classList.add(isFinal ? "is-rush-final" : "is-rush");
-      if (isFinal) face.classList.add("is-rush");
+      face.classList.add("is-rush");
+      if (isFinal) face.classList.add("is-rush-final");
+
+      // 1프레임 대기 후 scale — 트랜지션 확실히 발동
+      face.style.transition = "none";
+      face.style.transform = rushTransform(face, 1);
+      face.style.opacity = "1";
+      face.style.zIndex = "55";
+      face.style.filter = "contrast(1.6) saturate(0.7) brightness(1)";
+      void face.offsetWidth;
+
+      var dur = reduced ? 0.5 : isFinal ? 1.4 : 1.15;
+      var peak = isFinal ? 16 : 12;
+      face.style.transition =
+        "transform " +
+        dur +
+        "s cubic-bezier(0.12, 0.75, 0.18, 1), opacity " +
+        dur +
+        "s ease, filter 0.45s ease";
+      // 더블 rAF 로 브라우저가 transition 인식
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (phase !== 4 || !face) return;
+          face.style.transform = rushTransform(face, peak);
+          if (!isFinal) {
+            // 돌진 끝 무렵 살짝 페이드 (다음 얼굴 위해)
+            later(Math.floor(dur * 1000 * 0.85), function () {
+              if (face && !face.classList.contains("is-rush-final")) {
+                face.style.opacity = "0.25";
+              }
+            });
+          }
+        });
+      });
+
       laughBurst(step);
-      later(reduced ? 280 : 320, function () {
+      later(reduced ? 260 : 320, function () {
         hauntMonster.classList.remove("is-flash");
       });
+
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.log("[climax] face rush", step, face.className, "→ scale", peak);
+      }
     }
 
-    // 등장: 세 얼굴 대기 포즈
+    // 등장
     clearRush();
     hauntMonster.hidden = false;
+    hauntMonster.removeAttribute("hidden");
     hauntMonster.classList.add("is-on");
+    hauntMonster.style.display = "block";
+    hauntMonster.style.opacity = "1";
+    hauntMonster.style.zIndex = "40";
 
-    var gap = reduced ? 900 : 1350;
-    // 1) 오른쪽
-    later(reduced ? 200 : 350, function () {
+    // 대기 포즈 강제
+    Array.prototype.forEach.call(
+      hauntMonster.querySelectorAll(".hm-face"),
+      function (f) {
+        f.style.opacity = "0.92";
+        f.style.transform = baseTransform(f);
+      }
+    );
+
+    var gap = reduced ? 850 : 1300;
+    var t0 = reduced ? 180 : 300;
+    later(t0, function () {
       rushOne(faces[0], 0, false);
     });
-    // 2) 왼쪽
-    later(reduced ? 200 : 350 + gap, function () {
+    later(t0 + gap, function () {
       rushOne(faces[1], 1, false);
     });
-    // 3) 가운데 (최종 덮침)
-    later(reduced ? 200 : 350 + gap * 2, function () {
+    later(t0 + gap * 2, function () {
       rushOne(faces[2], 2, true);
     });
   }
@@ -443,8 +529,10 @@
           hauntMonster.querySelectorAll(".hm-face"),
           function (f) {
             f.classList.remove("is-rush", "is-rush-final");
+            f.style.cssText = "";
           }
         );
+        hauntMonster.style.cssText = "";
         hauntMonster.hidden = true;
       }
       complete = true;
