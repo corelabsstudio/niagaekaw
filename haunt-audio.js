@@ -15,7 +15,7 @@
   var comp = null;
   // 2페이즈 BGM — Stalled_Rotor 루프 (HTMLAudio + WebAudio 이중)
   var P2_BGM_REL = "assets/audio/Stalled_Rotor.mp3";
-  var P2_BGM_VOL = 0.26; // 작게 깔되 들릴 정도
+  var P2_BGM_VOL = 0.48; // 배경이지만 분명히 들리게
   var p2BgmEl = null;
   var p2BgmWanted = false;
   var p2BgmFadeTimer = null;
@@ -29,7 +29,7 @@
 
   // 3페이즈 BGM — Iron_Chest_Cavity (DOM #p3BgmTrack 우선, 단순·확실)
   var P3_BGM_REL = "assets/audio/Iron_Chest_Cavity.mp3";
-  var P3_BGM_VOL = 0.42;
+  var P3_BGM_VOL = 0.68; // 3페이즈 — 더 또렷하게
   var p3BgmEl = null;
   var p3BgmWanted = false;
   var p3BgmPlaying = false;
