@@ -505,6 +505,13 @@
     document.body.classList.add("trig-hint-live", "p2-trig-reveal");
     document.documentElement.classList.add("trig-hint-live");
 
+    // 페이즈 전환으로 숨은 홀드 타깃 재바인딩 (badge/path/feat/quote 등)
+    if (typeof window.__hauntP2RebindHold === "function") {
+      try {
+        window.__hauntP2RebindHold();
+      } catch (eRe) {}
+    }
+
     // 활성 트리거별 추가 가이드
     var id = active && active.id;
     if (id === "type_kill") showTypeGuide("kill 또는 wake");
@@ -514,10 +521,25 @@
     else if (id === "scroll_bounce") showScrollCue("bounce");
     else if (id === "idle_haunt") showScrollCue("idle");
 
-    // 첫 핫 타깃으로 스크롤
-    var hot =
-      hotTargets[0] ||
-      document.querySelector(".p2-trig-hot, .p2-trig-banner, .p2-trig-signature");
+    // 보이는 핫 타깃으로 스크롤 (숨은 요소 스킵)
+    var hot = null;
+    for (var hi = 0; hi < hotTargets.length; hi++) {
+      if (isInteractable(hotTargets[hi])) {
+        hot = hotTargets[hi];
+        break;
+      }
+    }
+    if (!hot) {
+      var cands = document.querySelectorAll(
+        ".p2-trig-hot, .p2-trig-banner, .p2-trig-signature"
+      );
+      for (var ci = 0; ci < cands.length; ci++) {
+        if (isInteractable(cands[ci])) {
+          hot = cands[ci];
+          break;
+        }
+      }
+    }
     if (hot && typeof hot.scrollIntoView === "function") {
       try {
         hot.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
@@ -527,6 +549,32 @@
         } catch (e3) {}
       }
     }
+  }
+
+  /** 클릭/홀드 가능 여부 (display:none·0크기 제외) */
+  function isInteractable(el) {
+    if (!el) return false;
+    try {
+      var cs = getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden") return false;
+      if (parseFloat(cs.opacity) === 0) return false;
+      var r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function firstInteractable(cands) {
+    for (var i = 0; i < cands.length; i++) {
+      if (isInteractable(cands[i])) return cands[i];
+    }
+    // 폴백: 첫 존재하는 노드 (force-show로 살릴 수 있음)
+    for (var j = 0; j < cands.length; j++) {
+      if (cands[j]) return cands[j];
+    }
+    return null;
   }
 
   function armHold(el, ms, done, holdClass) {
@@ -557,6 +605,78 @@
     el.addEventListener("pointerup", clear);
     el.addEventListener("pointerleave", clear);
     el.addEventListener("pointercancel", clear);
+    return true;
+  }
+
+  /**
+   * 페이즈 전환 후 타깃이 숨겨질 수 있는 홀드 — 힌트/입력 시점에 재해석
+   * resolve() 가 보이는 요소를 반환해야 함.
+   */
+  function armHoldResolved(resolve, ms, done, holdClass) {
+    if (typeof resolve !== "function") return armHold(resolve, ms, done, holdClass);
+    var current = resolve();
+    if (current) markHot(current);
+    var needMs = ms;
+    var t = null;
+    var cls = holdClass || "climax-holding";
+    var bound = [];
+
+    function clearHold(el) {
+      if (t) clearTimeout(t);
+      t = null;
+      if (el) el.classList.remove(cls);
+    }
+
+    function bind(el) {
+      if (!el || bound.indexOf(el) !== -1) return;
+      bound.push(el);
+      markHot(el);
+      el.addEventListener("pointerdown", function (e) {
+        if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
+        if (e.button != null && e.button !== 0) return;
+        // 숨은 타깃이면 재해석 후 재시도 안내만
+        var live = resolve();
+        if (live && live !== el) {
+          bind(live);
+          try {
+            live.scrollIntoView({ block: "center", inline: "nearest" });
+          } catch (e0) {}
+        }
+        var target = isInteractable(el) ? el : live || el;
+        try {
+          e.preventDefault();
+        } catch (err) {}
+        target.classList.add(cls);
+        var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
+        clearHold(target);
+        t = setTimeout(function () {
+          clearHold(target);
+          done();
+        }, holdFor);
+      });
+      el.addEventListener("pointerup", function () {
+        clearHold(el);
+      });
+      el.addEventListener("pointerleave", function () {
+        clearHold(el);
+      });
+      el.addEventListener("pointercancel", function () {
+        clearHold(el);
+      });
+    }
+
+    bind(current);
+    // 힌트 시 재해석용 훅
+    var prevReveal = window.__hauntP2RebindHold;
+    window.__hauntP2RebindHold = function () {
+      if (typeof prevReveal === "function") {
+        try {
+          prevReveal();
+        } catch (e1) {}
+      }
+      var next = resolve();
+      if (next) bind(next);
+    };
     return true;
   }
 
@@ -860,60 +980,82 @@
       id: "path_hold",
       hint: "상단 경로 문자열 길게",
       arm: function (done) {
-        var el =
-          document.getElementById("corruptPath") ||
-          document.querySelector(".stasis-path-hide");
-        if (!el || (isMobileHaunt() && el.offsetParent === null)) {
-          el =
-            document.getElementById("navCta") ||
-            document.getElementById("topRec");
-        }
-        armHold(el, 1800, done);
+        // 2페이즈에서 경로가 숨겨지면 Get started / 로고로 폴백 (힌트 시 재해석)
+        armHoldResolved(
+          function () {
+            return firstInteractable([
+              document.getElementById("corruptPath"),
+              document.querySelector(".stasis-path-hide"),
+              document.getElementById("navCta"),
+              document.getElementById("topRec"),
+            ]);
+          },
+          1800,
+          done
+        );
       },
     },
     {
       id: "badge_hold",
       hint: "상태 뱃지 길게",
       arm: function (done) {
-        var el =
-          document.getElementById("eyebrow") ||
-          document.querySelector(".stasis-badge") ||
-          document.querySelector("[data-find='badge']");
-        if (!el || getComputedStyle(el).display === "none" || el.offsetParent === null) {
-          el =
-            document.getElementById("mainTitle") ||
-            document.getElementById("topRec");
-        }
-        armHold(el, 1600, done);
+        // stage-corrupt/dread 에서 eyebrow display:none → 큰 제목으로 폴백
+        armHoldResolved(
+          function () {
+            return firstInteractable([
+              document.getElementById("eyebrow"),
+              document.querySelector(".stasis-badge"),
+              document.querySelector("[data-find='badge']"),
+              document.getElementById("mainTitle"),
+              document.getElementById("topRec"),
+            ]);
+          },
+          1600,
+          done
+        );
       },
     },
     {
       id: "feat_hold",
       hint: "Features 제목 길게",
       arm: function (done) {
-        var el =
-          document.getElementById("h2log") ||
-          document.querySelector(".stasis-card-light h2") ||
-          document.querySelector("[data-find='features']");
-        armHold(el, 1600, done);
+        armHoldResolved(
+          function () {
+            return firstInteractable([
+              document.getElementById("h2log"),
+              document.querySelector(".stasis-card-light h2"),
+              document.querySelector("[data-find='features']"),
+              document.getElementById("mainTitle"),
+            ]);
+          },
+          1600,
+          done
+        );
       },
     },
     {
       id: "quote_hold",
       hint: "하단 서명 줄 길게",
       arm: function (done) {
-        var el =
-          document.querySelector(".stasis-quote-by") ||
-          document.querySelector("[data-find='readme']");
-        var ban =
-          document.getElementById("cardWarn") ||
-          document.querySelector(".stasis-quote");
-        if (ban) {
-          ban.classList.add("p2-trig-banner");
-          markHot(ban);
-        }
-        if (el) markHot(el, "p2-trig-signature");
-        armHold(el || ban, 1600, done);
+        armHoldResolved(
+          function () {
+            var ban =
+              document.getElementById("cardWarn") ||
+              document.querySelector(".stasis-quote");
+            if (ban) ban.classList.add("p2-trig-banner");
+            var el = firstInteractable([
+              document.querySelector(".stasis-quote-by"),
+              document.querySelector("[data-find='readme']"),
+              ban,
+            ]);
+            if (el && el.classList.contains("stasis-quote-by")) {
+              markHot(el, "p2-trig-signature");
+            }
+            return el;
+          },
+          1600,
+          done
+        );
       },
     },
     {
@@ -1063,8 +1205,10 @@
     idle_haunt: "마우스·키보드 손 떼고 가만히 계세요. (힌트 후 약 12초)",
     type_process: "키보드로 process 입력. (또는 큰 제목 다섯 번)",
     path_hold: "상단 경로 글자(또는 Get started)를 길게 누르세요.",
-    badge_hold: "상태 뱃지(또는 큰 제목)를 길게 누르세요.",
-    feat_hold: "Features 카드 제목을 길게 누르세요.",
+    badge_hold:
+      "큰 제목(Simple monitoring…)을 길게 누르세요. (2페이즈에선 상단 뱃지 숨김)",
+    feat_hold:
+      "아래로 스크롤 → Features 카드 큰 제목(// blackbox_log 등)을 길게 누르세요.",
     quote_hold:
       "아래로 스크롤 → 어두운 인용 카드 맨 아랫줄 서명을 길게 누르세요.",
     hit_pulse: "상단 시계가 ·GO(짝수 초)일 때, 빨간 깜빡 점을 더블클릭.",
