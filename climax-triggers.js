@@ -1063,16 +1063,70 @@
     });
   }
 
-  // phase2 진입 감지 → 힌트 1회
-  function watchPhase2() {
-    if (phase2Ready()) {
-      // 일기 닫고 메인 볼 때 보이도록 약간 딜레이
-      setTimeout(function () {
-        if (phase2Ready() && !busy() && !fired) showP2Hint();
-      }, 1800);
-      return true;
+  // 2페이즈 힌트: 진입 직후가 아니라 탐험 시간 뒤 (기본 2분)
+  // 3페이즈와 같이 ?hintfast=1 이면 8초
+  var P2_HINT_MS = 2 * 60 * 1000;
+  if (/[?&]hintfast=1/.test(location.search || "")) P2_HINT_MS = 8000;
+  if (/[?&]p2hint=1/.test(location.search || "")) P2_HINT_MS = 5000;
+
+  var p2EnteredAt = 0;
+  var p2HintTimer = null;
+
+  function markP2Entered() {
+    if (!phase2Ready()) return false;
+    if (!p2EnteredAt) {
+      p2EnteredAt = Date.now();
+      try {
+        var saved = sessionStorage.getItem("haunt_p2_entered_at");
+        if (saved) {
+          var n = parseInt(saved, 10);
+          if (!isNaN(n) && n > 0) p2EnteredAt = n;
+          else sessionStorage.setItem("haunt_p2_entered_at", String(p2EnteredAt));
+        } else {
+          sessionStorage.setItem("haunt_p2_entered_at", String(p2EnteredAt));
+        }
+      } catch (e) {}
     }
-    return false;
+    scheduleP2Hint();
+    return true;
+  }
+
+  function scheduleP2Hint() {
+    if (fired || window.__hauntPhase3Active) return;
+    if (p2HintShown || alreadyHintedThisSession()) return;
+    if (!phase2Ready()) return;
+    if (p2HintTimer) return; // 한 번만 예약
+
+    var elapsed = Date.now() - (p2EnteredAt || Date.now());
+    var wait = Math.max(0, P2_HINT_MS - elapsed);
+    // 일기 연 동안에도 타이머는 가되, showP2Hint 가 diary-open 이면 미룸
+    p2HintTimer = setTimeout(function () {
+      p2HintTimer = null;
+      if (fired || window.__hauntPhase3Active) return;
+      if (!phase2Ready() || busy()) {
+        // 바쁘면 조금 뒤 재시도
+        p2HintTimer = setTimeout(function () {
+          p2HintTimer = null;
+          if (!fired && phase2Ready() && !busy()) showP2Hint();
+        }, 4000);
+        return;
+      }
+      showP2Hint();
+    }, wait);
+
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log(
+        "[climax] P2 hint scheduled in",
+        Math.round(wait / 1000) + "s",
+        "(delay",
+        Math.round(P2_HINT_MS / 1000) + "s)"
+      );
+    }
+  }
+
+  // phase2 진입 감지 → 힌트 예약 (즉시 표시 안 함)
+  function watchPhase2() {
+    return markP2Entered();
   }
   document.addEventListener("haunt-stage", function (ev) {
     var s = ev && ev.detail && ev.detail.stage;
@@ -1083,11 +1137,12 @@
     if (m >= 3) watchPhase2();
   });
   document.addEventListener("haunt-diary", function () {
-    setTimeout(watchPhase2, 500);
+    // 일기 닫힌 뒤에 2페이즈가 열리므로, 상태 안정 후 진입 시각 기록
+    setTimeout(watchPhase2, 800);
   });
-  // 이미 조건을 만족한 채 로드된 경우
+  // 이미 조건을 만족한 채 로드된 경우 — 폴링으로 진입만 감지
   setInterval(function () {
-    if (!p2HintShown && !alreadyHintedThisSession() && phase2Ready() && !busy() && !fired) {
+    if (!p2HintShown && !alreadyHintedThisSession() && phase2Ready() && !fired) {
       watchPhase2();
     }
   }, 3000);
