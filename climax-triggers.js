@@ -27,24 +27,94 @@
     );
   }
 
+  /** 3페이즈 지속 UI — 2페이즈와 한눈에 구분 */
+  function applyPhase3Visuals(opts) {
+    opts = opts || {};
+    var body = document.body;
+    body.classList.add("phase-3-active");
+    body.setAttribute("data-game-phase", "3");
+    body.classList.remove("phase-2-active");
+
+    // 상단 깊이 띠
+    var bar = document.getElementById("p3DepthBar");
+    if (bar) {
+      bar.hidden = false;
+      bar.setAttribute("aria-hidden", "false");
+      bar.classList.add("is-on");
+    }
+    var depthMsg = document.getElementById("p3DepthMsg");
+    if (depthMsg && !opts.quiet) {
+      depthMsg.textContent = "한 층 더 내려왔다 · 아직 끝이 아니다";
+    }
+
+    // 가짜 주소창
+    try {
+      var urlText = document.getElementById("fakeUrlText");
+      if (urlText) {
+        urlText.dataset.p3Prev = urlText.textContent || "";
+        urlText.textContent = "about:blank#depth/3/not-done";
+      }
+      var chrome = document.getElementById("fakeChrome");
+      if (chrome) chrome.classList.add("is-phase3");
+    } catch (eU) {}
+
+    // 히어로 제목 — 2페이즈 카피와 다른 층
+    try {
+      var t1 = document.getElementById("titleL1");
+      var t2 = document.getElementById("titleL2");
+      if (t1) {
+        t1.dataset.p3Prev = t1.textContent || "";
+        t1.textContent = "한 층 더 아래로";
+      }
+      if (t2) {
+        t2.dataset.p3Prev = t2.textContent || "";
+        t2.textContent = "끝은 아직 아니다";
+      }
+      var lede = document.getElementById("lede");
+      if (lede) lede.classList.add("p3-lede");
+      var mainTitle = document.getElementById("mainTitle");
+      if (mainTitle) mainTitle.classList.add("p3-title");
+    } catch (eT) {}
+
+    // 진입 즉시 레이어 토스트 (미션 힌트와 별개 — “변한 느낌”)
+    if (!opts.quiet) {
+      var layer = document.getElementById("p3LayerToast");
+      var layerText = document.getElementById("p3LayerText");
+      if (layerText) {
+        layerText.textContent =
+          "2페이즈 통과. 여기는 더 깊다. 화면 톤이 바뀌었다 — 최종 조건을 찾아라.";
+      }
+      if (layer) {
+        layer.classList.add("is-on");
+        layer.setAttribute("aria-hidden", "false");
+        setTimeout(function () {
+          layer.classList.remove("is-on");
+          layer.setAttribute("aria-hidden", "true");
+        }, 4200);
+      }
+    }
+  }
+
   function enterPhase3() {
     if (window.__hauntPhase3Active) return true;
     window.__hauntPhase3Active = true;
     try {
       sessionStorage.setItem("haunt_phase3", "1");
+      sessionStorage.setItem("haunt_p3_entered_at", String(Date.now()));
     } catch (e) {}
-    document.body.classList.add("phase-3-active");
-    document.body.setAttribute("data-game-phase", "3");
     // stage/mood 최대 끌어올림 — 3페이즈 비주얼
     try {
       if (typeof window.__hauntSetStage === "function") window.__hauntSetStage(3);
       if (typeof window.__hauntSetMood === "function") window.__hauntSetMood(4);
-      if (typeof window.__hauntSetP2Decay === "function") window.__hauntSetP2Decay(4);
+      if (typeof window.__hauntSetP2Decay === "function") window.__hauntSetP2Decay(5);
       else {
-        document.body.setAttribute("data-p2-decay", "4");
-        document.body.classList.add("p2-d4");
+        document.body.setAttribute("data-p2-decay", "5");
+        document.body.classList.add("p2-d5");
       }
     } catch (e2) {}
+
+    applyPhase3Visuals({ quiet: false });
+
     try {
       document.dispatchEvent(
         new CustomEvent("haunt-phase3", {
@@ -52,16 +122,18 @@
         })
       );
     } catch (e3) {}
-    // 짧은 진입 연출
+    // 강한 진입 연출
     document.body.classList.add("phase3-enter");
     setTimeout(function () {
       document.body.classList.remove("phase3-enter");
-    }, 1600);
+      document.body.classList.add("phase3-settled");
+    }, 2200);
     try {
       var au = window.__hauntAudio;
       if (au) {
-        if (au.rumble) au.rumble(1.4);
-        if (au.sting) setTimeout(function () { au.sting("blood"); }, 200);
+        if (au.rumble) au.rumble(1.6);
+        if (au.sting) setTimeout(function () { au.sting("blood"); }, 180);
+        if (au.whisper) setTimeout(function () { au.whisper(); }, 500);
       }
     } catch (e4) {}
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
@@ -660,7 +732,8 @@
     path_hold: "상단 내비 근처 경로 문자열. 길게.",
     badge_hold: "히어로 위 상태 뱃지. 길게.",
     feat_hold: "Features 카드 제목. 길게.",
-    quote_hold: "어두운 배너 아래 서명 줄. 길게.",
+    quote_hold:
+      "아래로 스크롤 → Features/UI 아래 어두운 카드(// do_not_trust). 맨 아랫줄 서명(— … / Esc 안내). 길게.",
     hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 더블클릭.",
   };
   var MISSION_MOBILE = {
@@ -670,6 +743,8 @@
     fakeurl_double: "맨 위 가짜 주소창. 빠르게 두 번 탭.",
     path_hold: "상단 경로 글자(또는 Get started). 길게.",
     badge_hold: "큰 제목. 길게 누르고 있어.",
+    quote_hold:
+      "아래로 스크롤 → 어두운 카드 맨 아랫줄(서명/Esc 안내). 길게 누르기.",
     hit_pulse: "화면 어딘가 희미한 점. 짝수 초에 두 번 탭.",
     idle_haunt: "손 떼고 가만히. 조금만.",
   };
@@ -915,10 +990,10 @@
   try {
     if (sessionStorage.getItem("haunt_phase3") === "1" && window.__hauntDiaryDiscovered) {
       window.__hauntPhase3Active = true;
-      document.body.classList.add("phase-3-active");
-      document.body.setAttribute("data-game-phase", "3");
       fired = true;
       hideP2Hint(true);
+      applyPhase3Visuals({ quiet: true });
+      document.body.classList.add("phase3-settled");
     }
   } catch (eRestore) {}
 

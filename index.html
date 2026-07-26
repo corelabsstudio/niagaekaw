@@ -74,6 +74,21 @@
     <div class="p2-atm-fog"></div>
   </div>
 
+  <!-- 3페이즈 상시 레이어: 핏빛(2)과 다른 심층 보이드 -->
+  <div id="p3Atmosphere" class="p3-atmosphere" aria-hidden="true">
+    <div class="p3-atm-bg"></div>
+    <div class="p3-atm-grid"></div>
+    <div class="p3-atm-tear left"></div>
+    <div class="p3-atm-tear right"></div>
+    <div class="p3-atm-scan"></div>
+  </div>
+
+  <!-- 3페이즈 상단 깊이 띠 -->
+  <div id="p3DepthBar" class="p3-depth-bar" hidden aria-hidden="true">
+    <span class="p3-depth-tag">PHASE 3</span>
+    <span class="p3-depth-msg" id="p3DepthMsg">한 층 더 내려왔다 · 아직 끝이 아니다</span>
+  </div>
+
   <!-- WIP 띠: clean 숨김 (wip/branch 트리거는 footer micro) -->
   <div class="wip-banner" id="wipBanner" aria-hidden="true">
     <span class="wip-pill" title="">WIP</span>
@@ -519,6 +534,12 @@
     <span class="p3-chip-dot"></span>
     <span class="p3-chip-label">최종 조건</span>
   </button>
+
+  <!-- 3페이즈 진입 즉시 레이어 토스트 (미션 힌트와 별개) -->
+  <div id="p3LayerToast" class="p3-layer-toast" aria-live="assertive" aria-hidden="true">
+    <span class="p3-layer-tag">DEPTH +1</span>
+    <p id="p3LayerText">2페이즈를 통과했다. 여기는 더 깊다. 화면이 바뀌었다.</p>
+  </div>
 
   <script src="app.js"></script>
   <script src="haunt-audio.js"></script>
