@@ -27,7 +27,141 @@
     );
   }
 
-  /** 3페이즈 지속 UI — 2페이즈와 한눈에 구분 */
+  var p3FxStarted = false;
+  var P3_FACE_POOL = [
+    "assets/faces/face-1.jpg",
+    "assets/faces/face-2.jpg",
+    "assets/faces/face-3.jpg",
+    "assets/faces/face-4.jpg",
+    "assets/faces/face-5.jpg",
+    "assets/faces/face-6.jpg",
+    "assets/faces/face-7.jpg",
+    "assets/faces/face-8.jpg",
+    "assets/faces/face-9.jpg",
+  ];
+
+  function p3FaceSrc() {
+    return P3_FACE_POOL[Math.floor(Math.random() * P3_FACE_POOL.length)];
+  }
+
+  /** 플랜 카드: 금 간 유리 뒤 눈 — 랜덤 출몰 */
+  function pulsePlanShatter() {
+    if (!document.body.classList.contains("phase-3-active")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    if (document.body.classList.contains("is-haunting")) return;
+    var cards = document.querySelectorAll(".plan-btn.plan-card");
+    if (!cards.length) return;
+    // 1~3장 랜덤 깨짐
+    var order = Array.prototype.slice.call(cards).sort(function () {
+      return Math.random() - 0.5;
+    });
+    var n = 1 + Math.floor(Math.random() * Math.min(3, order.length));
+    var picks = order.slice(0, n);
+    picks.forEach(function (card, i) {
+      setTimeout(function () {
+        if (!document.body.classList.contains("phase-3-active")) return;
+        var face = card.querySelector(".p3-plan-face");
+        if (face) {
+          try {
+            face.src = p3FaceSrc();
+          } catch (e) {}
+        }
+        card.classList.add("is-shattered", "is-eyes");
+        setTimeout(function () {
+          card.classList.remove("is-eyes");
+        }, 1400 + Math.random() * 1200);
+        setTimeout(function () {
+          // 가끔 금은 남기고 눈만 끔 / 가끔 금도 풀림
+          if (Math.random() > 0.45) card.classList.remove("is-shattered");
+        }, 2800 + Math.random() * 2200);
+      }, i * (120 + Math.random() * 200));
+    });
+  }
+
+  /** 화면 떠다니는 얼굴 — 평소 숨김, 가끔 출몰 */
+  function pulseP3FloatFaces() {
+    if (!document.body.classList.contains("phase-3-active")) return;
+    if (document.body.classList.contains("diary-open")) return;
+    if (document.body.classList.contains("is-haunting")) return;
+    var root = document.getElementById("p3FloatFaces");
+    if (!root) return;
+    var faces = Array.prototype.slice.call(root.querySelectorAll(".p3-ff"));
+    if (!faces.length) return;
+    faces.forEach(function (f) {
+      f.classList.remove("is-on", "is-out");
+    });
+    var n = 1 + Math.floor(Math.random() * 3);
+    var picks = faces
+      .slice()
+      .sort(function () {
+        return Math.random() - 0.5;
+      })
+      .slice(0, n);
+    var life = 1600 + Math.random() * 2200;
+    picks.forEach(function (f, i) {
+      try {
+        f.src = p3FaceSrc();
+      } catch (e) {}
+      // 랜덤 위치
+      f.style.left = 6 + Math.random() * 78 + "%";
+      f.style.top = 12 + Math.random() * 62 + "%";
+      f.style.setProperty("--ff-rot", (-18 + Math.random() * 36).toFixed(1) + "deg");
+      f.style.setProperty("--ff-scale", (0.75 + Math.random() * 0.55).toFixed(2));
+      setTimeout(function () {
+        if (!document.body.classList.contains("phase-3-active")) return;
+        f.classList.add("is-on");
+      }, i * 90);
+    });
+    setTimeout(function () {
+      picks.forEach(function (f, i) {
+        setTimeout(function () {
+          f.classList.remove("is-on");
+          f.classList.add("is-out");
+          setTimeout(function () {
+            f.classList.remove("is-out");
+          }, 700);
+        }, i * 80);
+      });
+    }, life);
+  }
+
+  function startPhase3FxLoops() {
+    if (p3FxStarted) return;
+    p3FxStarted = true;
+    // 진입 직후 한 번 깨짐
+    setTimeout(function () {
+      pulsePlanShatter();
+      pulseP3FloatFaces();
+    }, 900);
+    setTimeout(function planLoop() {
+      if (!document.body.classList.contains("phase-3-active")) {
+        setTimeout(planLoop, 4000);
+        return;
+      }
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !document.body.classList.contains("is-haunting")
+      ) {
+        pulsePlanShatter();
+      }
+      setTimeout(planLoop, 7000 + Math.random() * 9000);
+    }, 5000);
+    setTimeout(function faceLoop() {
+      if (!document.body.classList.contains("phase-3-active")) {
+        setTimeout(faceLoop, 4000);
+        return;
+      }
+      if (
+        !document.body.classList.contains("diary-open") &&
+        !document.body.classList.contains("is-haunting")
+      ) {
+        pulseP3FloatFaces();
+      }
+      setTimeout(faceLoop, 8000 + Math.random() * 12000);
+    }, 3500);
+  }
+
+  /** 3페이즈 지속 UI — 참조 목업 핏빛 심층 */
   function applyPhase3Visuals(opts) {
     opts = opts || {};
     var body = document.body;
@@ -44,7 +178,7 @@
     }
     var depthMsg = document.getElementById("p3DepthMsg");
     if (depthMsg && !opts.quiet) {
-      depthMsg.textContent = "한 층 더 내려왔다 · 아직 끝이 아니다";
+      depthMsg.textContent = "한 층 더 내려왔다 · 잠든 것들이 깨어난다";
     }
 
     // 가짜 주소창
@@ -58,31 +192,37 @@
       if (chrome) chrome.classList.add("is-phase3");
     } catch (eU) {}
 
-    // 히어로 제목 — 2페이즈 카피와 다른 층
+    // 히어로 — 참조 목업 카피
     try {
       var t1 = document.getElementById("titleL1");
       var t2 = document.getElementById("titleL2");
       if (t1) {
         t1.dataset.p3Prev = t1.textContent || "";
-        t1.textContent = "한 층 더 아래로";
+        t1.textContent = "잠들어 있던 것들이";
       }
       if (t2) {
         t2.dataset.p3Prev = t2.textContent || "";
-        t2.textContent = "끝은 아직 아니다";
+        t2.textContent = "깨어날 준비를 하고 있다.";
       }
       var lede = document.getElementById("lede");
       if (lede) lede.classList.add("p3-lede");
       var mainTitle = document.getElementById("mainTitle");
       if (mainTitle) mainTitle.classList.add("p3-title");
+      // 플랜 카드 깨짐 레이어 준비
+      document.querySelectorAll(".plan-btn.plan-card").forEach(function (c) {
+        c.classList.add("p3-plan-ready");
+      });
     } catch (eT) {}
 
-    // 진입 즉시 레이어 토스트 (미션 힌트와 별개 — “변한 느낌”)
+    startPhase3FxLoops();
+
+    // 진입 즉시 레이어 토스트
     if (!opts.quiet) {
       var layer = document.getElementById("p3LayerToast");
       var layerText = document.getElementById("p3LayerText");
       if (layerText) {
         layerText.textContent =
-          "2페이즈 통과. 여기는 더 깊다. 화면 톤이 바뀌었다 — 최종 조건을 찾아라.";
+          "2페이즈 통과. 살과 회로가 섞인 층이다. 카드가 금 가기 시작한다.";
       }
       if (layer) {
         layer.classList.add("is-on");

@@ -74,13 +74,19 @@
     <div class="p2-atm-fog"></div>
   </div>
 
-  <!-- 3페이즈 상시 레이어: 핏빛(2)과 다른 심층 보이드 -->
+  <!-- 3페이즈 상시 레이어: 참조 목업 대기 + 랜덤 얼굴 -->
   <div id="p3Atmosphere" class="p3-atmosphere" aria-hidden="true">
     <div class="p3-atm-bg"></div>
-    <div class="p3-atm-grid"></div>
-    <div class="p3-atm-tear left"></div>
-    <div class="p3-atm-tear right"></div>
+    <div class="p3-atm-veil"></div>
     <div class="p3-atm-scan"></div>
+    <div id="p3FloatFaces" class="p3-float-faces" aria-hidden="true">
+      <img class="p3-ff f1" src="assets/faces/face-1.jpg" alt="" />
+      <img class="p3-ff f2" src="assets/faces/face-3.jpg" alt="" />
+      <img class="p3-ff f3" src="assets/faces/face-5.jpg" alt="" />
+      <img class="p3-ff f4" src="assets/faces/face-7.jpg" alt="" />
+      <img class="p3-ff f5" src="assets/faces/face-9.jpg" alt="" />
+      <img class="p3-ff f6" src="assets/faces/face-8.jpg" alt="" />
+    </div>
   </div>
 
   <!-- 3페이즈 상단 깊이 띠 -->
@@ -173,6 +179,11 @@
       <!-- Pricing plan cards — 목업 3카드 -->
       <div class="stasis-plan-row fake-actions plan-cards" role="group">
         <button type="button" class="btn ghost plan-btn plan-card is-on find-hot" data-find="freehold" data-fake="2" id="planFree">
+          <span class="p3-plan-shatter" aria-hidden="true">
+            <img class="p3-plan-face" src="assets/faces/face-2.jpg" alt="" draggable="false" />
+            <span class="p3-plan-cracks"></span>
+            <span class="p3-plan-glare"></span>
+          </span>
           <span class="plan-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 9.2l2.2 2.2 4.8-4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
@@ -182,6 +193,11 @@
           <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
         <button type="button" class="btn ghost plan-btn plan-card" data-fake="1" id="planPro" title="Pro">
+          <span class="p3-plan-shatter" aria-hidden="true">
+            <img class="p3-plan-face" src="assets/faces/face-4.jpg" alt="" draggable="false" />
+            <span class="p3-plan-cracks"></span>
+            <span class="p3-plan-glare"></span>
+          </span>
           <span class="plan-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 13.5l1.2-3.6L12.8 2.3a1.2 1.2 0 011.7 1.7L7 12.3 3.5 13.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10.5 4.5l3 3" stroke="currentColor" stroke-width="1.3"/></svg>
           </span>
@@ -191,6 +207,11 @@
           <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
         <button type="button" class="btn ghost plan-btn plan-card danger-btn is-stub find-hot" data-find="team" data-fake="3" id="planTeam">
+          <span class="p3-plan-shatter" aria-hidden="true">
+            <img class="p3-plan-face" src="assets/faces/face-6.jpg" alt="" draggable="false" />
+            <span class="p3-plan-cracks"></span>
+            <span class="p3-plan-glare"></span>
+          </span>
           <span class="plan-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6.5" cy="7" r="2.2" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="7.5" r="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c.4-2 2-3.2 4-3.2s3.6 1.2 4 3.2M10.2 12.2c.7-.5 1.6-.8 2.6-.8 1.6 0 2.9.8 3.4 2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           </span>
