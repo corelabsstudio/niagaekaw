@@ -92,7 +92,16 @@
     });
   }
 
-  /** 화면 떠다니는 얼굴 — 평소 숨김, 가끔 출몰 */
+  /** 출몰 얼굴 크기 — 작게 / 보통 / 크게 / 가끔 초대형 */
+  function randomP3FaceScale() {
+    var r = Math.random();
+    if (r < 0.25) return 0.35 + Math.random() * 0.3; // tiny
+    if (r < 0.55) return 0.7 + Math.random() * 0.45; // mid
+    if (r < 0.85) return 1.2 + Math.random() * 0.55; // large
+    return 1.85 + Math.random() * 0.9; // huge scare
+  }
+
+  /** 화면 떠다니는 얼굴 — 평소 숨김, 가끔 출몰 (크기 랜덤) */
   function pulseP3FloatFaces() {
     if (!document.body.classList.contains("phase-3-active")) return;
     if (document.body.classList.contains("diary-open")) return;
@@ -116,11 +125,11 @@
       try {
         f.src = p3FaceSrc();
       } catch (e) {}
-      // 랜덤 위치
+      // 랜덤 위치 + 크기(작고↔크게)
       f.style.left = 6 + Math.random() * 78 + "%";
       f.style.top = 12 + Math.random() * 62 + "%";
       f.style.setProperty("--ff-rot", (-18 + Math.random() * 36).toFixed(1) + "deg");
-      f.style.setProperty("--ff-scale", (0.75 + Math.random() * 0.55).toFixed(2));
+      f.style.setProperty("--ff-scale", randomP3FaceScale().toFixed(2));
       setTimeout(function () {
         if (!document.body.classList.contains("phase-3-active")) return;
         f.classList.add("is-on");

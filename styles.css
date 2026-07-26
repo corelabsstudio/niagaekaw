@@ -4983,6 +4983,7 @@ body.phase-3-active .p3-atmosphere {
   border-radius: 50%;
   opacity: 0;
   visibility: hidden;
+  /* --ff-scale: 출몰마다 랜덤 (0.35~2.7 근처) */
   transform: translate(-50%, -50%) scale(calc(var(--ff-scale, 1) * 0.9))
     rotate(var(--ff-rot, 0deg));
   filter: contrast(1.2) saturate(0.45) brightness(0.85);
@@ -4991,6 +4992,7 @@ body.phase-3-active .p3-atmosphere {
   mask-image: radial-gradient(circle at 50% 48%, #000 34%, rgba(0, 0, 0, 0.55) 54%, transparent 76%);
   box-shadow: 0 0 18px rgba(0, 0, 0, 0.5);
   background: transparent;
+  transform-origin: center center;
   transition: opacity 0.5s ease, visibility 0.5s ease, transform 0.6s ease;
 }
 .p3-ff.is-on {
@@ -7991,12 +7993,14 @@ body.phase-2-active .p2-monitor-faces {
   border-radius: 50%;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(6px) scale(0.92);
+  /* --mf-scale: JS가 출몰마다 랜덤 설정 (작게~크게) */
+  transform: translateY(6px) scale(calc(var(--mf-scale, 1) * 0.92));
   filter: contrast(1.2) saturate(0.45) brightness(0.85);
   -webkit-mask-image: radial-gradient(circle at 50% 48%, #000 34%, rgba(0, 0, 0, 0.55) 54%, transparent 76%);
   mask-image: radial-gradient(circle at 50% 48%, #000 34%, rgba(0, 0, 0, 0.55) 54%, transparent 76%);
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.45);
   background: transparent;
+  transform-origin: center center;
   transition:
     opacity 0.55s ease,
     visibility 0.55s ease,
@@ -8006,13 +8010,13 @@ body.phase-2-active .p2-monitor-faces {
 .p2-mf.is-on {
   opacity: 0.82;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(0) scale(var(--mf-scale, 1));
   animation: p2FaceFloat 2.8s ease-in-out infinite;
 }
 .p2-mf.is-out {
   opacity: 0 !important;
   visibility: hidden;
-  transform: translateY(-4px) scale(0.96);
+  transform: translateY(-4px) scale(calc(var(--mf-scale, 1) * 0.96));
   animation: none;
   transition-duration: 0.7s;
 }
@@ -8021,8 +8025,8 @@ body.phase-2-active .p2-monitor-faces {
 .p2-mf.f3 { left: 38%; bottom: 14%; top: auto; width: 44px; height: 44px; }
 .p2-mf.f4 { right: 22%; bottom: 20%; left: auto; top: auto; width: 50px; height: 50px; }
 @keyframes p2FaceFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-3px) scale(1.03); }
+  0%, 100% { transform: translateY(0) scale(var(--mf-scale, 1)); }
+  50% { transform: translateY(-3px) scale(calc(var(--mf-scale, 1) * 1.05)); }
 }
 body.stage-corrupt .monitor-charts,
 body.stage-dread .monitor-charts {

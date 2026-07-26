@@ -1471,6 +1471,32 @@
   }
 
   /**
+   * 출몰 얼굴 크기 — 작게/보통/크게/가끔 초대형 가중 랜덤
+   * @param {"monitor"|"float"|"card"} kind
+   */
+  function randomFaceScale(kind) {
+    var r = rng();
+    if (kind === "monitor") {
+      // 모니터 안: 0.45 ~ 2.1 (가끔 프레임 거의 채움)
+      if (r < 0.28) return 0.45 + rng() * 0.3;
+      if (r < 0.58) return 0.75 + rng() * 0.4;
+      if (r < 0.86) return 1.15 + rng() * 0.45;
+      return 1.65 + rng() * 0.45;
+    }
+    if (kind === "card") {
+      if (r < 0.3) return 0.4 + rng() * 0.25;
+      if (r < 0.65) return 0.65 + rng() * 0.35;
+      if (r < 0.9) return 1.0 + rng() * 0.4;
+      return 1.4 + rng() * 0.45;
+    }
+    // float (viewport)
+    if (r < 0.25) return 0.35 + rng() * 0.3;
+    if (r < 0.55) return 0.7 + rng() * 0.45;
+    if (r < 0.85) return 1.2 + rng() * 0.55;
+    return 1.85 + rng() * 0.85;
+  }
+
+  /**
    * 대시보드 내장 얼굴 슬롯 — 평소 opacity 0, 가끔 is-on 후 페이드아웃
    */
   function pulseMonitorFaces(opts) {
@@ -1496,13 +1522,15 @@
     var picks = order.slice(0, n);
     var life = opts.ms != null ? opts.ms : 1600 + rng() * 2200;
 
-    // 소스 가끔 교체 (같은 장만 안 보이게)
+    // 소스 가끔 교체 + 크기 랜덤 (크고 작게)
     picks.forEach(function (f, i) {
       try {
         if (rng() > 0.35 && typeof pickFaceSrc === "function") {
           f.src = pickFaceSrc();
         }
       } catch (e) {}
+      var sc = randomFaceScale("monitor");
+      f.style.setProperty("--mf-scale", sc.toFixed(2));
       setTimeout(function () {
         if (!phase2Active() || !f.parentNode) return;
         f.classList.remove("is-out");
@@ -1578,7 +1606,7 @@
       // 카드 구석 — 텍스트 덜 가림
       var left = rng() > 0.5 ? 72 + rng() * 18 : 8 + rng() * 18;
       var top = 12 + rng() * 40;
-      var scale = 0.55 + rng() * 0.35;
+      var scale = randomFaceScale("card");
       face.style.setProperty("--acf-x", left.toFixed(1) + "%");
       face.style.setProperty("--acf-y", top.toFixed(1) + "%");
       face.style.setProperty("--acf-scale", scale.toFixed(2));
@@ -1589,14 +1617,14 @@
       armFaceLifecycle(face, host, lifeBase, idx);
     });
 
-    // 플로팅 1개 (가장자리, 작게)
+    // 플로팅 1개 (가장자리 — 크기는 작게~크게 랜덤)
     if (!mobile || rng() > 0.35) {
       var kind2 = 1 + Math.floor(rng() * 6);
       var ff = spawnFaceEl(kind2, "is-float");
       var edge = rng() > 0.5;
       ff.style.setProperty("--acf-x", edge ? 4 + rng() * 10 + "%" : 82 + rng() * 12 + "%");
       ff.style.setProperty("--acf-y", 28 + rng() * 40 + "%");
-      ff.style.setProperty("--acf-scale", (0.55 + rng() * 0.25).toFixed(2));
+      ff.style.setProperty("--acf-scale", randomFaceScale("float").toFixed(2));
       ff.style.setProperty("--acf-delay", "0.08s");
       ff.style.setProperty("--acf-rot", (rng() * 12 - 6).toFixed(1) + "deg");
       document.body.appendChild(ff);
