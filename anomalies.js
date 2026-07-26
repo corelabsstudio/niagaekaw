@@ -1691,7 +1691,7 @@
       '<img class="ara-face" src="' +
       src +
       '" alt="" draggable="false" />' +
-      '<div class="ara-hair"></div>' +
+      '<span class="ara-soft" aria-hidden="true"></span>' +
       "</div>" +
       "</div>" +
       '<div class="ara-flash"></div>';
