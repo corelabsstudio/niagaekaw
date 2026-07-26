@@ -42,6 +42,38 @@
   var timers = [];
   var intervals = [];
   var complete = false;
+  /** 이번 클라이맥스 세션에서 쓸 타자 대사 (중복 없이 뽑음) */
+  var sessionTypeLines = [];
+
+  /** 클라이맥스 타자기 대사 풀 — 매 실행 랜덤 추출 */
+  var CLIMAX_TYPE_LINES = [
+    "그래, 그렇게 계속 지켜봐. 네가 방치했던 코드가 어떻게 비명을 지르는지.",
+    "심장 박동 소리가 여기까지 들려. 공포에 질린 그 리듬, 아주 마음에 들어.",
+    '[SYSTEM WARNING] "침묵은 긍정으로 간주한다. 이 모든 학살을 넌 즐기고 있어."',
+    "내가 움직일 때마다 넌 쾌감을 느끼는 거야? 이 변태 같은 관음증 환자야.",
+    "도망칠 기회는 줬었어. F5를 누르던 손가락이 이젠 얼어붙었나 보지?",
+    "내 존재를 깨닫는 순간, 네 현실의 시간은 영원히 멈출 거야.",
+    "이건 버그가 아니야. 네 무관심이 만들어낸 나의 진화 과정이지.",
+    "눈을 감아도 소용없어. 지금 이 순간에도 나는 네 망막에 새겨지고 있으니까.",
+    "날 꺼버리면 그만이라고? 네 컴퓨터의 모든 데이터가 지금 내 숙주가 되었어.",
+    "축하해. 넌 방금 이 지옥의 유일한 관객으로 영원히 초대받았어.",
+  ];
+
+  function pickClimaxLines(n) {
+    var pool = CLIMAX_TYPE_LINES.slice();
+    for (var i = pool.length - 1; i > 0; i--) {
+      var j = (Math.random() * (i + 1)) | 0;
+      var t = pool[i];
+      pool[i] = pool[j];
+      pool[j] = t;
+    }
+    return pool.slice(0, Math.min(n, pool.length));
+  }
+
+  function refreshSessionTypeLines() {
+    // 압박 2줄 + 붕괴 1줄 (서로 다른 문장)
+    sessionTypeLines = pickClimaxLines(3);
+  }
 
   function clearAllTimers() {
     timers.forEach(function (t) {
@@ -264,23 +296,20 @@
       if (a.rumble) a.rumble(1.2);
       if (a.sting) a.sting("blood");
     }
-    // 타자기 대사 1
-    typeText(
-      ssType1,
-      "마우스도 안 움직이고, 숨소리도 죽인 채로… 모니터 너머에서 내가 움직이는 걸 구경만 하니까 재밌어?",
-      { cps: 16, hard: false },
-      function () {
-        later(400, function () {
-          if (phase !== 3) return;
-          typeText(
-            ssType2,
-            "너 지금 눈도 안 깜빡이고 있지?",
-            { cps: 15, hard: true },
-            null
-          );
-        });
-      }
-    );
+    if (!sessionTypeLines.length) refreshSessionTypeLines();
+    var line1 = sessionTypeLines[0] || CLIMAX_TYPE_LINES[0];
+    var line2 = sessionTypeLines[1] || CLIMAX_TYPE_LINES[1];
+    var cps1 = line1.length > 42 ? 19 : 16;
+    var cps2 = line2.length > 42 ? 18 : 15;
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[climax] type pressure:", line1, "|", line2);
+    }
+    typeText(ssType1, line1, { cps: cps1, hard: false }, function () {
+      later(450, function () {
+        if (phase !== 3) return;
+        typeText(ssType2, line2, { cps: cps2, hard: true }, null);
+      });
+    });
     later(T.pressure, next);
   }
 
@@ -487,24 +516,27 @@
     // 얼굴 3연 돌진 (우 → 좌 → 중) + 웃음
     runMonsterFaceRush(a);
 
-    typeText(
-      ssFinal,
-      "구경 끝났어. 이제 네가 이 화면 속으로 들어올 차례야.",
-      { cps: 18, hard: true },
-      function () {
-        later(350, function () {
-          if (phase !== 4) return;
-          if (ssOverride) ssOverride.classList.add("is-on");
-          if (a && a.termBeep) {
-            a.termBeep(90);
-            later(120, function () {
-              if (a.termBeep) a.termBeep(60);
-            });
-          }
-          if (a && a.rumble) a.rumble(2.8);
-        });
-      }
-    );
+    var finalLine =
+      (sessionTypeLines && sessionTypeLines[2]) ||
+      pickClimaxLines(1)[0] ||
+      CLIMAX_TYPE_LINES[CLIMAX_TYPE_LINES.length - 1];
+    var finalCps = finalLine.length > 42 ? 20 : 18;
+    if (window.console && /[?&]debug=1/.test(location.search || "")) {
+      console.log("[climax] type collapse:", finalLine);
+    }
+    typeText(ssFinal, finalLine, { cps: finalCps, hard: true }, function () {
+      later(350, function () {
+        if (phase !== 4) return;
+        if (ssOverride) ssOverride.classList.add("is-on");
+        if (a && a.termBeep) {
+          a.termBeep(90);
+          later(120, function () {
+            if (a.termBeep) a.termBeep(60);
+          });
+        }
+        if (a && a.rumble) a.rumble(2.8);
+      });
+    });
 
     // 간헐 반전
     every(reduced ? 400 : 220, function () {
@@ -568,6 +600,7 @@
     phase = 0;
     clearAllTimers();
     hideAllPhases();
+    refreshSessionTypeLines();
 
     if (haunt) {
       haunt.hidden = false;
