@@ -44,6 +44,36 @@
   <div id="p2DecayLayer" class="p2-decay-layer" aria-hidden="true"></div>
   <div id="p2DecayGrain" class="p2-decay-grain" aria-hidden="true"></div>
 
+  <!-- 2페이즈 상시 대기: 참조 목업의 손·실루엣·안개 (phase-2-active 때만 보임) -->
+  <div id="p2Atmosphere" class="p2-atmosphere" aria-hidden="true">
+    <div class="p2-atm-bg"></div>
+    <div class="p2-atm-hand side-left" aria-hidden="true">
+      <svg viewBox="0 0 160 280" preserveAspectRatio="xMidYMax meet">
+        <defs><linearGradient id="p2hL" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a080c"/><stop offset="55%" stop-color="#0a0306"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+        <ellipse cx="80" cy="210" rx="42" ry="50" fill="url(#p2hL)" opacity="0.95"/>
+        <rect x="38" y="55" width="15" height="130" rx="7" fill="#0c0408" transform="rotate(-18 46 185)"/>
+        <rect x="56" y="30" width="16" height="155" rx="7" fill="#0a0306" transform="rotate(-6 64 185)"/>
+        <rect x="76" y="18" width="17" height="170" rx="7" fill="#080205"/>
+        <rect x="96" y="32" width="15" height="150" rx="7" fill="#0a0306" transform="rotate(8 104 185)"/>
+        <rect x="30" y="130" width="14" height="75" rx="6" fill="#0c0408" transform="rotate(-48 38 195)"/>
+      </svg>
+    </div>
+    <div class="p2-atm-hand side-right" aria-hidden="true">
+      <svg viewBox="0 0 160 280" preserveAspectRatio="xMidYMax meet">
+        <defs><linearGradient id="p2hR" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a080c"/><stop offset="55%" stop-color="#0a0306"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+        <ellipse cx="80" cy="210" rx="42" ry="50" fill="url(#p2hR)" opacity="0.95"/>
+        <rect x="107" y="55" width="15" height="130" rx="7" fill="#0c0408" transform="rotate(18 114 185)"/>
+        <rect x="88" y="30" width="16" height="155" rx="7" fill="#0a0306" transform="rotate(6 96 185)"/>
+        <rect x="67" y="18" width="17" height="170" rx="7" fill="#080205"/>
+        <rect x="49" y="32" width="15" height="150" rx="7" fill="#0a0306" transform="rotate(-8 56 185)"/>
+        <rect x="116" y="130" width="14" height="75" rx="6" fill="#0c0408" transform="rotate(48 122 195)"/>
+      </svg>
+    </div>
+    <div class="p2-atm-sil side-left"></div>
+    <div class="p2-atm-sil side-right"></div>
+    <div class="p2-atm-fog"></div>
+  </div>
+
   <!-- WIP 띠: clean 숨김 (wip/branch 트리거는 footer micro) -->
   <div class="wip-banner" id="wipBanner" aria-hidden="true">
     <span class="wip-pill" title="">WIP</span>
@@ -64,6 +94,7 @@
         </svg>
       </span>
       <span class="logo-text">Stasis</span>
+      <span class="p2-drip p2-drip-logo" aria-hidden="true"></span>
     </a>
     <nav class="stasis-pills" aria-label="menu">
       <span class="pill-link">Product</span>
@@ -74,7 +105,7 @@
     <button type="button" class="stasis-cta" id="navCta"
       data-clean="Get started"
       data-mid="Start…?"
-      data-horror="DO NOT TRACK">Get started</button>
+      data-horror="DO NOT TRACK">Get started<span class="p2-drip p2-drip-cta" aria-hidden="true"></span></button>
     <!-- 숨은 일기 트리거: 거의 안 보이는 ? -->
     <button type="button" class="diary-hint find-hot" id="diaryHint" data-find="nav" aria-label="" title="">?</button>
     <span class="path stasis-path-hide" id="corruptPath"
@@ -93,6 +124,7 @@
         data-horror="● System Status: STILL BREATHING">Uptime · Alerts · Solo</p>
 
       <h1 class="title-horror stasis-h1 find-hot" id="mainTitle" data-find="title">
+        <span class="p2-title-glitch" aria-hidden="true"></span>
         <span class="title-line" id="titleL1"
           data-clean="Simple monitoring"
           data-mid="잠들어 있던 것들"
@@ -101,6 +133,7 @@
           data-clean="for solitary dev"
           data-mid="깨어나려 하고 있다."
           data-horror="깨어날 준비를 하고 있다.">for solitary dev</span>
+        <span class="p2-drip p2-drip-title" aria-hidden="true"></span>
       </h1>
       <!-- caret: clean에선 거의 투명, 활성 경로일 때만 약간 보임 -->
       <p class="wip-cursor-line find-hot" data-find="caret" aria-hidden="true"><span class="wip-caret"></span> <span class="wip-hint">// quiet</span></p>
@@ -130,6 +163,8 @@
           </span>
           <span class="plan-name">Free</span>
           <span class="plan-price"><span class="btn-note">$0</span> / mo</span>
+          <span class="plan-corrupt-meta" aria-hidden="true">Free 4 Pnins</span>
+          <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
         <button type="button" class="btn ghost plan-btn plan-card" data-fake="1" id="planPro" title="Pro">
           <span class="plan-icon" aria-hidden="true">
@@ -137,6 +172,8 @@
           </span>
           <span class="plan-name">Pro</span>
           <span class="plan-price"><span class="btn-note">$20</span> / mo</span>
+          <span class="plan-corrupt-meta" aria-hidden="true">$20 Proins</span>
+          <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
         <button type="button" class="btn ghost plan-btn plan-card danger-btn is-stub find-hot" data-find="team" data-fake="3" id="planTeam">
           <span class="plan-icon" aria-hidden="true">
@@ -144,6 +181,8 @@
           </span>
           <span class="plan-name">Team</span>
           <span class="plan-price"><span class="btn-note">$39</span> / mo</span>
+          <span class="plan-corrupt-meta" aria-hidden="true">$29.00 Prints</span>
+          <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
       </div>
       <!-- fixme: clean에선 미세 카피 라인처럼 -->
@@ -171,6 +210,18 @@
         <div class="wip-card-meta">
           <span class="wip-file find-hot" data-find="features">Features</span>
           <span class="wip-status ok">live</span>
+        </div>
+        <!-- 2페이즈: 참조 목업 할퀴 자국 + 눈 -->
+        <div class="p2-card-scratches" aria-hidden="true">
+          <svg class="p2-scratch-svg" viewBox="0 0 200 140" preserveAspectRatio="none">
+            <path d="M40 20 L95 110" stroke="#2a080c" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M70 12 L120 118" stroke="#1a0408" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+            <path d="M95 18 L145 105" stroke="#22060a" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+            <path d="M55 28 L100 100" stroke="#3a1014" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M110 22 L155 95" stroke="#2a0a10" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.8"/>
+          </svg>
+          <span class="p2-scratch-eye e1"></span>
+          <span class="p2-scratch-eye e2"></span>
         </div>
         <h2 id="h2log"
           data-clean="Features"
@@ -244,6 +295,13 @@
                   <svg viewBox="0 0 120 40" preserveAspectRatio="none">
                     <path d="M0 28 C15 26 20 12 35 16 S55 30 70 18 S95 8 120 14" fill="none" stroke="#5b8def" stroke-width="2"/>
                   </svg>
+                </div>
+                <!-- 2페이즈: 대시보드 안 유령 얼굴 (참조 목업) -->
+                <div class="p2-monitor-faces" aria-hidden="true">
+                  <img class="p2-mf f1" src="assets/faces/face-1.jpg" alt="" />
+                  <img class="p2-mf f2" src="assets/faces/face-3.jpg" alt="" />
+                  <img class="p2-mf f3" src="assets/faces/face-5.jpg" alt="" />
+                  <img class="p2-mf f4" src="assets/faces/face-7.jpg" alt="" />
                 </div>
               </div>
             </div>
