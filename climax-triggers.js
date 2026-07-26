@@ -404,8 +404,125 @@
     copy_curse: 1,
   };
 
+  /** 힌트 후 풀 수 있게: 타깃 표시·히트영역·가시성 */
+  var missionRevealed = false;
+  var hotTargets = [];
+
+  function markHot(el, extraClass) {
+    if (!el) return null;
+    el.classList.add("p2-trig-hot");
+    if (extraClass) el.classList.add(extraClass);
+    el.style.pointerEvents = "auto";
+    el.style.cursor = "pointer";
+    try {
+      el.setAttribute("tabindex", "0");
+    } catch (e0) {}
+    // 숨김 요소 복구 (뱃지 등)
+    try {
+      var cs = getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden" || cs.opacity === "0") {
+        el.classList.add("p2-trig-force-show");
+      }
+      if (el.offsetParent === null && el !== document.body) {
+        el.classList.add("p2-trig-force-show");
+      }
+    } catch (e1) {}
+    if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
+    return el;
+  }
+
+  function showTypeGuide(text) {
+    var g = document.getElementById("p2TypeGuide");
+    if (!g) {
+      g = document.createElement("div");
+      g.id = "p2TypeGuide";
+      g.className = "p2-type-guide";
+      g.setAttribute("aria-live", "polite");
+      document.body.appendChild(g);
+    }
+    g.innerHTML =
+      '<span class="p2-type-tag">TYPE</span><kbd class="p2-type-keys">' +
+      text +
+      "</kbd>";
+    g.classList.add("is-on");
+    g.hidden = false;
+  }
+
+  function showScrollCue(kind) {
+    // kind: deep | bounce
+    var g = document.getElementById("p2ScrollCue");
+    if (!g) {
+      g = document.createElement("div");
+      g.id = "p2ScrollCue";
+      g.className = "p2-scroll-cue";
+      g.setAttribute("aria-hidden", "true");
+      document.body.appendChild(g);
+    }
+    if (kind === "deep") {
+      g.textContent = "↓ 맨 아래로 · 잠시 머무르기";
+      g.className = "p2-scroll-cue is-on is-bottom";
+    } else if (kind === "bounce") {
+      g.textContent = "↓ 맨 아래 → 곧 ↑ 맨 위";
+      g.className = "p2-scroll-cue is-on is-bottom";
+    } else if (kind === "idle") {
+      g.textContent = "손 떼고 가만히…";
+      g.className = "p2-scroll-cue is-on is-center";
+    } else {
+      g.className = "p2-scroll-cue";
+    }
+    g.hidden = false;
+  }
+
+  function hideMissionAids() {
+    var g = document.getElementById("p2TypeGuide");
+    if (g) {
+      g.classList.remove("is-on");
+      g.hidden = true;
+    }
+    var s = document.getElementById("p2ScrollCue");
+    if (s) {
+      s.classList.remove("is-on");
+      s.hidden = true;
+    }
+    document.body.classList.remove("trig-hint-live", "p2-trig-reveal");
+    document.documentElement.classList.remove("trig-hint-live");
+  }
+
+  function revealMissionTargets() {
+    missionRevealed = true;
+    window.__hauntHintRevealed = true;
+    document.body.classList.add("trig-hint-live", "p2-trig-reveal");
+    document.documentElement.classList.add("trig-hint-live");
+
+    // 활성 트리거별 추가 가이드
+    var id = active && active.id;
+    if (id === "type_kill") showTypeGuide("kill 또는 wake");
+    else if (id === "type_process") showTypeGuide("process");
+    else if (id === "copy_curse") showTypeGuide("아무 글 드래그 → Ctrl+C");
+    else if (id === "deep_hold") showScrollCue("deep");
+    else if (id === "scroll_bounce") showScrollCue("bounce");
+    else if (id === "idle_haunt") showScrollCue("idle");
+
+    // 첫 핫 타깃으로 스크롤
+    var hot =
+      hotTargets[0] ||
+      document.querySelector(".p2-trig-hot, .p2-trig-banner, .p2-trig-signature");
+    if (hot && typeof hot.scrollIntoView === "function") {
+      try {
+        hot.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      } catch (e2) {
+        try {
+          hot.scrollIntoView(true);
+        } catch (e3) {}
+      }
+    }
+  }
+
   function armHold(el, ms, done, holdClass) {
     if (!el) return false;
+    markHot(el);
+    // 힌트 후에는 홀드 시간 완화
+    var needMs = ms;
     var t = null;
     var cls = holdClass || "climax-holding";
     function clear() {
@@ -416,15 +533,15 @@
     el.addEventListener("pointerdown", function (e) {
       if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
       if (e.button != null && e.button !== 0) return;
-      // 모바일 스크롤 제스처와 충돌 줄이기
       try {
         e.preventDefault();
       } catch (err) {}
       el.classList.add(cls);
+      var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
       t = setTimeout(function () {
         clear();
         done();
-      }, ms);
+      }, holdFor);
     });
     el.addEventListener("pointerup", clear);
     el.addEventListener("pointerleave", clear);
@@ -434,17 +551,20 @@
 
   function armClicks(el, need, windowMs, done) {
     if (!el) return false;
+    markHot(el);
     var n = 0;
     var reset = null;
     var win = windowMs || 2200;
-    if (isMobileHaunt()) win = Math.max(win, 2800);
+    if (isMobileHaunt()) win = Math.max(win, 3200);
+    // 힌트 후: 클릭 창 더 여유
     el.addEventListener("click", function (e) {
       if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
       n++;
       clearTimeout(reset);
+      var w = missionRevealed ? Math.max(win, 4000) : win;
       reset = setTimeout(function () {
         n = 0;
-      }, win);
+      }, w);
       if (n >= need) {
         n = 0;
         done();
@@ -456,14 +576,12 @@
   /** 모바일 터치 대체: 대상 연타 / 길게 누르기 */
   function armMobileTapAlt(el, need, done, hotClass) {
     if (!el) return false;
-    if (hotClass) el.classList.add(hotClass);
-    el.classList.add("p2-trig-hot", "mobile-trig-alt");
-    return armClicks(el, need, 3000, done);
+    markHot(el, hotClass || "mobile-trig-alt");
+    return armClicks(el, need, 3200, done);
   }
   function armMobileHoldAlt(el, ms, done) {
     if (!el) return false;
-    el.classList.add("p2-trig-hot", "mobile-trig-alt");
-    el.style.pointerEvents = "auto";
+    markHot(el, "mobile-trig-alt");
     return armHold(el, ms, done);
   }
 
@@ -476,14 +594,14 @@
           document.getElementById("planFree") ||
           document.querySelector(".plan-card.is-on") ||
           document.querySelector("[data-fake='2']");
-        armHold(btn, 2500, done);
+        armHold(btn, 1800, done);
       },
     },
     {
       id: "triple_logo",
       hint: "로고 3연타",
       arm: function (done) {
-        armClicks(document.getElementById("topRec"), 3, 800, done);
+        armClicks(document.getElementById("topRec"), 3, 1400, done);
       },
     },
     {
@@ -501,11 +619,11 @@
             done();
           }
         });
-        // 모바일: Team 카드 7연타
         var team =
           document.getElementById("planTeam") ||
           document.querySelector("[data-fake='3']");
-        armMobileTapAlt(team, 7, done);
+        // 데스크톱도 힌트 후 Team 7연타 대체 가능
+        armMobileTapAlt(team, isMobileHaunt() ? 7 : 5, done);
       },
     },
     {
@@ -524,11 +642,13 @@
           var max = el.scrollHeight - el.clientHeight;
           var r = max <= 0 ? 1 : el.scrollTop / max;
           var now = Date.now();
-          if (r >= 0.92) {
+          var need = missionRevealed ? 2200 : 3000;
+          var thr = missionRevealed ? 0.88 : 0.9;
+          if (r >= thr) {
             if (!last) last = now;
             hold += now - last;
             last = now;
-            if (hold >= 4000) {
+            if (hold >= need) {
               hold = 0;
               done();
             }
@@ -547,7 +667,7 @@
           document.getElementById("planTeam") ||
           document.querySelector("[data-fake='3']") ||
           document.querySelector(".plan-card.danger-btn");
-        armClicks(btn, 5, 2500, done);
+        armClicks(btn, 5, 3200, done);
       },
     },
     {
@@ -557,10 +677,11 @@
         var bar = document.getElementById("fakeUrlBar");
         if (!bar) return;
         document.documentElement.classList.add("climax-fakeurl-live");
-        bar.style.pointerEvents = "auto";
-        bar.classList.add("p2-trig-hot", "mobile-trig-alt");
+        markHot(bar, "mobile-trig-alt");
+        var chrome = document.querySelector(".fake-chrome");
+        if (chrome) chrome.classList.add("p2-trig-fakeurl");
         var last = 0;
-        var dblMs = isMobileHaunt() ? 650 : 420;
+        var dblMs = isMobileHaunt() ? 700 : 500;
         bar.addEventListener("click", function (e) {
           if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           e.preventDefault();
@@ -580,25 +701,24 @@
           if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
           done();
         });
-        // 모바일: 본문(lede) 길게 누르기
         var lede =
           document.getElementById("lede") ||
           document.querySelector(".stasis-lede") ||
           document.getElementById("mainTitle");
-        armMobileHoldAlt(lede, 2200, done);
+        markHot(lede);
+        // 데스크톱도 길게 누르기로 대체 가능
+        armHold(lede, 2000, done);
       },
     },
     {
       id: "wait_triple",
       hint: "하단 기다림 문장 3번",
       arm: function (done) {
-        // 예전 console.log 자리 — 2페이즈에선 “그것들은 기다린다” 줄
         var el =
           document.getElementById("resWait") ||
           document.querySelector("[data-find='console']") ||
           document.querySelector(".stasis-later .morph");
-        if (el) el.classList.add("p2-trig-hot");
-        armClicks(el, 3, 2000, done);
+        armClicks(el, 3, 2800, done);
       },
     },
     {
@@ -608,8 +728,7 @@
         var el =
           document.querySelector(".foot-beta") ||
           document.querySelector("[data-find='wip']");
-        if (el) el.classList.add("p2-trig-hot");
-        armClicks(el, 4, 2500, done);
+        armClicks(el, 4, 3200, done);
       },
     },
     {
@@ -619,15 +738,14 @@
         var el =
           document.querySelector(".foot-micro:not(.foot-beta)") ||
           document.querySelector("[data-find='branch']");
-        if (el) el.classList.add("p2-trig-hot");
-        armClicks(el, 3, 2500, done);
+        armClicks(el, 3, 3200, done);
       },
     },
     {
       id: "title_mash",
       hint: "제목 5연타",
       arm: function (done) {
-        armClicks(document.getElementById("mainTitle"), 5, 1800, done);
+        armClicks(document.getElementById("mainTitle"), 5, 2800, done);
       },
     },
     {
@@ -643,11 +761,14 @@
             var el = document.documentElement;
             var max = el.scrollHeight - el.clientHeight;
             var r = max <= 0 ? 1 : el.scrollTop / max;
-            if (r >= 0.9) {
+            var deepThr = missionRevealed ? 0.85 : 0.9;
+            var topThr = missionRevealed ? 0.18 : 0.12;
+            var win = missionRevealed ? 5000 : 4000;
+            if (r >= deepThr) {
               sawDeep = true;
               deepAt = Date.now();
             }
-            if (sawDeep && r <= 0.12 && Date.now() - deepAt < 3500) {
+            if (sawDeep && r <= topThr && Date.now() - deepAt < win) {
               sawDeep = false;
               done();
             }
@@ -663,6 +784,7 @@
         var seq = [];
         var need = ["2", "3", "2"];
         document.querySelectorAll("[data-fake]").forEach(function (btn) {
+          markHot(btn);
           btn.addEventListener("click", function () {
             if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
             var id = btn.getAttribute("data-fake");
@@ -697,11 +819,13 @@
             last = Date.now();
             return;
           }
-          if (Date.now() - last >= 35000) {
+          // 힌트 전 20초 / 힌트 후 12초
+          var need = missionRevealed ? 12000 : 20000;
+          if (Date.now() - last >= need) {
             last = Date.now() + 999999;
             done();
           }
-        }, 1000);
+        }, 500);
       },
     },
     {
@@ -718,7 +842,6 @@
             done();
           }
         });
-        // 모바일: 큰 제목 5연타
         armMobileTapAlt(document.getElementById("mainTitle"), 5, done);
       },
     },
@@ -726,22 +849,15 @@
       id: "path_hold",
       hint: "상단 경로 문자열 길게",
       arm: function (done) {
-        // 2페이즈에만 보이는 corruptPath (stage-clean에선 숨김)
         var el =
           document.getElementById("corruptPath") ||
           document.querySelector(".stasis-path-hide");
-        if (el) {
-          el.classList.add("p2-trig-hot", "mobile-trig-alt");
-          el.style.pointerEvents = "auto";
-        }
-        // 경로가 너무 작으면 CTA 홀드로 폴백
         if (!el || (isMobileHaunt() && el.offsetParent === null)) {
           el =
             document.getElementById("navCta") ||
             document.getElementById("topRec");
-          if (el) el.classList.add("p2-trig-hot", "mobile-trig-alt");
         }
-        armHold(el, 2200, done);
+        armHold(el, 1800, done);
       },
     },
     {
@@ -752,14 +868,12 @@
           document.getElementById("eyebrow") ||
           document.querySelector(".stasis-badge") ||
           document.querySelector("[data-find='badge']");
-        // 2페이즈 UI에서 뱃지 숨김 → 제목/로고 폴백
         if (!el || getComputedStyle(el).display === "none" || el.offsetParent === null) {
           el =
             document.getElementById("mainTitle") ||
             document.getElementById("topRec");
         }
-        if (el) el.classList.add("p2-trig-hot", "mobile-trig-alt");
-        armHold(el, 2000, done);
+        armHold(el, 1600, done);
       },
     },
     {
@@ -770,8 +884,7 @@
           document.getElementById("h2log") ||
           document.querySelector(".stasis-card-light h2") ||
           document.querySelector("[data-find='features']");
-        if (el) el.classList.add("p2-trig-hot");
-        armHold(el, 2000, done);
+        armHold(el, 1600, done);
       },
     },
     {
@@ -781,16 +894,15 @@
         var el =
           document.querySelector(".stasis-quote-by") ||
           document.querySelector("[data-find='readme']");
-        // 배너 자체도 보이게 표시 (힌트: Features/UI 아래 스크롤)
         var ban =
           document.getElementById("cardWarn") ||
           document.querySelector(".stasis-quote");
-        if (ban) ban.classList.add("p2-trig-banner");
-        if (el) {
-          el.classList.add("p2-trig-hot", "p2-trig-signature");
-          el.style.pointerEvents = "auto";
+        if (ban) {
+          ban.classList.add("p2-trig-banner");
+          markHot(ban);
         }
-        armHold(el, 2200, done);
+        if (el) markHot(el, "p2-trig-signature");
+        armHold(el || ban, 1600, done);
       },
     },
     {
@@ -801,7 +913,10 @@
         document.body.classList.add("hit-pulse-mode");
         document.documentElement.classList.add("hit-pulse-mode");
         var clk = document.getElementById("clock");
-        if (clk) clk.classList.add("hit-pulse-clock");
+        if (clk) {
+          markHot(clk);
+          clk.classList.add("hit-pulse-clock");
+        }
         document.addEventListener("haunt-hit-success", function onHit() {
           document.removeEventListener("haunt-hit-success", onHit);
           document.body.classList.remove("hit-pulse-mode");
@@ -919,41 +1034,40 @@
     )
   );
 
-  /** 유저용 미션 힌트 (세션당 1회 토스트) — 너무 노골적이지 않게 */
+  /** 유저용 미션 힌트 — 힌트가 뜨면 풀 수 있을 만큼 구체적으로 */
   var MISSION = {
-    hold_free: "요금 카드 ‘Free’. 잠깐 누르고 있어.",
-    triple_logo: "왼쪽 위 Stasis 로고. 세 번.",
-    type_kill: "키보드. 끝내는 말, 또는 다시 깨우는 말.",
-    deep_hold: "페이지 맨 아래. 거기서 조금 더 머물러.",
-    team_spam: "‘Team’ 요금 카드. 여러 번.",
-    fakeurl_double: "화면 맨 위, 가짜 주소창. 두 번.",
-    copy_curse: "아무 글이나 복사해 봐. (Ctrl+C)",
-    wait_triple: "페이지 아래쪽, ‘기다린다’ 문장. 세 번.",
-    beta_quad: "푸터 끝 beta. 네 번.",
-    version_triple: "푸터 버전 숫자(v0.x). 세 번.",
-    title_mash: "큰 제목. 빠르게 여러 번.",
-    scroll_bounce: "맨 아래까지 갔다가, 빨리 맨 위로.",
-    plan_sequence: "Free → Team → 다시 Free.",
-    idle_haunt: "아무 것도 하지 마. 가만히.",
-    type_process: "키보드로 process.",
-    path_hold: "상단 내비 근처 경로 문자열. 길게.",
-    badge_hold: "히어로 위 상태 뱃지. 길게.",
-    feat_hold: "Features 카드 제목. 길게.",
+    hold_free: "요금제 ‘Free’ 카드(빛나는 테두리)를 길게 누르세요.",
+    triple_logo: "왼쪽 위 ‘Stasis’ 로고를 세 번 클릭하세요.",
+    type_kill: "키보드로 kill 또는 wake 입력. (또는 빨간 테두리 Team 카드 연타)",
+    deep_hold: "페이지 맨 아래까지 스크롤한 뒤 2~3초 머무르세요.",
+    team_spam: "‘Team’ 요금 카드를 빠르게 다섯 번 클릭하세요.",
+    fakeurl_double: "맨 위 가짜 주소창(URL 바)을 더블클릭하세요.",
+    copy_curse: "아무 글이나 드래그해 Ctrl+C. (또는 본문 길게 누르기)",
+    wait_triple: "페이지 아래 ‘기다린다’ 문장을 세 번 클릭하세요.",
+    beta_quad: "맨 아래 푸터의 beta 글자를 네 번 클릭하세요.",
+    version_triple: "맨 아래 푸터 버전(v0.x)을 세 번 클릭하세요.",
+    title_mash: "화면 큰 제목을 빠르게 다섯 번 클릭하세요.",
+    scroll_bounce: "맨 아래까지 스크롤 → 바로 맨 위로 올리세요.",
+    plan_sequence: "요금 카드 순서: Free → Team → Free 클릭.",
+    idle_haunt: "마우스·키보드 손 떼고 가만히 계세요. (힌트 후 약 12초)",
+    type_process: "키보드로 process 입력. (또는 큰 제목 다섯 번)",
+    path_hold: "상단 경로 글자(또는 Get started)를 길게 누르세요.",
+    badge_hold: "상태 뱃지(또는 큰 제목)를 길게 누르세요.",
+    feat_hold: "Features 카드 제목을 길게 누르세요.",
     quote_hold:
-      "아래로 스크롤 → Features/UI 아래 어두운 카드(// do_not_trust). 맨 아랫줄 서명(— … / Esc 안내). 길게.",
-    hit_pulse: "상단 시계가 짝수 초(·GO)일 때, 빨간 깜빡 점을 더블클릭.",
+      "아래로 스크롤 → 어두운 인용 카드 맨 아랫줄 서명을 길게 누르세요.",
+    hit_pulse: "상단 시계가 ·GO(짝수 초)일 때, 빨간 깜빡 점을 더블클릭.",
   };
   var MISSION_MOBILE = {
-    type_kill: "‘Team’ 요금 카드. 일곱 번 탭.",
-    type_process: "큰 제목. 다섯 번 탭.",
-    copy_curse: "본문 글(설명 문단). 길게 누르고 있어.",
-    fakeurl_double: "맨 위 가짜 주소창. 빠르게 두 번 탭.",
-    path_hold: "상단 경로 글자(또는 Get started). 길게.",
-    badge_hold: "큰 제목. 길게 누르고 있어.",
-    quote_hold:
-      "아래로 스크롤 → 어두운 카드 맨 아랫줄(서명/Esc 안내). 길게 누르기.",
-    hit_pulse: "상단 시계 ·GO 일 때, 빨간 깜빡 점을 두 번 탭.",
-    idle_haunt: "손 떼고 가만히. 조금만.",
+    type_kill: "빨간 테두리 ‘Team’ 카드를 일곱 번 탭하세요.",
+    type_process: "큰 제목을 다섯 번 탭하세요.",
+    copy_curse: "본문(설명 문단)을 길게 누르세요.",
+    fakeurl_double: "맨 위 가짜 주소창을 빠르게 두 번 탭하세요.",
+    path_hold: "상단 경로 글자(또는 Get started)를 길게 누르세요.",
+    badge_hold: "큰 제목을 길게 누르세요.",
+    quote_hold: "어두운 카드 맨 아랫줄(서명)을 길게 누르세요.",
+    hit_pulse: "상단 시계 ·GO 일 때, 빨간 깜빡 점을 두 번 탭하세요.",
+    idle_haunt: "손 떼고 가만히. 힌트 후 약 12초.",
   };
   if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
     active.mission = MISSION_MOBILE[active.id];
@@ -970,6 +1084,7 @@
     // 이미 3페이즈면 무시 (클라이맥스는 phase3-triggers)
     if (window.__hauntPhase3Active) return;
     fired = true;
+    hideMissionAids();
     hideP2Hint(true);
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[p2→p3] gate trigger fired:", active.id);
@@ -1020,8 +1135,9 @@
       }, 1200);
       return;
     }
+    // 힌트가 뜨는 순간부터 타깃 공개 (풀 수 있게)
+    revealMissionTargets();
     if (alreadyHintedThisSession()) {
-      // 이미 봤으면 칩만
       if (p2Chip) p2Chip.hidden = false;
       return;
     }
@@ -1036,7 +1152,7 @@
       p2Toast.classList.remove("is-out");
     }
     document.body.classList.add("p2-hint-visible");
-    // 자동으로 안 사라지게 조금 길게, 닫으면 칩 남김
+    // 자동으로 안 사라지게 조금 길게, 닫으면 칩 남김 (타깃 강조는 유지)
     setTimeout(function () {
       if (p2Toast && !p2Toast.hidden) {
         p2Toast.classList.remove("is-in");
@@ -1047,7 +1163,7 @@
           if (p2Chip && !fired) p2Chip.hidden = false;
         }, 400);
       }
-    }, 12000);
+    }, 16000);
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[climax] P2 mission hint:", active.id, active.mission);
     }
@@ -1064,6 +1180,7 @@
 
   function reShowHintFromChip() {
     if (fired || busy() || window.__hauntPhase3Active) return;
+    revealMissionTargets();
     if (p2Text) {
       p2Text.textContent = "3페이즈 진입 조건 — " + active.mission;
     }
@@ -1117,8 +1234,13 @@
 
   function scheduleP2Hint() {
     if (fired || window.__hauntPhase3Active) return;
-    if (p2HintShown || alreadyHintedThisSession()) return;
     if (!phase2Ready()) return;
+    // 이미 힌트 본 세션: 칩 + 타깃 공개 유지 (풀 수 있게)
+    if (p2HintShown || alreadyHintedThisSession()) {
+      revealMissionTargets();
+      if (p2Chip && !fired) p2Chip.hidden = false;
+      return;
+    }
     if (p2HintTimer) return; // 한 번만 예약
 
     var elapsed = Date.now() - (p2EnteredAt || Date.now());

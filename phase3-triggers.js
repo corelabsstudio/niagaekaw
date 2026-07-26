@@ -57,8 +57,112 @@
     select_all_curse: 1,
   };
 
+  var missionRevealed = false;
+  var hotTargets = [];
+
+  function markHot(el, extraClass) {
+    if (!el) return null;
+    el.classList.add("p2-trig-hot", "p3-trig-hot");
+    if (extraClass) el.classList.add(extraClass);
+    el.style.pointerEvents = "auto";
+    el.style.cursor = "pointer";
+    try {
+      el.setAttribute("tabindex", "0");
+    } catch (e0) {}
+    try {
+      var cs = getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) === 0) {
+        el.classList.add("p2-trig-force-show");
+      }
+      if (el.offsetParent === null && el !== document.body) {
+        el.classList.add("p2-trig-force-show");
+      }
+    } catch (e1) {}
+    if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
+    return el;
+  }
+
+  function showTypeGuide(text) {
+    var g = document.getElementById("p3TypeGuide");
+    if (!g) {
+      g = document.createElement("div");
+      g.id = "p3TypeGuide";
+      g.className = "p2-type-guide p3-type-guide";
+      g.setAttribute("aria-live", "polite");
+      document.body.appendChild(g);
+    }
+    g.innerHTML =
+      '<span class="p2-type-tag">TYPE</span><kbd class="p2-type-keys">' +
+      text +
+      "</kbd>";
+    g.classList.add("is-on");
+    g.hidden = false;
+  }
+
+  function showScrollCue(kind) {
+    var g = document.getElementById("p3ScrollCue");
+    if (!g) {
+      g = document.createElement("div");
+      g.id = "p3ScrollCue";
+      g.className = "p2-scroll-cue";
+      document.body.appendChild(g);
+    }
+    if (kind === "top") {
+      g.textContent = "↑ 맨 위로 · 잠시 머무르기";
+      g.className = "p2-scroll-cue is-on is-top";
+    } else if (kind === "idle") {
+      g.textContent = "손 떼고 가만히…";
+      g.className = "p2-scroll-cue is-on is-center";
+    } else {
+      g.className = "p2-scroll-cue";
+    }
+    g.hidden = false;
+  }
+
+  function hideMissionAids() {
+    var g = document.getElementById("p3TypeGuide");
+    if (g) {
+      g.classList.remove("is-on");
+      g.hidden = true;
+    }
+    var s = document.getElementById("p3ScrollCue");
+    if (s) {
+      s.classList.remove("is-on");
+      s.hidden = true;
+    }
+    document.body.classList.remove("trig-hint-live", "p3-trig-reveal");
+    document.documentElement.classList.remove("trig-hint-live");
+  }
+
+  function revealMissionTargets() {
+    missionRevealed = true;
+    window.__hauntP3HintRevealed = true;
+    document.body.classList.add("trig-hint-live", "p3-trig-reveal");
+    document.documentElement.classList.add("trig-hint-live");
+    var id = active && active.id;
+    if (id === "type_stasis") showTypeGuide("stasis");
+    else if (id === "type_wakeagain") showTypeGuide("wakeagain");
+    else if (id === "type_escape") showTypeGuide("escape");
+    else if (id === "arrow_sigil") showTypeGuide("↑ ↑ ↓ ↓");
+    else if (id === "space_ritual") showTypeGuide("Space × 12");
+    else if (id === "select_all_curse") showTypeGuide("Ctrl+A");
+    else if (id === "top_hold") showScrollCue("top");
+    else if (id === "long_idle") showScrollCue("idle");
+    var hot = hotTargets[0] || document.querySelector(".p3-trig-hot, .p2-trig-hot");
+    if (hot && typeof hot.scrollIntoView === "function") {
+      try {
+        hot.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      } catch (e2) {
+        try {
+          hot.scrollIntoView(true);
+        } catch (e3) {}
+      }
+    }
+  }
+
   function armHoldEl(el, ms, done, holdClass) {
     if (!el) return false;
+    markHot(el);
     var t = null;
     var cls = holdClass || "p3-holding";
     function clear() {
@@ -73,10 +177,11 @@
         e.preventDefault();
       } catch (err) {}
       el.classList.add(cls);
+      var holdFor = missionRevealed ? Math.min(ms, 1600) : ms;
       t = setTimeout(function () {
         clear();
         done();
-      }, ms);
+      }, holdFor);
     });
     el.addEventListener("pointerup", clear);
     el.addEventListener("pointerleave", clear);
@@ -86,18 +191,19 @@
 
   function armTapEl(el, need, windowMs, done) {
     if (!el) return false;
+    markHot(el, "mobile-trig-alt");
     var n = 0;
     var reset = null;
     var win = windowMs || 2500;
     if (isMobileHaunt()) win = Math.max(win, 3000);
-    el.classList.add("p2-trig-hot", "mobile-trig-alt");
     el.addEventListener("click", function () {
       if (!phase3Ready() || busy()) return;
       n++;
       clearTimeout(reset);
+      var w = missionRevealed ? Math.max(win, 4000) : win;
       reset = setTimeout(function () {
         n = 0;
-      }, win);
+      }, w);
       if (n >= need) {
         n = 0;
         done();
@@ -175,25 +281,12 @@
       arm: function (done) {
         var btn = document.getElementById("planPro");
         if (!btn) return;
-        // 비활성 해제 (3페이즈 트리거용)
         try {
           btn.disabled = false;
           btn.removeAttribute("disabled");
         } catch (e) {}
-        var n = 0;
-        var reset = null;
-        btn.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          n++;
-          clearTimeout(reset);
-          reset = setTimeout(function () {
-            n = 0;
-          }, 2800);
-          if (n >= 7) {
-            n = 0;
-            done();
-          }
-        });
+        markHot(btn);
+        armTapEl(btn, 7, 3200, done);
       },
     },
     {
@@ -201,21 +294,7 @@
       hint: "Docs 3연타",
       arm: function (done) {
         var el = document.querySelector("[data-find='docs']") || document.querySelector(".pill-dead");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2000);
-          if (n >= 3) {
-            n = 0;
-            done();
-          }
-        });
+        armTapEl(el, 3, 2800, done);
       },
     },
     {
@@ -234,21 +313,7 @@
           document.querySelector(".monitor-frame") ||
           document.querySelector(".stasis-monitor-card") ||
           document.querySelector(".stasis-card-dark");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2500);
-          if (n >= 4) {
-            n = 0;
-            done();
-          }
-        });
+        armTapEl(el, 4, 3000, done);
       },
     },
     {
@@ -286,21 +351,7 @@
         var el =
           document.querySelector("[data-find='branch']") ||
           document.querySelector(".foot-micro:not(.foot-beta)");
-        if (!el) return;
-        var n = 0;
-        var t = null;
-        el.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, 2500);
-          if (n >= 5) {
-            n = 0;
-            done();
-          }
-        });
+        armTapEl(el, 5, 3200, done);
       },
     },
     {
@@ -319,11 +370,13 @@
           var max = el.scrollHeight - el.clientHeight;
           var r = max <= 0 ? 0 : el.scrollTop / max;
           var now = Date.now();
-          if (r <= 0.06) {
+          var thr = missionRevealed ? 0.1 : 0.06;
+          var need = missionRevealed ? 2500 : 3500;
+          if (r <= thr) {
             if (!last) last = now;
             hold += now - last;
             last = now;
-            if (hold >= 4500) {
+            if (hold >= need) {
               hold = 0;
               done();
             }
@@ -380,11 +433,11 @@
             }
           }
         });
-        // 모바일: Free → Free → Team → Team 탭 시퀀스
+        // 터치/클릭 대체: Free → Free → Team → Team (데스크톱 힌트 후에도 가능)
         var seqM = [];
         var needM = ["2", "2", "3", "3"];
         document.querySelectorAll("[data-fake]").forEach(function (btn) {
-          btn.classList.add("mobile-trig-alt");
+          markHot(btn, "mobile-trig-alt");
           btn.addEventListener("click", function () {
             if (!phase3Ready() || busy()) return;
             var id = btn.getAttribute("data-fake");
@@ -414,18 +467,22 @@
         document.addEventListener("keydown", function (e) {
           if (!phase3Ready() || busy()) return;
           if (e.code !== "Space" && e.key !== " ") return;
+          try {
+            e.preventDefault();
+          } catch (err) {}
           n++;
           clearTimeout(t);
           t = setTimeout(function () {
             n = 0;
-          }, 4000);
-          if (n >= 12) {
+          }, missionRevealed ? 6000 : 4500);
+          var need = missionRevealed ? 8 : 12;
+          if (n >= need) {
             n = 0;
             done();
           }
         });
-        // 모바일: 제목 12연타
-        armTapEl(document.getElementById("mainTitle"), 12, 5000, done);
+        // 클릭 대체 (모바일·데스크톱)
+        armTapEl(document.getElementById("mainTitle"), isMobileHaunt() ? 12 : 8, 5000, done);
       },
     },
     {
@@ -446,9 +503,9 @@
           document.getElementById("cardWarn") ||
           document.querySelector(".stasis-quote");
         if (!el) return;
-        el.classList.add("mobile-trig-alt");
+        markHot(el, "mobile-trig-alt");
         var last = 0;
-        var dblMs = isMobileHaunt() ? 650 : 420;
+        var dblMs = isMobileHaunt() ? 700 : 500;
         el.addEventListener("click", function () {
           if (!phase3Ready() || busy()) return;
           var now = Date.now();
@@ -469,12 +526,11 @@
             done();
           }
         });
-        // 모바일: 다크 배너 길게
         var quote =
           document.getElementById("cardWarn") ||
           document.querySelector(".stasis-quote") ||
           document.getElementById("mainTitle");
-        armHoldEl(quote, 2500, done);
+        armHoldEl(quote, 2000, done);
       },
     },
     {
@@ -493,8 +549,9 @@
             last = Date.now();
             return;
           }
-          // 50초 — 2페이즈 idle(35s)보다 김
-          if (Date.now() - last >= 50000) {
+          // 힌트 전 25초 / 힌트 후 15초
+          var need = missionRevealed ? 15000 : 25000;
+          if (Date.now() - last >= need) {
             last = Date.now() + 999999;
             done();
           }
@@ -591,37 +648,37 @@
   document.body.setAttribute("data-p3-climax-trigger", active.id);
 
   var MISSION = {
-    logo_hold: "왼쪽 위 브랜드. 손가락을 떼지 마.",
-    type_stasis: "키보드. 이 서비스 이름.",
-    type_wakeagain: "키보드. 기억해야 할 그 이름.",
-    cta_hold: "Get started. 잠깐 누르고 있어.",
-    pro_spam: "Pro 요금 카드. 여러 번.",
-    docs_triple: "내비 Docs. 세 번.",
-    pricing_hold: "Pricing. 길게.",
-    monitor_quad: "다크 모니터 미리보기. 네 번.",
-    badge_mash: "히어로 위 뱃지. 빠르게 다섯.",
-    title_hold: "큰 제목. 길게 눌러.",
-    beta_hold: "푸터 beta. 길게.",
-    version_spam: "푸터 버전 숫자. 다섯 번.",
-    top_hold: "맨 위로 올려 두고 머물러.",
-    type_escape: "키보드로 escape.",
-    arrow_sigil: "화살표. 위 위 아래 아래.",
-    space_ritual: "스페이스바. 많이.",
-    features_hold: "Features 쪽 라벨. 길게.",
-    quote_double: "어두운 인용 배너. 두 번.",
-    select_all_curse: "전부 선택해 봐. (Ctrl+A)",
-    long_idle: "아무 것도 하지 마. 더 오래.",
+    logo_hold: "왼쪽 위 ‘Stasis’ 로고를 길게 누르세요.",
+    type_stasis: "키보드로 stasis 입력. (또는 로고 연타)",
+    type_wakeagain: "키보드로 wakeagain 입력. (또는 Get started 연타)",
+    cta_hold: "‘Get started’ 버튼을 길게 누르세요.",
+    pro_spam: "‘Pro’ 요금 카드를 일곱 번 클릭하세요.",
+    docs_triple: "상단 내비 ‘Docs’를 세 번 클릭하세요.",
+    pricing_hold: "상단 내비 ‘Pricing’을 길게 누르세요.",
+    monitor_quad: "모니터/다크 카드 프레임을 네 번 클릭하세요.",
+    badge_mash: "상태 뱃지(또는 큰 제목)를 다섯 번 클릭하세요.",
+    title_hold: "큰 제목을 길게 누르세요.",
+    beta_hold: "맨 아래 푸터 beta를 길게 누르세요.",
+    version_spam: "맨 아래 푸터 버전 숫자를 다섯 번 클릭하세요.",
+    top_hold: "맨 위로 스크롤한 뒤 2~3초 머무르세요.",
+    type_escape: "키보드로 escape 입력. (또는 Free 카드 연타)",
+    arrow_sigil: "화살표 ↑↑↓↓ 또는 Free→Free→Team→Team.",
+    space_ritual: "스페이스를 여러 번 (힌트 후 8회). 또는 제목 연타.",
+    features_hold: "Features 쪽 제목을 길게 누르세요.",
+    quote_double: "어두운 인용 배너를 더블클릭하세요.",
+    select_all_curse: "Ctrl+A 전체 선택. (또는 어두운 배너 길게)",
+    long_idle: "손 떼고 가만히. (힌트 후 약 15초)",
   };
   var MISSION_MOBILE = {
-    type_stasis: "왼쪽 위 로고. 여섯 번 탭.",
-    type_wakeagain: "Get started. 여섯 번 탭.",
-    type_escape: "Free 요금 카드. 여덟 번 탭.",
+    type_stasis: "왼쪽 위 로고를 여섯 번 탭하세요.",
+    type_wakeagain: "Get started를 여섯 번 탭하세요.",
+    type_escape: "Free 요금 카드를 여덟 번 탭하세요.",
     arrow_sigil: "Free → Free → Team → Team 순서.",
-    space_ritual: "큰 제목. 열두 번 탭.",
-    select_all_curse: "어두운 인용 배너. 길게 누르고 있어.",
-    badge_mash: "큰 제목. 빠르게 다섯 번.",
-    quote_double: "어두운 인용 배너. 빠르게 두 번 탭.",
-    long_idle: "손 떼고 더 오래 가만히.",
+    space_ritual: "큰 제목을 열두 번 탭하세요.",
+    select_all_curse: "어두운 인용 배너를 길게 누르세요.",
+    badge_mash: "큰 제목을 빠르게 다섯 번 탭하세요.",
+    quote_double: "어두운 인용 배너를 두 번 탭하세요.",
+    long_idle: "손 떼고 가만히. 힌트 후 약 15초.",
   };
   if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
     active.mission = MISSION_MOBILE[active.id];
@@ -633,6 +690,7 @@
     if (fired || busy()) return;
     if (!phase3Ready()) return;
     fired = true;
+    hideMissionAids();
     hideP3Hint(true);
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[p3→climax] trigger fired:", active.id);
@@ -703,6 +761,8 @@
       }, 1200);
       return;
     }
+    // 힌트 순간부터 타깃 공개
+    revealMissionTargets();
     if (alreadyHinted()) {
       if (p3Chip) p3Chip.hidden = false;
       return;
@@ -728,7 +788,7 @@
           if (p3Chip && !fired) p3Chip.hidden = false;
         }, 400);
       }
-    }, 14000);
+    }, 16000);
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
       console.log("[p3] mission hint:", active.id, active.mission);
     }
@@ -745,6 +805,7 @@
 
   function reShowFromChip() {
     if (fired || busy()) return;
+    revealMissionTargets();
     if (p3Text) p3Text.textContent = "클라이맥스 조건 — " + active.mission;
     if (p3Toast) {
       p3Toast.hidden = false;
@@ -769,8 +830,10 @@
   var hintTimer = null;
   function scheduleHintFromEntry() {
     if (hintTimer) clearTimeout(hintTimer);
-    if (!phase3Ready() || fired || alreadyHinted()) {
-      if (alreadyHinted() && phase3Ready() && p3Chip && !fired) p3Chip.hidden = false;
+    if (!phase3Ready() || fired) return;
+    if (alreadyHinted()) {
+      revealMissionTargets();
+      if (p3Chip && !fired) p3Chip.hidden = false;
       return;
     }
     var entered = getEnteredAt();

@@ -2317,15 +2317,141 @@ body:not(.stage-clean) .stasis-clock-hide.p2-trig-hot,
 body:not(.stage-clean) .p2-trig-hot {
   color: rgba(255, 170, 185, 0.72);
 }
-/* 2페이즈 숨은 트리거 핫존 — 티 안 나게, 커서만 */
-.p2-trig-hot {
+/* 2·3페이즈 트리거 핫존 — 힌트 전: 은은 / 힌트 후: 확실히 보이게 */
+.p2-trig-hot,
+.p3-trig-hot {
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
 }
-.p2-trig-hot.climax-holding {
+.p2-trig-hot.climax-holding,
+.p3-trig-hot.p3-holding,
+.p2-trig-hot.p3-holding {
   outline: 1px solid rgba(255, 80, 120, 0.4);
   box-shadow: 0 0 14px rgba(255, 40, 80, 0.25);
+}
+/* 숨겨진 뱃지 등 강제 표시 */
+.p2-trig-force-show {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+  clip: auto !important;
+  overflow: visible !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+/* 힌트가 뜬 뒤: 타깃을 풀 수 있게 강조 (토스트 닫혀도 유지) */
+body.trig-hint-live .p2-trig-hot,
+body.trig-hint-live .p3-trig-hot,
+body.p2-trig-reveal .p2-trig-hot,
+body.p3-trig-reveal .p3-trig-hot {
+  outline: 2px solid rgba(255, 70, 100, 0.85) !important;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 1px rgba(255, 120, 140, 0.35),
+    0 0 22px rgba(255, 40, 70, 0.45) !important;
+  animation: trigHotPulse 1.4s ease-in-out infinite;
+  position: relative;
+  z-index: 6;
+}
+body.trig-hint-live .p2-trig-banner,
+body.trig-hint-live .p2-trig-fakeurl,
+body.trig-hint-live .fake-chrome.p2-trig-fakeurl,
+html.climax-fakeurl-live.trig-hint-live #fakeUrlBar {
+  outline: 2px solid rgba(255, 90, 110, 0.8) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 20px rgba(255, 40, 70, 0.4) !important;
+}
+@keyframes trigHotPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+/* 키보드 미션 가이드 */
+.p2-type-guide {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(12px);
+  z-index: 92;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(18, 0, 6, 0.94);
+  border: 1px solid rgba(255, 70, 100, 0.55);
+  border-radius: 8px;
+  color: #ffd0d8;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.p2-type-guide.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.p2-type-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff6078;
+  letter-spacing: 0.12em;
+}
+.p2-type-keys {
+  font: inherit;
+  padding: 0.15rem 0.45rem;
+  background: rgba(255, 40, 70, 0.18);
+  border: 1px solid rgba(255, 100, 120, 0.4);
+  border-radius: 4px;
+  color: #fff;
+}
+/* 스크롤/idle 큐 */
+.p2-scroll-cue {
+  position: fixed;
+  left: 50%;
+  z-index: 91;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.95rem;
+  background: rgba(16, 0, 6, 0.92);
+  border: 1px solid rgba(255, 80, 100, 0.5);
+  border-radius: 999px;
+  color: #ffc8d0;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+.p2-scroll-cue.is-on {
+  opacity: 1;
+  visibility: visible;
+  animation: trigHotPulse 1.6s ease-in-out infinite;
+}
+.p2-scroll-cue.is-bottom {
+  bottom: max(4.5rem, calc(env(safe-area-inset-bottom, 0px) + 4rem));
+}
+.p2-scroll-cue.is-top {
+  top: max(4.5rem, calc(env(safe-area-inset-top, 0px) + 4rem));
+}
+.p2-scroll-cue.is-center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+body.is-ending .p2-type-guide,
+body.is-ending .p2-scroll-cue,
+body.is-haunting .p2-type-guide,
+body.is-haunting .p2-scroll-cue {
+  display: none !important;
 }
 /* quote_hold: Features/UI 아래 어두운 인용 배너 + 서명 줄 */
 body.stage-corrupt .stasis-quote.p2-trig-banner,
