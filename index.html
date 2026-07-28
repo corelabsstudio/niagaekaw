@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=audit1" />
+  <link rel="stylesheet" href="styles.css?v=presence-bottom1" />
 </head>
 <body class="stage-clean" data-stage="0">
   <!-- ===== FAKE BROWSER CHROME (in-page address bar eye-trick) ===== -->
@@ -629,8 +629,9 @@
   </div>
 
   <!-- 방문자 / 영혼 카운터 (페이즈별 카피) — inline로 CSS 캐시 깨져도 보이게 -->
+  <!-- 위치는 styles.css .presence-hud 가 담당 (모바일=하단, PC=우상단). inline top 금지 — 폰 화면 가림 방지 -->
   <div id="presenceHud" class="presence-hud is-ready" role="status" aria-live="polite" data-phase="1"
-    style="position:fixed;z-index:9980;top:110px;right:14px;left:auto;display:inline-flex;align-items:center;gap:6px 8px;padding:8px 14px 8px 10px;border-radius:999px;font:600 13px/1.35 ui-monospace,Consolas,monospace;color:#1a1917;background:#fffdf9;border:1px solid rgba(0,0,0,.16);box-shadow:0 6px 22px rgba(20,16,12,.14);opacity:1;visibility:visible;pointer-events:none;user-select:none;">
+    style="position:fixed;z-index:9980;display:inline-flex;align-items:center;gap:6px 8px;padding:8px 14px 8px 10px;border-radius:999px;font:600 13px/1.35 ui-monospace,Consolas,monospace;color:#1a1917;background:#fffdf9;border:1px solid rgba(0,0,0,.16);box-shadow:0 6px 22px rgba(20,16,12,.14);opacity:1;visibility:visible;pointer-events:none;user-select:none;">
     <span class="presence-dot" aria-hidden="true" style="width:8px;height:8px;border-radius:50%;background:#2f9e55;flex-shrink:0;"></span>
     <span class="presence-live" style="display:inline-flex;gap:5px;white-space:nowrap;">
       <span id="presenceLiveLabel" class="presence-label">접속 중</span>

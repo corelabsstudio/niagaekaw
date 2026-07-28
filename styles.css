@@ -3614,17 +3614,22 @@ body.ending-active .presence-hud {
   z-index: 10040 !important;
 }
 
-/* 모바일: 상단 중앙 (로고 아래) */
+/* 모바일: 하단 중앙 — 상단 데모(폰/Stasis) 헤더·본문을 가리지 않음 */
 @media (max-width: 720px) {
   .presence-hud {
-    top: calc(var(--fake-chrome-h, 44px) + 3.6rem) !important;
+    top: auto !important;
+    bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem)) !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
     font-size: 0.72rem;
-    max-width: min(96vw, 400px);
+    max-width: min(94vw, 380px);
     justify-content: center;
-    padding: 0.45rem 0.7rem 0.45rem 0.55rem;
+    padding: 0.45rem 0.75rem 0.45rem 0.55rem;
+    /* 하단 고정 시 본문과 겹쳐도 읽히게 */
+    box-shadow:
+      0 8px 28px rgba(20, 16, 12, 0.22),
+      0 0 0 1px rgba(255, 255, 255, 0.65) inset;
   }
   .presence-live,
   .presence-total {
