@@ -31,6 +31,10 @@
     "너는 구경만 하고 있지.",
     "heartbeat_sync: OK",
     "clipboard ready for scream.",
+    "클릭할 때마다 LIVE 가 오른다.",
+    "스크롤 끝은 없다. 너는 이미 끝이다.",
+    "탭을 바꿔도 세션은 여기 남는다.",
+    "방문자 수 — 네가 원인이다.",
   ];
   var ERR_TITLES = [
     "Access Denied",

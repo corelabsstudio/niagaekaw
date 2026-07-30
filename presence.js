@@ -32,6 +32,8 @@
     ready: false,
     timer: null,
     testTraffic: false,
+    /** 2·3페이즈 연출용 LIVE 숫자 (티저처럼 상승). null 이면 실제 동시접속 */
+    horrorLive: null,
   };
 
   /**
@@ -129,14 +131,22 @@
     hud.classList.toggle("is-p2", phase === 2);
     hud.classList.toggle("is-p3", phase === 3);
 
-    var live = Math.max(1, state.live | 0);
+    var realLive = Math.max(1, state.live | 0);
+    /* P2/P3: 티저처럼 오르는 LIVE 연출 숫자 우선 표시 */
+    var live =
+      phase >= 2 && state.horrorLive != null
+        ? Math.max(1, Math.floor(state.horrorLive))
+        : realLive;
     var liveEl = $("presenceLiveCount");
     var liveLabel = $("presenceLiveLabel");
     var totalWrap = $("presenceTotalWrap");
     var totalCount = $("presenceTotalCount");
     var totalLabel = $("presenceTotalLabel");
 
-    if (liveEl) liveEl.textContent = fmt(live);
+    if (liveEl) {
+      liveEl.textContent = fmt(live);
+      liveEl.classList.toggle("is-climbing", phase >= 2 && state.horrorLive != null);
+    }
 
     if (phase === 1) {
       if (liveLabel) liveLabel.textContent = "접속 중";
@@ -157,17 +167,36 @@
           (state.total != null ? state.total : "집계 중")
       );
     } else if (phase === 2) {
-      if (liveLabel) liveLabel.textContent = "이 페이지에 머물고 있는 영혼";
-      if (totalWrap) totalWrap.hidden = true;
-      if (totalLabel) totalLabel.hidden = true;
-      if (totalCount) totalCount.hidden = true;
-      hud.setAttribute("aria-label", "이 페이지에 머물고 있는 영혼 " + live);
+      if (liveLabel) liveLabel.textContent = "LIVE visitors";
+      /* 실제 영혼 수(동시접속)는 옆에 작게 */
+      if (totalWrap) totalWrap.hidden = false;
+      if (totalLabel) {
+        totalLabel.hidden = false;
+        totalLabel.textContent = "영혼";
+      }
+      if (totalCount) {
+        totalCount.hidden = false;
+        totalCount.textContent = fmt(realLive);
+      }
+      hud.setAttribute(
+        "aria-label",
+        "LIVE visitors " + live + ", 영혼 " + realLive
+      );
     } else {
-      if (liveLabel) liveLabel.textContent = "소멸을 앞 둔 영혼";
-      if (totalWrap) totalWrap.hidden = true;
-      if (totalLabel) totalLabel.hidden = true;
-      if (totalCount) totalCount.hidden = true;
-      hud.setAttribute("aria-label", "소멸을 앞 둔 영혼 " + live);
+      if (liveLabel) liveLabel.textContent = "LIVE visitors";
+      if (totalWrap) totalWrap.hidden = false;
+      if (totalLabel) {
+        totalLabel.hidden = false;
+        totalLabel.textContent = "소멸 직전";
+      }
+      if (totalCount) {
+        totalCount.hidden = false;
+        totalCount.textContent = fmt(realLive);
+      }
+      hud.setAttribute(
+        "aria-label",
+        "LIVE visitors " + live + ", 소멸 직전 " + realLive
+      );
     }
 
     hud.classList.add("is-ready");
@@ -337,6 +366,18 @@
       },
       getTotal: function () {
         return state.total;
+      },
+      getHorrorLive: function () {
+        return state.horrorLive;
+      },
+      setHorrorLive: function (n) {
+        if (n == null || isNaN(n)) return;
+        state.horrorLive = Math.max(1, Math.floor(n));
+        render();
+      },
+      clearHorrorLive: function () {
+        state.horrorLive = null;
+        render();
       },
       isTestTraffic: function () {
         return !!state.testTraffic;

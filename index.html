@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=presence-bottom1" />
+  <link rel="stylesheet" href="styles.css?v=watch-taunts1" />
 </head>
 <body class="stage-clean" data-stage="0">
   <!-- ===== FAKE BROWSER CHROME (in-page address bar eye-trick) ===== -->
@@ -645,8 +645,12 @@
   </div>
 
   <script src="app.js"></script>
-  <script src="presence.js?v=nocount1"></script>
-  <script src="haunt-audio.js"></script>
+  <script src="presence.js?v=horror-live1"></script>
+  <script src="watch-taunts.js?v=1"></script>
+  <script src="haunt-audio.js?v=bgm-sfx1"></script>
+  <!-- BGM / SFX preload (gesture 후 play) -->
+  <audio id="p2BgmTrack" src="assets/audio/bgm_phase2_eerie.mp3" loop preload="auto" playsinline hidden></audio>
+  <audio id="p3BgmTrack" src="assets/audio/bgm_phase3_climax.mp3" loop preload="auto" playsinline hidden></audio>
   <script src="diary-stories.js"></script>
   <script src="diary.js"></script>
   <script src="corruption-progress.js"></script>

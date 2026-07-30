@@ -1,7 +1,8 @@
 /**
- * 공포 오디오 엔진 (Web Audio — 외부 파일 없음)
- * - 저음 심박 + 앰비언트 드론 + 스팅/정전기/속삭임/HDD
- * - stage/mood/이상현상/클라이맥스/엔딩에 훅
+ * 공포 오디오 엔진
+ * - Web Audio 합성 + 외부 BGM/SFX 파일
+ * - Phase2: BGM loop 0.25~0.4 · 이벤트 SFX 1회 0.5~0.8
+ * - Phase3: BGM 1~2초 페이드 교체 · 울음/웃음 트리거
  */
 (function () {
   "use strict";
@@ -13,9 +14,9 @@
   var ctx = null;
   var master = null;
   var comp = null;
-  // 2페이즈 BGM — Stalled_Rotor 루프 (HTMLAudio + WebAudio 이중)
-  var P2_BGM_REL = "assets/audio/Stalled_Rotor.mp3";
-  var P2_BGM_VOL = 0.48; // 배경이지만 분명히 들리게
+  // 2페이즈 BGM — eerie loop
+  var P2_BGM_REL = "assets/audio/bgm_phase2_eerie.mp3";
+  var P2_BGM_VOL = 0.32; // 0.25~0.4 중간
   var p2BgmEl = null;
   var p2BgmWanted = false;
   var p2BgmFadeTimer = null;
@@ -27,15 +28,30 @@
   var p2BgmUseWA = false; // Web Audio 경로 성공 시 true
   var p2BgmLastErr = "";
 
-  // 3페이즈 BGM — Iron_Chest_Cavity (DOM #p3BgmTrack 우선, 단순·확실)
-  var P3_BGM_REL = "assets/audio/Iron_Chest_Cavity.mp3";
-  var P3_BGM_VOL = 0.68; // 3페이즈 — 더 또렷하게
+  // 3페이즈 BGM — climax (페이드 인 1.5s)
+  var P3_BGM_REL = "assets/audio/bgm_phase3_climax.mp3";
+  var P3_BGM_VOL = 0.38; // 루프 배경 (SFX보다 낮게)
+  var P3_BGM_FADE_MS = 1600; // 1~2초 교체
   var p3BgmEl = null;
   var p3BgmWanted = false;
   var p3BgmPlaying = false;
   var p3BgmLastErr = "";
   var p3BgmUseWA = false;
   var p3BgmSource = null; // status 호환용 (DOM 전용)
+  var p3BgmFadeTimer = null;
+
+  // 이벤트 SFX (1회 재생 · 0.5~0.8)
+  var SFX_MAP = {
+    wail: "assets/audio/sfx_wail_cry.mp3",
+    sob: "assets/audio/sfx_sob_whimper.mp3",
+    laugh: "assets/audio/sfx_evil_laugh.mp3",
+    glitch: "assets/audio/sfx_glitch_stinger.mp3",
+    whisperTex: "assets/audio/sfx_whisper_texture.mp3",
+  };
+  var SFX_VOL_MIN = 0.5;
+  var SFX_VOL_MAX = 0.8;
+  var sfxLastAt = {};
+  var sfxPool = {};
 
   function resolveAudioUrl(rel) {
     try {
@@ -157,16 +173,133 @@
     }
   }
 
-  // 배경음악 비활성 (요청: 2·3페이즈 BGM 제거)
-  var BGM_DISABLED = true;
+  // 배경음악 활성 (신규 에셋: phase2 eerie / phase3 climax)
+  var BGM_DISABLED = false;
+
+  function sfxVol(v) {
+    if (typeof v === "number" && !isNaN(v)) {
+      return Math.max(0, Math.min(1, v));
+    }
+    return SFX_VOL_MIN + Math.random() * (SFX_VOL_MAX - SFX_VOL_MIN);
+  }
+
+  /**
+   * 이벤트 SFX 1회 재생 (겹침 허용 · 쿨다운으로 폭주 방지)
+   * @param {string} key wail|sob|laugh|glitch|whisperTex
+   * @param {{vol?:number, minGapMs?:number}} opts
+   */
+  function playSfx(key, opts) {
+    opts = opts || {};
+    if (reduced && key !== "glitch") {
+      /* reduced: 짧은 스팅만 */
+      if (key !== "glitch" && key !== "laugh") return false;
+    }
+    var rel = SFX_MAP[key];
+    if (!rel) return false;
+    var gap = opts.minGapMs != null ? opts.minGapMs : 900;
+    var nowT = Date.now();
+    if (sfxLastAt[key] && nowT - sfxLastAt[key] < gap) return false;
+    sfxLastAt[key] = nowT;
+    try {
+      unlock();
+      var a = new Audio(resolveAudioUrl(rel));
+      a.preload = "auto";
+      a.loop = false;
+      a.volume = sfxVol(opts.vol);
+      a.setAttribute("playsinline", "");
+      var p = a.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(function () {});
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function fadeP3HtmlTo(target, ms) {
+    var el = ensureP3BgmEl();
+    if (!el) return;
+    if (p3BgmFadeTimer) {
+      clearInterval(p3BgmFadeTimer);
+      p3BgmFadeTimer = null;
+    }
+    var from = typeof el.volume === "number" ? el.volume : 0;
+    var steps = Math.max(8, Math.floor((ms || P3_BGM_FADE_MS) / 50));
+    var i = 0;
+    p3BgmFadeTimer = setInterval(function () {
+      i++;
+      var t = Math.min(1, i / steps);
+      try {
+        el.volume = Math.max(0, Math.min(1, from + (target - from) * t));
+      } catch (e) {}
+      if (i >= steps) {
+        clearInterval(p3BgmFadeTimer);
+        p3BgmFadeTimer = null;
+        try {
+          el.volume = Math.max(0, Math.min(1, target));
+        } catch (e2) {}
+        if (target <= 0.001) {
+          try {
+            el.pause();
+          } catch (e3) {}
+          p3BgmPlaying = false;
+        } else {
+          p3BgmPlaying = true;
+        }
+      }
+    }, 50);
+  }
 
   function startPhase3Bgm() {
-    p3BgmWanted = false;
     if (BGM_DISABLED) {
+      p3BgmWanted = false;
       stopPhase3Bgm(true);
       return false;
     }
-    return false;
+    p3BgmWanted = true;
+    // P2 → P3 교체: 1~2초 페이드 아웃 후/동시에 페이드 인
+    try {
+      stopPhase2Bgm(false);
+    } catch (e0) {
+      try {
+        killP2BgmHard();
+      } catch (e1) {}
+    }
+    var el = ensureP3BgmEl();
+    if (!el) return false;
+    try {
+      el.loop = true;
+      if (el.readyState < 2 && el.load) el.load();
+    } catch (e2) {}
+    // 이미 재생 중이면 볼륨만 맞춤
+    if (!el.paused && p3BgmPlaying) {
+      fadeP3HtmlTo(P3_BGM_VOL, 800);
+      return true;
+    }
+    try {
+      el.volume = 0.001;
+    } catch (e3) {}
+    var playP = el.play();
+    var after = function () {
+      p3BgmPlaying = true;
+      fadeP3HtmlTo(P3_BGM_VOL, P3_BGM_FADE_MS);
+      // 진입 트리거: 울음 한 번
+      setTimeout(function () {
+        playSfx("wail", { vol: 0.72, minGapMs: 2500 });
+      }, 400);
+      setTimeout(function () {
+        playSfx("sob", { vol: 0.55, minGapMs: 2000 });
+      }, 1800);
+    };
+    if (playP && typeof playP.then === "function") {
+      playP.then(after).catch(function (err) {
+        p3BgmLastErr = String(err && err.message ? err.message : err);
+      });
+    } else {
+      after();
+    }
+    return true;
   }
 
   function stopPhase3Bgm(fast) {
@@ -174,6 +307,10 @@
     var el = p3BgmEl || document.getElementById("p3BgmTrack");
     if (!el) return;
     if (fast) {
+      if (p3BgmFadeTimer) {
+        clearInterval(p3BgmFadeTimer);
+        p3BgmFadeTimer = null;
+      }
       try {
         el.pause();
         el.volume = 0;
@@ -181,24 +318,7 @@
       p3BgmPlaying = false;
       return;
     }
-    // 짧은 페이드
-    var from = el.volume || P3_BGM_VOL;
-    var steps = 8;
-    var i = 0;
-    var iv = setInterval(function () {
-      i++;
-      try {
-        el.volume = Math.max(0, from * (1 - i / steps));
-      } catch (e2) {}
-      if (i >= steps) {
-        clearInterval(iv);
-        try {
-          el.pause();
-          el.volume = 0;
-        } catch (e3) {}
-        p3BgmPlaying = false;
-      }
-    }, 40);
+    fadeP3HtmlTo(0, P3_BGM_FADE_MS);
   }
 
   function syncPhase3Bgm() {
@@ -212,7 +332,7 @@
       if (!ok) startPhase3Bgm();
     } else {
       var el2 = p3BgmEl || document.getElementById("p3BgmTrack");
-      if (el2 && !el2.paused) stopPhase3Bgm(true);
+      if (el2 && !el2.paused) stopPhase3Bgm(false);
     }
   }
 
@@ -315,7 +435,10 @@
         var t0 = ctx.currentTime;
         p2BgmGainNode.gain.cancelScheduledValues(t0);
         p2BgmGainNode.gain.setValueAtTime(p2BgmGainNode.gain.value, t0);
-        p2BgmGainNode.gain.linearRampToValueAtTime(0.0001, t0 + (fast ? 0.25 : 1.0));
+        p2BgmGainNode.gain.linearRampToValueAtTime(
+          0.0001,
+          t0 + (fast ? 0.25 : P3_BGM_FADE_MS / 1000)
+        );
       } catch (e) {}
     }
     setTimeout(
@@ -332,7 +455,7 @@
         p2BgmUseWA = false;
         p2BgmPlaying = false;
       },
-      fast ? 280 : 1100
+      fast ? 280 : P3_BGM_FADE_MS + 100
     );
   }
 
@@ -447,8 +570,8 @@
   }
 
   function startPhase2Bgm() {
-    p2BgmWanted = false;
     if (BGM_DISABLED) {
+      p2BgmWanted = false;
       try {
         killP2BgmHard();
       } catch (e) {
@@ -456,7 +579,26 @@
       }
       return false;
     }
-    return false;
+    if (p3BgmReady()) {
+      /* 3페이즈면 P2 금지 */
+      stopPhase2Bgm(true);
+      return false;
+    }
+    if (!p2BgmReady()) return false;
+    p2BgmWanted = true;
+    unlock();
+    // WebAudio 우선, 실패 시 HTMLAudio
+    return startWebBgm()
+      .then(function (ok) {
+        if (ok) return true;
+        return startHtmlBgm();
+      })
+      .catch(function () {
+        return startHtmlBgm().catch(function (err) {
+          p2BgmLastErr = String(err && err.message ? err.message : err);
+          return false;
+        });
+      });
   }
 
   function stopPhase2Bgm(fast) {
@@ -465,7 +607,8 @@
       stopWebBgm(!!fast);
     }
     if (p2BgmEl) {
-      fadeHtmlBgmTo(0, fast ? 350 : 1000);
+      // Phase3 교체 시 1~2초 페이드
+      fadeHtmlBgmTo(0, fast ? 350 : P3_BGM_FADE_MS);
     }
   }
 
@@ -1013,13 +1156,17 @@
     }, 360);
   }
 
-  /** 점프스케어/섬광 스팅 */
+  /** 점프스케어/섬광 스팅 — 글리치 SFX + 합성 */
   function sting(kind) {
     unlock();
+    kind = kind || "blood";
+    playSfx("glitch", {
+      vol: kind === "soft" ? 0.52 : 0.72,
+      minGapMs: kind === "soft" ? 700 : 450,
+    });
     var c = ensureCtx();
     if (!c || !unlocked) return;
     var t0 = now();
-    kind = kind || "blood";
 
     // 급격한 디스코드 톤
     var freqs =
@@ -1053,9 +1200,10 @@
     thump(kind === "soft" ? 0.12 : 0.26, 36);
   }
 
-  /** 속삭임 같은 필터 노이즈 */
+  /** 속삭임 — 합성 노이즈 + 텍스처 SFX */
   function whisper() {
     unlock();
+    playSfx("whisperTex", { vol: 0.55 + Math.random() * 0.15, minGapMs: 1400 });
     var c = ensureCtx();
     if (!c || !unlocked) return;
     var t0 = now();
@@ -1148,6 +1296,7 @@
 
   function dreadHit() {
     unlock();
+    playSfx("wail", { vol: 0.75, minGapMs: 2200 });
     sting("blood");
     setTimeout(function () {
       rumble(1.2);
@@ -1183,6 +1332,7 @@
   function approachLaugh(opts) {
     opts = opts || {};
     unlock();
+    playSfx("laugh", { vol: 0.65, minGapMs: 2800 });
     var c = ensureCtx();
     if (!c || !unlocked) return;
     var approachSec = Math.max(1.2, (opts.ms != null ? opts.ms : 4000) / 1000);
@@ -1352,6 +1502,7 @@
   function codeLaugh(opts) {
     opts = opts || {};
     unlock();
+    playSfx("laugh", { vol: 0.58, minGapMs: 3200 });
     var c = ensureCtx();
     if (!c || !unlocked) return;
     var t0 = now();
@@ -1863,18 +2014,22 @@
       staticBurst(300);
       rumble(1.6);
       termBeep(220);
+      playSfx("sob", { vol: 0.6, minGapMs: 1500 });
     } else if (p === 2) {
       hddScratch();
       metal();
       termBeep(440);
+      playSfx("glitch", { vol: 0.7, minGapMs: 800 });
     } else if (p === 3) {
       dreadHit();
       staticBurst(250);
       setTimeout(function () {
         sting("blood");
       }, 200);
+      playSfx("wail", { vol: 0.78, minGapMs: 1800 });
     } else if (p === 4) {
       sting("neon");
+      playSfx("laugh", { vol: 0.72, minGapMs: 2000 });
       setTimeout(function () {
         sting("blood");
       }, 220);
@@ -1885,6 +2040,10 @@
       rumble(2);
       pulse("heavy");
       termBeep(180);
+      playSfx("wail", { vol: 0.8, minGapMs: 1500 });
+      setTimeout(function () {
+        playSfx("sob", { vol: 0.62, minGapMs: 1000 });
+      }, 700);
     }
   });
 
@@ -1964,6 +2123,8 @@
     stopHauntHeartbeats: stopHauntHeartbeats,
     stopAll: stopAll,
     setMaster: setMaster,
+    playSfx: playSfx,
+    sfx: playSfx,
     startPhase2Bgm: startPhase2Bgm,
     stopPhase2Bgm: stopPhase2Bgm,
     startPhase3Bgm: startPhase3Bgm,
