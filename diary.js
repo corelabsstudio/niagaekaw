@@ -1003,6 +1003,7 @@
 
   function openDiary() {
     if (!panel) return;
+    if (discovered && reading) return;
     discovered = true;
     // 시간 힌트 중단 (아래 scheduleFindHints 가 심어 둔 타이머)
     if (typeof clearFindHints === "function") {
@@ -1555,9 +1556,9 @@
     var t3 = fast ? 15000 : 180000;
 
     var ladder = FIND_LADDER[findPath] || [
-      "어딘가에 일기가 있다.",
-      "클릭·홀드·더블클릭·타이핑을 의심.",
-      "주소창 힌트와 페이지를 다시 훑어 봐.",
+      "반짝이는 곳이 있다. 짧게 빛날 때 눌러 봐.",
+      "빛나는 순간은 아주 짧다. 놓치면 다음을 기다려.",
+      "화면 여기저기가 돌아가며 빛난다. 타이밍이다.",
     ];
 
     hintTimers.push(
@@ -1580,4 +1581,10 @@
   scheduleFindHints();
 
   setBoost();
+
+  // 외부 모듈(phase1-flash 등)에서 일기 오픈 / 발견 여부 조회
+  window.__hauntOpenDiary = openDiary;
+  window.__hauntDiaryIsDiscovered = function () {
+    return !!discovered;
+  };
 })();
