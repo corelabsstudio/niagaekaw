@@ -57,8 +57,10 @@
     select_all_curse: 1,
   };
 
-  var missionRevealed = false;
+  /** 힌트 UI 없음 — 처음부터 타깃 발광만 */
+  var missionRevealed = true;
   var hotTargets = [];
+  window.__hauntP3HintRevealed = true;
 
   function markHot(el, extraClass) {
     if (!el) return null;
@@ -96,41 +98,11 @@
     }
   }
 
-  function showTypeGuide(text) {
-    var g = document.getElementById("p3TypeGuide");
-    if (!g) {
-      g = document.createElement("div");
-      g.id = "p3TypeGuide";
-      g.className = "p2-type-guide p3-type-guide";
-      g.setAttribute("aria-live", "polite");
-      document.body.appendChild(g);
-    }
-    g.innerHTML =
-      '<span class="p2-type-tag">TYPE</span><kbd class="p2-type-keys">' +
-      text +
-      "</kbd>";
-    g.classList.add("is-on");
-    g.hidden = false;
+  function showTypeGuide() {
+    /* no-op: dwell hint guides removed */
   }
-
-  function showScrollCue(kind) {
-    var g = document.getElementById("p3ScrollCue");
-    if (!g) {
-      g = document.createElement("div");
-      g.id = "p3ScrollCue";
-      g.className = "p2-scroll-cue";
-      document.body.appendChild(g);
-    }
-    if (kind === "top") {
-      g.textContent = "↑ 맨 위로 · 잠시 머무르기";
-      g.className = "p2-scroll-cue is-on is-top";
-    } else if (kind === "idle") {
-      g.textContent = "손 떼고 가만히…";
-      g.className = "p2-scroll-cue is-on is-center";
-    } else {
-      g.className = "p2-scroll-cue";
-    }
-    g.hidden = false;
+  function showScrollCue() {
+    /* no-op */
   }
 
   function hideMissionAids() {
@@ -150,29 +122,9 @@
   }
 
   function revealMissionTargets() {
+    /* 힌트 UI 없음 — 발광은 markHot(find-flash) 만 */
     missionRevealed = true;
     window.__hauntP3HintRevealed = true;
-    document.body.classList.add("trig-hint-live", "p3-trig-reveal");
-    document.documentElement.classList.add("trig-hint-live");
-    var id = active && active.id;
-    if (id === "type_stasis") showTypeGuide("stasis");
-    else if (id === "type_wakeagain") showTypeGuide("wakeagain");
-    else if (id === "type_escape") showTypeGuide("escape");
-    else if (id === "arrow_sigil") showTypeGuide("↑ ↑ ↓ ↓");
-    else if (id === "space_ritual") showTypeGuide("Space × 12");
-    else if (id === "select_all_curse") showTypeGuide("Ctrl+A");
-    else if (id === "top_hold") showScrollCue("top");
-    else if (id === "long_idle") showScrollCue("idle");
-    var hot = hotTargets[0] || document.querySelector(".p3-trig-hot, .p2-trig-hot");
-    if (hot && typeof hot.scrollIntoView === "function") {
-      try {
-        hot.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      } catch (e2) {
-        try {
-          hot.scrollIntoView(true);
-        } catch (e3) {}
-      }
-    }
   }
 
   function armHoldEl(el, ms, done, holdClass) {
@@ -750,33 +702,17 @@
     if (window.console) console.warn("[p3] arm failed", active.id, e);
   }
 
-  // ----- 3페이즈 힌트: 진입 후 2분 (2페이즈와 동일 탐험 여유) -----
+  // ----- 3페이즈 미션 힌트 UI: 전부 비활성 -----
   var p3Toast = document.getElementById("p3HintToast");
-  var p3Text = document.getElementById("p3HintText");
-  var p3Close = document.getElementById("p3HintClose");
   var p3Chip = document.getElementById("p3MissionChip");
-  var p3HintShown = false;
-  var HINT_MS = 2 * 60 * 1000; // 2분 (이전 5분은 사실상 안 뜨는 것처럼 느껴짐)
-  if (/[?&]hintfast=1/.test(location.search || "")) HINT_MS = 8000;
-  if (/[?&]p3hint=1/.test(location.search || "")) HINT_MS = 3000;
-
-  function sessionHintKey() {
-    return "haunt_p3_hint_" + active.id;
+  var HINT_MS = 0;
+  if (p3Toast) {
+    p3Toast.hidden = true;
+    p3Toast.setAttribute("aria-hidden", "true");
   }
-
-  function alreadyHinted() {
-    try {
-      return sessionStorage.getItem(sessionHintKey()) === "1";
-    } catch (e) {
-      return p3HintShown;
-    }
-  }
-
-  function markHinted() {
-    p3HintShown = true;
-    try {
-      sessionStorage.setItem(sessionHintKey(), "1");
-    } catch (e) {}
+  if (p3Chip) {
+    p3Chip.hidden = true;
+    p3Chip.setAttribute("aria-hidden", "true");
   }
 
   function getEnteredAt() {
@@ -794,156 +730,34 @@
   }
 
   function showP3Hint() {
-    if (fired) return;
-    if (!phase3Ready()) return;
-    if (busy() || document.body.classList.contains("diary-open")) {
-      if (hintRetryTimer) clearTimeout(hintRetryTimer);
-      hintRetryTimer = setTimeout(tryShowP3Hint, 1500);
-      return;
-    }
-    // 힌트 순간부터 타깃 공개
-    revealMissionTargets();
-    if (alreadyHinted()) {
-      // 이미 본 세션: 칩으로 재확인 가능 + 토스트 한 번 더 띄워 안 보였던 경우 보완
-      if (p3Text) {
-        p3Text.textContent = "클라이맥스 조건 — " + active.mission;
-      }
-      if (p3Toast) {
-        p3Toast.hidden = false;
-        p3Toast.classList.add("is-in");
-        p3Toast.classList.remove("is-out");
-      }
-      document.body.classList.add("p3-hint-visible");
-      if (p3Chip) p3Chip.hidden = false;
-      return;
-    }
-    markHinted();
-    if (p3Text) {
-      p3Text.textContent =
-        "3페이즈. 클라이맥스 조건이 하나 있다. — " + active.mission;
-    }
-    if (p3Toast) {
-      p3Toast.hidden = false;
-      p3Toast.classList.add("is-in");
-      p3Toast.classList.remove("is-out");
-    }
-    document.body.classList.add("p3-hint-visible");
-    setTimeout(function () {
-      if (p3Toast && !p3Toast.hidden) {
-        p3Toast.classList.remove("is-in");
-        p3Toast.classList.add("is-out");
-        setTimeout(function () {
-          if (p3Toast) p3Toast.hidden = true;
-          document.body.classList.remove("p3-hint-visible");
-          if (p3Chip && !fired) p3Chip.hidden = false;
-        }, 400);
-      }
-    }, 16000);
-    if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[p3] mission hint:", active.id, active.mission);
-    }
+    /* no-op */
   }
-
-  function hideP3Hint(all) {
-    if (p3Toast) {
-      p3Toast.hidden = true;
-      p3Toast.classList.remove("is-in");
-    }
+  function hideP3Hint() {
+    if (p3Toast) p3Toast.hidden = true;
+    if (p3Chip) p3Chip.hidden = true;
     document.body.classList.remove("p3-hint-visible");
-    if (all && p3Chip) p3Chip.hidden = true;
   }
-
-  function reShowFromChip() {
-    if (fired || busy()) return;
-    revealMissionTargets();
-    if (p3Text) p3Text.textContent = "클라이맥스 조건 — " + active.mission;
-    if (p3Toast) {
-      p3Toast.hidden = false;
-      p3Toast.classList.add("is-in");
-      p3Toast.classList.remove("is-out");
-    }
-    document.body.classList.add("p3-hint-visible");
-  }
-
-  if (p3Close) {
-    p3Close.addEventListener("click", function () {
-      hideP3Hint(false);
-      if (p3Chip && !fired) p3Chip.hidden = false;
-    });
-  }
-  if (p3Chip) {
-    p3Chip.addEventListener("click", function () {
-      reShowFromChip();
-    });
-  }
-
-  var hintTimer = null;
-  var hintRetryTimer = null;
-
-  function tryShowP3Hint() {
-    if (fired || !phase3Ready()) return;
-    if (busy() || document.body.classList.contains("diary-open")) {
-      // busy 순간에 스킵되면 영구 누락되던 버그 → 재시도
-      if (hintRetryTimer) clearTimeout(hintRetryTimer);
-      hintRetryTimer = setTimeout(tryShowP3Hint, 1500);
-      return;
-    }
-    showP3Hint();
-  }
-
   function scheduleHintFromEntry() {
-    if (hintTimer) clearTimeout(hintTimer);
-    if (!phase3Ready() || fired) return;
-    if (alreadyHinted()) {
-      revealMissionTargets();
-      if (p3Chip && !fired) p3Chip.hidden = false;
-      return;
+    /* no-op */
+  }
+  function showLayerToast() {
+    /* no-op: dwell/layer toasts removed */
+    var el = document.getElementById("p3LayerToast");
+    if (el) {
+      el.classList.remove("is-on");
+      el.setAttribute("aria-hidden", "true");
     }
-    var entered = getEnteredAt();
-    if (!entered) {
-      entered = Date.now();
-      setEnteredAt(entered);
-    }
-    var wait = Math.max(0, HINT_MS - (Date.now() - entered));
-    if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[p3] hint in", Math.round(wait / 1000) + "s", "trigger", active.id);
-    }
-    // 대기 중 칩 숨김. 2분 후 토스트 (busy면 tryShow가 재시도).
-    hintTimer = setTimeout(function () {
-      tryShowP3Hint();
-    }, wait);
   }
 
   function onPhase3Enter() {
     if (!getEnteredAt()) setEnteredAt(Date.now());
     document.body.classList.add("phase-3-active");
     document.body.setAttribute("data-game-phase", "3");
-    // 2페이즈 칩/토스트 숨김
     var p2ChipEl = document.getElementById("p2MissionChip");
     if (p2ChipEl) p2ChipEl.hidden = true;
     var p2ToastEl = document.getElementById("p2HintToast");
     if (p2ToastEl) p2ToastEl.hidden = true;
-    scheduleHintFromEntry();
-    // 진입 토스트 (힌트 아님 — 층이 바뀌었다는 신호만)
-    showLayerToast();
-  }
-
-  function showLayerToast() {
-    if (busy()) return;
-    var el = document.getElementById("p3LayerToast");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "p3LayerToast";
-      el.className = "p3-layer-toast";
-      el.setAttribute("aria-hidden", "true");
-      el.innerHTML =
-        '<span class="p3-layer-tag">PHASE 3</span><p>더 깊은 층이다. 아직 끝나지 않았다.</p>';
-      document.body.appendChild(el);
-    }
-    el.classList.add("is-on");
-    setTimeout(function () {
-      el.classList.remove("is-on");
-    }, 4200);
+    hideP3Hint();
   }
 
   document.addEventListener("haunt-phase3", function () {

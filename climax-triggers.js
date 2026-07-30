@@ -285,24 +285,7 @@
     } catch (eT) {}
 
     startPhase3FxLoops();
-
-    // 진입 즉시 레이어 토스트
-    if (!opts.quiet) {
-      var layer = document.getElementById("p3LayerToast");
-      var layerText = document.getElementById("p3LayerText");
-      if (layerText) {
-        layerText.textContent =
-          "어둠이 살이 되었다. 촉수가 화면을 찢는다. 지표는 끝났다 — OVER.";
-      }
-      if (layer) {
-        layer.classList.add("is-on");
-        layer.setAttribute("aria-hidden", "false");
-        setTimeout(function () {
-          layer.classList.remove("is-on");
-          layer.setAttribute("aria-hidden", "true");
-        }, 4200);
-      }
-    }
+    // 진입 레이어 토스트 제거 — 머무름/전환 힌트 UI 없음
   }
 
   function enterPhase3() {
@@ -415,9 +398,10 @@
     copy_curse: 1,
   };
 
-  /** 힌트 후 풀 수 있게: 타깃 표시·히트영역·가시성 */
-  var missionRevealed = false;
+  /** 힌트 UI 없음 — 처음부터 타깃 발광만 (홀드 시간 완화 플래그 상시 on) */
+  var missionRevealed = true;
   var hotTargets = [];
+  window.__hauntHintRevealed = true;
 
   function markHot(el, extraClass) {
     if (!el) return null;
@@ -456,46 +440,11 @@
     }
   }
 
-  function showTypeGuide(text) {
-    var g = document.getElementById("p2TypeGuide");
-    if (!g) {
-      g = document.createElement("div");
-      g.id = "p2TypeGuide";
-      g.className = "p2-type-guide";
-      g.setAttribute("aria-live", "polite");
-      document.body.appendChild(g);
-    }
-    g.innerHTML =
-      '<span class="p2-type-tag">TYPE</span><kbd class="p2-type-keys">' +
-      text +
-      "</kbd>";
-    g.classList.add("is-on");
-    g.hidden = false;
+  function showTypeGuide() {
+    /* no-op: dwell hint guides removed */
   }
-
-  function showScrollCue(kind) {
-    // kind: deep | bounce
-    var g = document.getElementById("p2ScrollCue");
-    if (!g) {
-      g = document.createElement("div");
-      g.id = "p2ScrollCue";
-      g.className = "p2-scroll-cue";
-      g.setAttribute("aria-hidden", "true");
-      document.body.appendChild(g);
-    }
-    if (kind === "deep") {
-      g.textContent = "↓ 맨 아래로 · 잠시 머무르기";
-      g.className = "p2-scroll-cue is-on is-bottom";
-    } else if (kind === "bounce") {
-      g.textContent = "↓ 맨 아래 → 곧 ↑ 맨 위";
-      g.className = "p2-scroll-cue is-on is-bottom";
-    } else if (kind === "idle") {
-      g.textContent = "손 떼고 가만히…";
-      g.className = "p2-scroll-cue is-on is-center";
-    } else {
-      g.className = "p2-scroll-cue";
-    }
-    g.hidden = false;
+  function showScrollCue() {
+    /* no-op */
   }
 
   function hideMissionAids() {
@@ -515,54 +464,13 @@
   }
 
   function revealMissionTargets() {
+    /* 힌트 UI 없음 — 발광은 markHot(find-flash) 만 사용 */
     missionRevealed = true;
     window.__hauntHintRevealed = true;
-    document.body.classList.add("trig-hint-live", "p2-trig-reveal");
-    document.documentElement.classList.add("trig-hint-live");
-
-    // 페이즈 전환으로 숨은 홀드 타깃 재바인딩 (badge/path/feat/quote 등)
     if (typeof window.__hauntP2RebindHold === "function") {
       try {
         window.__hauntP2RebindHold();
       } catch (eRe) {}
-    }
-
-    // 활성 트리거별 추가 가이드
-    var id = active && active.id;
-    if (id === "type_kill") showTypeGuide("kill 또는 wake");
-    else if (id === "type_process") showTypeGuide("process");
-    else if (id === "copy_curse") showTypeGuide("아무 글 드래그 → Ctrl+C");
-    else if (id === "deep_hold") showScrollCue("deep");
-    else if (id === "scroll_bounce") showScrollCue("bounce");
-    else if (id === "idle_haunt") showScrollCue("idle");
-
-    // 보이는 핫 타깃으로 스크롤 (숨은 요소 스킵)
-    var hot = null;
-    for (var hi = 0; hi < hotTargets.length; hi++) {
-      if (isInteractable(hotTargets[hi])) {
-        hot = hotTargets[hi];
-        break;
-      }
-    }
-    if (!hot) {
-      var cands = document.querySelectorAll(
-        ".p2-trig-hot, .p2-trig-banner, .p2-trig-signature"
-      );
-      for (var ci = 0; ci < cands.length; ci++) {
-        if (isInteractable(cands[ci])) {
-          hot = cands[ci];
-          break;
-        }
-      }
-    }
-    if (hot && typeof hot.scrollIntoView === "function") {
-      try {
-        hot.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      } catch (e2) {
-        try {
-          hot.scrollIntoView(true);
-        } catch (e3) {}
-      }
     }
   }
 
@@ -1273,199 +1181,35 @@
     if (window.console) console.warn("[climax] arm failed", active.id, e);
   }
 
-  // ----- 2페이즈 미션 힌트: 방문(세션)당 1회 -----
+  // ----- 2페이즈 미션 힌트 UI: 전부 비활성 (토스트·칩·타이머 없음) -----
   var p2Toast = document.getElementById("p2HintToast");
-  var p2Text = document.getElementById("p2HintText");
-  var p2Close = document.getElementById("p2HintClose");
   var p2Chip = document.getElementById("p2MissionChip");
-  var p2HintShown = false;
-
-  function sessionHintKey() {
-    return "haunt_p2_hint_" + active.id;
+  if (p2Toast) {
+    p2Toast.hidden = true;
+    p2Toast.setAttribute("aria-hidden", "true");
   }
-
-  function alreadyHintedThisSession() {
-    try {
-      return sessionStorage.getItem(sessionHintKey()) === "1";
-    } catch (e) {
-      return p2HintShown;
-    }
-  }
-
-  function markHinted() {
-    p2HintShown = true;
-    try {
-      sessionStorage.setItem(sessionHintKey(), "1");
-    } catch (e) {}
+  if (p2Chip) {
+    p2Chip.hidden = true;
+    p2Chip.setAttribute("aria-hidden", "true");
   }
 
   function showP2Hint() {
-    if (fired || busy()) return;
-    if (!phase2Ready()) return;
-    // 일기 연 중에는 미루기 — 닫힌 뒤 다시 시도
-    if (document.body.classList.contains("diary-open")) {
-      setTimeout(function () {
-        if (!fired && phase2Ready() && !busy()) showP2Hint();
-      }, 1200);
-      return;
-    }
-    // 힌트가 뜨는 순간부터 타깃 공개 (풀 수 있게)
-    revealMissionTargets();
-    if (alreadyHintedThisSession()) {
-      if (p2Chip) p2Chip.hidden = false;
-      return;
-    }
-    markHinted();
-    if (p2Text) {
-      p2Text.textContent =
-        "2페이즈. 다음 층(3페이즈)으로 가는 조건이 하나 있다. — " + active.mission;
-    }
-    if (p2Toast) {
-      p2Toast.hidden = false;
-      p2Toast.classList.add("is-in");
-      p2Toast.classList.remove("is-out");
-    }
-    document.body.classList.add("p2-hint-visible");
-    // 자동으로 안 사라지게 조금 길게, 닫으면 칩 남김 (타깃 강조는 유지)
-    setTimeout(function () {
-      if (p2Toast && !p2Toast.hidden) {
-        p2Toast.classList.remove("is-in");
-        p2Toast.classList.add("is-out");
-        setTimeout(function () {
-          if (p2Toast) p2Toast.hidden = true;
-          document.body.classList.remove("p2-hint-visible");
-          if (p2Chip && !fired) p2Chip.hidden = false;
-        }, 400);
-      }
-    }, 16000);
-    if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[climax] P2 mission hint:", active.id, active.mission);
-    }
+    /* no-op: dwell hints removed */
   }
-
-  function hideP2Hint(all) {
-    if (p2Toast) {
-      p2Toast.hidden = true;
-      p2Toast.classList.remove("is-in");
-    }
+  function hideP2Hint() {
+    if (p2Toast) p2Toast.hidden = true;
+    if (p2Chip) p2Chip.hidden = true;
     document.body.classList.remove("p2-hint-visible");
-    if (all && p2Chip) p2Chip.hidden = true;
   }
-
-  function reShowHintFromChip() {
-    if (fired || busy() || window.__hauntPhase3Active) return;
-    revealMissionTargets();
-    if (p2Text) {
-      p2Text.textContent = "3페이즈 진입 조건 — " + active.mission;
-    }
-    if (p2Toast) {
-      p2Toast.hidden = false;
-      p2Toast.classList.add("is-in");
-      p2Toast.classList.remove("is-out");
-    }
-    document.body.classList.add("p2-hint-visible");
-  }
-
-  if (p2Close) {
-    p2Close.addEventListener("click", function () {
-      hideP2Hint(false);
-      if (p2Chip && !fired) p2Chip.hidden = false;
-    });
-  }
-  if (p2Chip) {
-    p2Chip.addEventListener("click", function () {
-      reShowHintFromChip();
-    });
-  }
-
-  // 2페이즈 힌트: 진입 직후가 아니라 탐험 시간 뒤 (기본 2분)
-  // 3페이즈와 같이 ?hintfast=1 이면 8초
-  var P2_HINT_MS = 2 * 60 * 1000;
-  if (/[?&]hintfast=1/.test(location.search || "")) P2_HINT_MS = 8000;
-  if (/[?&]p2hint=1/.test(location.search || "")) P2_HINT_MS = 5000;
-
-  var p2EnteredAt = 0;
-  var p2HintTimer = null;
-
-  function markP2Entered() {
-    if (!phase2Ready()) return false;
-    if (!p2EnteredAt) {
-      p2EnteredAt = Date.now();
-      try {
-        var saved = sessionStorage.getItem("haunt_p2_entered_at");
-        if (saved) {
-          var n = parseInt(saved, 10);
-          if (!isNaN(n) && n > 0) p2EnteredAt = n;
-          else sessionStorage.setItem("haunt_p2_entered_at", String(p2EnteredAt));
-        } else {
-          sessionStorage.setItem("haunt_p2_entered_at", String(p2EnteredAt));
-        }
-      } catch (e) {}
-    }
-    scheduleP2Hint();
-    return true;
-  }
-
   function scheduleP2Hint() {
-    if (fired || window.__hauntPhase3Active) return;
-    if (!phase2Ready()) return;
-    // 이미 힌트 본 세션: 칩 + 타깃 공개 유지 (풀 수 있게)
-    if (p2HintShown || alreadyHintedThisSession()) {
-      revealMissionTargets();
-      if (p2Chip && !fired) p2Chip.hidden = false;
-      return;
-    }
-    if (p2HintTimer) return; // 한 번만 예약
-
-    var elapsed = Date.now() - (p2EnteredAt || Date.now());
-    var wait = Math.max(0, P2_HINT_MS - elapsed);
-    // 일기 연 동안에도 타이머는 가되, showP2Hint 가 diary-open 이면 미룸
-    p2HintTimer = setTimeout(function () {
-      p2HintTimer = null;
-      if (fired || window.__hauntPhase3Active) return;
-      if (!phase2Ready() || busy()) {
-        // 바쁘면 조금 뒤 재시도
-        p2HintTimer = setTimeout(function () {
-          p2HintTimer = null;
-          if (!fired && phase2Ready() && !busy()) showP2Hint();
-        }, 4000);
-        return;
-      }
-      showP2Hint();
-    }, wait);
-
-    if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log(
-        "[climax] P2 hint scheduled in",
-        Math.round(wait / 1000) + "s",
-        "(delay",
-        Math.round(P2_HINT_MS / 1000) + "s)"
-      );
-    }
+    /* no-op */
   }
-
-  // phase2 진입 감지 → 힌트 예약 (즉시 표시 안 함)
+  function markP2Entered() {
+    return !!phase2Ready();
+  }
   function watchPhase2() {
     return markP2Entered();
   }
-  document.addEventListener("haunt-stage", function (ev) {
-    var s = ev && ev.detail && ev.detail.stage;
-    if (s >= 2) watchPhase2();
-  });
-  document.addEventListener("haunt-mood", function (ev) {
-    var m = ev && ev.detail && ev.detail.mood;
-    if (m >= 3) watchPhase2();
-  });
-  document.addEventListener("haunt-diary", function () {
-    // 일기 닫힌 뒤에 2페이즈가 열리므로, 상태 안정 후 진입 시각 기록
-    setTimeout(watchPhase2, 800);
-  });
-  // 이미 조건을 만족한 채 로드된 경우 — 폴링으로 진입만 감지
-  setInterval(function () {
-    if (!p2HintShown && !alreadyHintedThisSession() && phase2Ready() && !fired) {
-      watchPhase2();
-    }
-  }, 3000);
 
   // 공개 빌드: 관리자/프리패스 UI·단축키 없음
   window.__hauntCreatorPass = false;

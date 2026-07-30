@@ -203,7 +203,7 @@
     chrome.classList.toggle("is-corrupt", n === 2);
     chrome.classList.toggle("is-dread", n >= 3);
     chrome.classList.remove("is-climax");
-    chrome.classList.toggle("is-hinting", n === 0 && !diaryFound);
+    chrome.classList.remove("is-hinting");
 
     if (urlBar) {
       urlBar.classList.toggle("glitching", (n >= 2 || (n === 0 && !diaryFound)) && !reduced);
@@ -211,14 +211,15 @@
 
     stopPollute();
     stopFindHint();
-    if (n === 0 && !diaryFound) startFindHint();
-    else if (n >= 2 && !reduced) startPollute(n);
+    if (n >= 2 && !reduced) startPollute(n);
     log("stage", n);
   }
 
-  /** 일기 찾기 전: 주소창에 Find the diary 영어 힌트 순환 */
+  /** 일기 찾기 전 주소창 힌트 순환 — 비활성 */
   function startFindHint() {
     stopFindHint();
+    return;
+    /* dead code: dwell URL hints removed */
     if (diaryFound || currentStage > 0 || isClimax) return;
     chrome.classList.add("is-hinting");
     var baseUrl = FAKE_URLS[0];

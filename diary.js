@@ -1554,35 +1554,8 @@
   }
 
   function scheduleFindHints() {
+    /* no-op: 머무름 시간 기반 힌트 토스트 전부 제거 */
     clearFindHints();
-    if (discovered) return;
-    // 디버그 가속: ?hintfast=1 → 5s / 10s / 15s
-    var fast = /[?&]hintfast=1/.test(location.search || "");
-    var t1 = fast ? 5000 : 60000;
-    var t2 = fast ? 10000 : 120000;
-    var t3 = fast ? 15000 : 180000;
-
-    var ladder = FIND_LADDER[findPath] || [
-      "반짝이는 곳이 있다. 짧게 빛날 때 눌러 봐.",
-      "빛나는 순간은 아주 짧다. 놓치면 다음을 기다려.",
-      "화면 여기저기가 돌아가며 빛난다. 타이밍이다.",
-    ];
-
-    hintTimers.push(
-      setTimeout(function () {
-        showFindHint(1, ladder[0] || "");
-      }, t1)
-    );
-    hintTimers.push(
-      setTimeout(function () {
-        showFindHint(2, ladder[1] || "");
-      }, t2)
-    );
-    hintTimers.push(
-      setTimeout(function () {
-        showFindHint(3, ladder[2] || "");
-      }, t3)
-    );
   }
 
   scheduleFindHints();

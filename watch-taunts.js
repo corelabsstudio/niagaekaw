@@ -109,23 +109,8 @@
   }
 
   function showTaunt(text, force) {
-    if (!force && (phase() < 2 || blocked())) return;
-    var now = Date.now();
-    if (!force && now - state.lastShow < (reduced ? 9000 : 5500)) return;
-    state.lastShow = now;
-
-    var el = ensureToast();
-    var p = document.getElementById("watchTauntText");
-    if (p) p.textContent = text;
-    el.classList.add("is-on");
-    el.setAttribute("aria-hidden", "false");
-    el.classList.toggle("is-p3", phase() === 3);
-
-    clearTimeout(showTaunt._t);
-    showTaunt._t = setTimeout(function () {
-      el.classList.remove("is-on");
-      el.setAttribute("aria-hidden", "true");
-    }, reduced ? 4200 : 5200);
+    /* no-op: 머무름 중 MATCH/힌트 토스트 제거 */
+    return;
   }
 
   function taunt(preferIdx) {
