@@ -1215,13 +1215,14 @@ body.diary-open .diary-sheet {
 .diary-photo-wrap img {
   display: block;
   width: 100%;
-  max-height: min(200px, 28vh);
+  max-height: min(220px, 30vh);
   object-fit: cover;
-  filter: grayscale(0.22) contrast(1.08) saturate(0.85);
+  /* 실사 유지 — 약한 톤만 */
+  filter: contrast(1.04) saturate(0.95);
   background: #1a1210;
 }
 .diary-photo-wrap.is-mid img {
-  filter: grayscale(0.45) contrast(1.2) brightness(0.92) sepia(0.15);
+  filter: contrast(1.08) brightness(0.96) saturate(0.88);
 }
 .diary-photo-cap {
   margin: 0.35rem 0.15rem 0;
