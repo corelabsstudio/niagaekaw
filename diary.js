@@ -1026,9 +1026,16 @@
       panel.style.transform = "none";
     }
     if (sheet) {
+      // 가운데 노트 펼침 애니 — 인라인 transform 덮어쓰지 않음
       sheet.style.opacity = "1";
       sheet.style.filter = "none";
-      sheet.style.transform = "";
+      sheet.classList.remove("is-open-done");
+      // 애니 재시작
+      void sheet.offsetWidth;
+      sheet.classList.add("is-notebook-open");
+      setTimeout(function () {
+        if (sheet) sheet.classList.add("is-open-done");
+      }, 750);
     }
     if (audio()) {
       try {

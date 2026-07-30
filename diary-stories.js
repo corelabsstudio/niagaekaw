@@ -821,33 +821,159 @@
     return seq;
   }
 
+  /**
+   * 스토리별 일기 사진 (기존 에셋 재사용 · 분위기 매칭)
+   * past = 시작/작업실 톤 · mid = 오염·공포 톤
+   */
+  var STORY_PHOTOS = {
+    "01": {
+      past: { src: "assets/faces/face-2.jpg", cap: "새벽 모니터 — 혼자 돌리던 감시망" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "로그가 이름을 부르기 시작했을 때" },
+    },
+    "02": {
+      past: { src: "assets/faces/face-5.jpg", cap: "안전하다 믿었던 백업 창" },
+      mid: { src: "assets/faces/face-1.jpg", cap: "복구 버튼 — already_consumed" },
+    },
+    "03": {
+      past: { src: "assets/p3-ref-atmosphere-only.png", cap: "Stasis — 다시 열어본 방치 프로젝트" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "빌드 버튼 옆, 기어 나온 그림자" },
+    },
+    "04": {
+      past: { src: "assets/faces/face-3.jpg", cap: "브레이크포인트가 붙잡히던 밤" },
+      mid: { src: "assets/faces/face-6.jpg", cap: "지운 줄이 다시 자라나 있었다" },
+    },
+    "05": {
+      past: { src: "assets/faces/face-8.jpg", cap: "방화벽 규칙 — 철통이라 믿던 때" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "포트 666 — 안쪽에서 두드림" },
+    },
+    "06": {
+      past: { src: "assets/faces/face-4.jpg", cap: "배포 직전, 설레던 터미널" },
+      mid: { src: "assets/faces/face-7.jpg", cap: "에러가 한글 문장으로 바뀌던 순간" },
+    },
+    "07": {
+      past: { src: "assets/faces/face-9.jpg", cap: "오래 방치한 레포를 다시 연 날" },
+      mid: { src: "assets/p3-ref-atmosphere.png", cap: "새벽 4시 무단 커밋 기록" },
+    },
+    "08": {
+      past: { src: "assets/faces/face-2.jpg", cap: "자동 완성이 편했던 오후" },
+      mid: { src: "assets/faces/face-1.jpg", cap: "내 하루가 먼저 완성되고 있었다" },
+    },
+    "09": {
+      past: { src: "assets/faces/face-5.jpg", cap: "세션을 넉넉히 잡아 둔 밤샘" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "0초인데 꺼지지 않는 화면" },
+    },
+    "10": {
+      past: { src: "assets/faces/face-3.jpg", cap: "메모리 릭을 쫓던 작업 관리자" },
+      mid: { src: "assets/faces/face-6.jpg", cap: "이름 없는 프로세스 — 99%" },
+    },
+    "11": {
+      past: { src: "assets/faces/face-8.jpg", cap: "테스트 커버리지를 올리던 날" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "테스트가 나를 검증하기 시작함" },
+    },
+    "12": {
+      past: { src: "assets/faces/face-4.jpg", cap: "조용한 localhost" },
+      mid: { src: "assets/faces/face-7.jpg", cap: "포트 너머의 숨소리" },
+    },
+    "13": {
+      past: { src: "assets/faces/face-9.jpg", cap: "리팩토링 체크리스트" },
+      mid: { src: "assets/p3-ref-atmosphere.png", cap: "지울수록 늘어나는 줄" },
+    },
+    "14": {
+      past: { src: "assets/faces/face-2.jpg", cap: "첫 사용자 로그를 기다리며" },
+      mid: { src: "assets/faces/face-1.jpg", cap: "사용자가 아닌 무언가가 접속했다" },
+    },
+    "15": {
+      past: { src: "assets/faces/face-5.jpg", cap: "캐시 초기화 — 깨끗하다고 믿던 때" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "지워지지 않는 잔상" },
+    },
+    "16": {
+      past: { src: "assets/faces/face-3.jpg", cap: "의존성 업데이트 밤" },
+      mid: { src: "assets/faces/face-6.jpg", cap: "패키지가 먼저 나를 읽었다" },
+    },
+    "17": {
+      past: { src: "assets/faces/face-8.jpg", cap: "헬스체크 그린 라이트" },
+      mid: { src: "assets/p3-ref-atmosphere.png", cap: "살아 있다고 응답하는 죽은 서버" },
+    },
+    "18": {
+      past: { src: "assets/faces/face-4.jpg", cap: "혼자 돌리던 데모 환경" },
+      mid: { src: "assets/faces/face-7.jpg", cap: "데모가 관객을 고르고 있었다" },
+    },
+    "19": {
+      past: { src: "assets/faces/face-9.jpg", cap: "로그 레벨을 INFO로 둔 날" },
+      mid: { src: "assets/p2-ref-atmosphere.png", cap: "FATAL 이 속삭임으로 바뀌던 때" },
+    },
+    "20": {
+      past: { src: "assets/faces/face-2.jpg", cap: "마지막 커밋 메시지 초안" },
+      mid: { src: "assets/faces/face-1.jpg", cap: "커밋 작성자가 더 이상 내가 아님" },
+    },
+  };
+
+  function photoHtml(photo, mid) {
+    if (!photo || !photo.src) return "";
+    return (
+      '<figure class="diary-photo-wrap' +
+      (mid ? " is-mid" : "") +
+      '">' +
+      '<img src="' +
+      escapeHtml(photo.src) +
+      '" alt="" loading="lazy" decoding="async" draggable="false" />' +
+      (photo.cap
+        ? '<figcaption class="diary-photo-cap">' +
+          escapeHtml(photo.cap) +
+          "</figcaption>"
+        : "") +
+      "</figure>"
+    );
+  }
+
   function renderStaticPages(st) {
     var p0 = document.querySelector('.diary-page[data-page="0"]');
     var p1 = document.querySelector('.diary-page[data-page="1"]');
+    var photos = (st && st.id && STORY_PHOTOS[st.id]) || STORY_PHOTOS["01"];
     if (p0) {
+      var pastParas = st.past.paras || [];
+      var pastBody =
+        pastParas.length > 0
+          ? "<p>" +
+            escapeHtml(pastParas[0]) +
+            "</p>" +
+            photoHtml(photos.past, false) +
+            pastParas
+              .slice(1)
+              .map(function (para) {
+                return "<p>" + escapeHtml(para) + "</p>";
+              })
+              .join("")
+          : photoHtml(photos.past, false);
       p0.innerHTML =
         '<p class="diary-date">' +
         escapeHtml(st.past.date) +
         "</p>" +
-        (st.past.paras || [])
-          .map(function (para) {
-            return "<p>" + escapeHtml(para) + "</p>";
-          })
-          .join("") +
+        pastBody +
         (st.past.aside
           ? '<p class="diary-aside">' + escapeHtml(st.past.aside) + "</p>"
           : "");
     }
     if (p1) {
+      var midParas = st.mid.paras || [];
+      var midBody =
+        midParas.length > 0
+          ? "<p>" +
+            escapeHtml(midParas[0]) +
+            "</p>" +
+            photoHtml(photos.mid, true) +
+            midParas
+              .slice(1)
+              .map(function (para) {
+                return "<p>" + escapeHtml(para) + "</p>";
+              })
+              .join("")
+          : photoHtml(photos.mid, true);
       p1.innerHTML =
         '<p class="diary-date">' +
         escapeHtml(st.mid.date) +
         "</p>" +
-        (st.mid.paras || [])
-          .map(function (para) {
-            return "<p>" + escapeHtml(para) + "</p>";
-          })
-          .join("") +
+        midBody +
         (st.mid.fear
           ? '<p class="diary-fear">' + escapeHtml(st.mid.fear) + "</p>"
           : "");
