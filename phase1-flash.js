@@ -224,26 +224,48 @@
     openFromFlash(el);
   }
 
+  /** body class 동기 재진입 방지 (MO → body class 변경 → MO … 무한 루프 차단) */
+  var moSync = false;
+
   function start() {
     if (state.running || blocked()) return;
     state.running = true;
-    document.body.classList.add("phase1-flash-live");
+    // body 가 아닌 html 에 표시 클래스 — body MutationObserver 와 분리
+    try {
+      document.documentElement.classList.add("phase1-flash-live");
+    } catch (e0) {}
     // 첫 반짝은 조금 여유 두고 (랜딩 읽기)
     scheduleNext(reduced ? 2500 : 1800 + Math.random() * 1200);
   }
 
   function stop() {
+    var was = state.running || state.timer || state.activeEl;
     state.running = false;
-    document.body.classList.remove("phase1-flash-live");
     if (state.timer) clearTimeout(state.timer);
     state.timer = null;
     clearFlash();
+    try {
+      document.documentElement.classList.remove("phase1-flash-live");
+    } catch (e1) {}
+    // 레거시 body 클래스 잔여 정리 (한 번만, MO 재진입 가드 하에서)
+    try {
+      if (document.body.classList.contains("phase1-flash-live")) {
+        document.body.classList.remove("phase1-flash-live");
+      }
+    } catch (e2) {}
+    return was;
   }
 
   function watch() {
     var obs = new MutationObserver(function () {
-      if (blocked()) stop();
-      else if (!state.running) start();
+      if (moSync) return;
+      moSync = true;
+      try {
+        if (blocked()) stop();
+        else if (!state.running) start();
+      } finally {
+        moSync = false;
+      }
     });
     obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     document.addEventListener("haunt-diary", function () {

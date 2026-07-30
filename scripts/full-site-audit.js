@@ -23,11 +23,19 @@ const ASSETS = [
   "assets/faces/face-4.jpg", "assets/faces/face-5.jpg", "assets/faces/face-6.jpg",
   "assets/faces/face-7.jpg", "assets/faces/face-8.jpg", "assets/faces/face-9.jpg",
   "assets/audio/Stalled_Rotor.mp3", "assets/audio/Iron_Chest_Cavity.mp3",
+  "assets/audio/bgm_phase2_eerie.mp3", "assets/audio/bgm_phase3_climax.mp3",
+  "assets/audio/sfx_wail_cry.mp3", "assets/audio/sfx_sob_whimper.mp3",
+  "assets/audio/sfx_evil_laugh.mp3", "assets/audio/sfx_glitch_stinger.mp3",
+  "assets/audio/sfx_whisper_texture.mp3",
+  "assets/horror/ghost_weak_phase2.png",
+  "assets/horror/ghost_medium_phase3.png",
+  "assets/horror/ghost_strong_climax.png",
   "assets/p2-ref-atmosphere.png", "assets/p3-ref-atmosphere.png",
   "assets/p3-ref-atmosphere-only.png",
   "styles.css", "app.js", "presence.js", "haunt-audio.js", "diary-stories.js",
   "diary.js", "climax-triggers.js", "phase3-triggers.js", "climax-sequence.js",
-  "ending.js", "anomalies.js", "phase3-horrors.js",
+  "ending.js", "anomalies.js", "phase3-horrors.js", "phase1-flash.js",
+  "watch-taunts.js", "address-bar.js", "corruption-progress.js",
 ];
 
 function sleep(ms) {

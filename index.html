@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=realphoto1" />
+  <link rel="stylesheet" href="styles.css?v=mo2" />
 </head>
 <body class="stage-clean" data-stage="0">
   <!-- ===== FAKE BROWSER CHROME (in-page address bar eye-trick) ===== -->
@@ -550,20 +550,24 @@
     <!-- ?쒓퀎 쨌 ?곹깭 -->
     <div class="ss-hud">
       <div class="ss-clock" id="ssClock">12:00:00</div>
-      <p class="ss-status" id="ssStatus">screen saver 쨌 idle</p>
+      <p class="ss-status" id="ssStatus">screen saver · idle</p>
       <p class="ss-process">process: idle</p>
     </div>
 
     <!-- 洹???덉씠??(weak / med / strong) -->
-    <div class="ss-ghost ss-ghost-weak" id="ssGhostWeak" hidden>
-      <img src="assets/faces/face-1.jpg" alt="" draggable="false" />
+    <div class="ss-ghost ss-ghost-weak" id="ssGhostWeak" hidden aria-hidden="true">
+      <img src="assets/horror/ghost_weak_phase2.png" alt="" draggable="false" decoding="async" />
     </div>
-    <div class="ss-ghost ss-ghost-med" id="ssGhostMed" hidden>
-      <img src="assets/faces/face-4.jpg" alt="" draggable="false" />
+    <div class="ss-ghost ss-ghost-med" id="ssGhostMed" hidden aria-hidden="true">
+      <img src="assets/horror/ghost_medium_phase3.png" alt="" draggable="false" decoding="async" />
     </div>
-    <div class="ss-ghost ss-ghost-strong" id="ssGhostStrong" hidden>
-      <img src="assets/faces/face-7.jpg" alt="" draggable="false" />
+    <div class="ss-ghost ss-ghost-strong" id="ssGhostStrong" hidden aria-hidden="true">
+      <img src="assets/horror/ghost_strong_climax.png" alt="" draggable="false" decoding="async" />
     </div>
+    <div class="ss-ghost ss-ghost-strong ss-ghost-trail" id="ssGhostStrongTrail" hidden aria-hidden="true">
+      <img src="assets/horror/ghost_strong_climax.png" alt="" draggable="false" decoding="async" />
+    </div>
+    <button type="button" class="ss-esc-btn" id="ssEscBtn" hidden aria-hidden="true" title="esc">esc</button>
 
     <!-- ?명꽣?숈뀡 諛곗떊 UI -->
     <p class="ss-exit-hint" id="ssExitHint" hidden>Press any key to exit</p>
@@ -640,13 +644,13 @@
   <script src="app.js"></script>
   <script src="presence.js?v=horror-live1"></script>
   <script src="watch-taunts.js?v=1"></script>
-  <script src="haunt-audio.js?v=bgm-sfx1"></script>
+  <script src="haunt-audio.js?v=unlock3"></script>
   <!-- BGM / SFX preload (gesture ??play) -->
   <audio id="p2BgmTrack" src="assets/audio/bgm_phase2_eerie.mp3" loop preload="auto" playsinline hidden></audio>
   <audio id="p3BgmTrack" src="assets/audio/bgm_phase3_climax.mp3" loop preload="auto" playsinline hidden></audio>
   <script src="diary-stories.js?v=realphoto1"></script>
   <script src="diary.js?v=notebook1"></script>
-  <script src="phase1-flash.js?v=1"></script>
+  <script src="phase1-flash.js?v=mo2"></script>
   <script src="corruption-progress.js"></script>
   <script src="address-bar.js"></script>
   <script src="dread-ambient.js"></script>
@@ -654,7 +658,7 @@
   <script src="climax-triggers.js?v=audit1"></script>
   <script src="phase3-triggers.js?v=audit1"></script>
   <script src="phase3-horrors.js"></script>
-  <script src="climax-sequence.js?v=ss60"></script>
+  <script src="climax-sequence.js?v=ss60v2"></script>
   <script src="ending.js"></script>
 </body>
 </html>

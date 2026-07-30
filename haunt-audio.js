@@ -55,7 +55,13 @@
 
   function resolveAudioUrl(rel) {
     try {
-      return new URL(rel, location.href).href;
+      // history API 가짜 경로(/abandoned/…) 에 있어도 사이트 루트 기준 해석
+      var base = (location.origin || "") + "/";
+      if (!rel) return rel;
+      if (/^https?:\/\//i.test(rel) || rel.charAt(0) === "/") {
+        return new URL(rel, base).href;
+      }
+      return new URL(String(rel).replace(/^\.\//, ""), base).href;
     } catch (e) {
       return rel;
     }
@@ -586,7 +592,7 @@
     }
     if (!p2BgmReady()) return false;
     p2BgmWanted = true;
-    unlock();
+    unlock({ noBgm: true });
     // WebAudio 우선, 실패 시 HTMLAudio
     return startWebBgm()
       .then(function (ok) {
@@ -767,15 +773,34 @@
     return master;
   }
 
-  function unlock() {
+  /** unlock → startPhase*Bgm → unlock 재귀 스택 방지 */
+  var unlockDepth = 0;
+
+  /**
+   * @param {object} [opts]
+   * @param {boolean} [opts.noBgm] true 면 AudioContext만 열고 BGM 자동 시작 안 함
+   */
+  function unlock(opts) {
+    opts = opts || {};
     unlocked = true;
     var c = ensureCtx();
     if (c && c.state === "suspended") {
       c.resume().catch(function () {});
     }
-    // 제스처 직후 해당 페이즈 BGM 시작 (브라우저 자동재생 정책)
-    if (p3BgmReady()) startPhase3Bgm();
-    else if (p2BgmReady()) startPhase2Bgm();
+    // BGM 시작 경로에서 다시 unlock 호출 시 재귀 차단
+    if (opts.noBgm || unlockDepth > 0) return;
+    unlockDepth++;
+    try {
+      // 제스처 직후 해당 페이즈 BGM 시작 (브라우저 자동재생 정책)
+      if (p3BgmReady()) startPhase3Bgm();
+      else if (p2BgmReady()) startPhase2Bgm();
+    } catch (eU) {
+      if (window.console && /[?&]debug=1/.test(location.search || "")) {
+        console.warn("[haunt-audio] unlock bgm", eU);
+      }
+    } finally {
+      unlockDepth--;
+    }
   }
 
   function now() {
