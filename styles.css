@@ -1322,8 +1322,17 @@ body.diary-open .diary-sheet {
 .diary-body {
   flex: 1;
   overflow: auto;
-  padding: 1.15rem 1.2rem 1rem;
+  padding: 1.15rem 1.25rem 1.1rem 1.55rem;
   -webkit-overflow-scrolling: touch;
+}
+.diary-head {
+  padding-left: 1.45rem;
+}
+.diary-tabs {
+  padding-left: 1.35rem;
+}
+.diary-foot {
+  padding-left: 1.35rem;
 }
 .diary-page p {
   margin: 0 0 1rem;
