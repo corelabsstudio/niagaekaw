@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <meta name="theme-color" content="#F7F4F0" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Stasis — simple monitoring</title>
+  <title>Stasis ??simple monitoring</title>
   <meta name="robots" content="noindex,nofollow" />
-  <meta name="description" content="Stasis — elegant single-developer uptime monitoring." />
+  <meta name="description" content="Stasis ??elegant single-developer uptime monitoring." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=p1flash1" />
+  <link rel="stylesheet" href="styles.css?v=ss60" />
 </head>
 <body class="stage-clean" data-stage="0">
   <!-- ===== FAKE BROWSER CHROME (in-page address bar eye-trick) ===== -->
@@ -22,9 +22,9 @@
       <span class="dot green"></span>
     </div>
     <div class="fake-chrome-nav" aria-hidden="true">
-      <span class="nav-btn">‹</span>
-      <span class="nav-btn">›</span>
-      <span class="nav-btn">↻</span>
+      <span class="nav-btn">??/span>
+      <span class="nav-btn">??/span>
+      <span class="nav-btn">??/span>
     </div>
     <div class="fake-chrome-url find-hot" id="fakeUrlBar" data-find="fakeurl">
       <span class="url-lock" id="fakeUrlLock" aria-hidden="true"></span>
@@ -44,7 +44,7 @@
   <div id="p2DecayLayer" class="p2-decay-layer" aria-hidden="true"></div>
   <div id="p2DecayGrain" class="p2-decay-grain" aria-hidden="true"></div>
 
-  <!-- 2페이즈 상시 대기: 참조 목업의 손·실루엣·안개 (phase-2-active 때만 보임) -->
+  <!-- 2?섏씠利??곸떆 ?湲? 李몄“ 紐⑹뾽???먃룹떎猷⑥뿣쨌?덇컻 (phase-2-active ?뚮쭔 蹂댁엫) -->
   <div id="p2Atmosphere" class="p2-atmosphere" aria-hidden="true">
     <div class="p2-atm-bg"></div>
     <div class="p2-atm-hand side-left" aria-hidden="true">
@@ -74,14 +74,14 @@
     <div class="p2-atm-fog"></div>
   </div>
 
-  <!-- 3페이즈: 살아있는 생체-디지털 조직 + 촉수 + 얼굴 -->
+  <!-- 3?섏씠利? ?댁븘?덈뒗 ?앹껜-?붿???議곗쭅 + 珥됱닔 + ?쇨뎬 -->
   <div id="p3Atmosphere" class="p3-atmosphere" aria-hidden="true">
     <div class="p3-atm-bg"></div>
     <div class="p3-atm-pulse"></div>
     <div class="p3-atm-veins"></div>
     <div class="p3-atm-veil"></div>
     <div class="p3-atm-scan"></div>
-    <!-- 화면을 찢고 나오는 촉수/발톱 -->
+    <!-- ?붾㈃??李?퀬 ?섏삤??珥됱닔/諛쒗넲 -->
     <div class="p3-tentacles" aria-hidden="true">
       <svg class="p3-tent t1" viewBox="0 0 200 400" preserveAspectRatio="xMidYMax meet">
         <path d="M40 400 C20 280 80 220 50 140 S90 40 120 0" fill="none" stroke="#3a0810" stroke-width="28" stroke-linecap="round"/>
@@ -114,25 +114,25 @@
     </div>
   </div>
 
-  <!-- 3페이즈 상단 깊이 띠 -->
+  <!-- 3?섏씠利??곷떒 源딆씠 ??-->
   <div id="p3DepthBar" class="p3-depth-bar" hidden aria-hidden="true">
     <span class="p3-depth-tag">PHASE 3</span>
-    <span class="p3-depth-msg" id="p3DepthMsg">한 층 더 내려왔다 · 아직 끝이 아니다</span>
+    <span class="p3-depth-msg" id="p3DepthMsg">??痢????대젮?붾떎 쨌 ?꾩쭅 ?앹씠 ?꾨땲??/span>
   </div>
 
-  <!-- WIP 띠: clean 숨김 (wip/branch 트리거는 footer micro) -->
+  <!-- WIP ?? clean ?④? (wip/branch ?몃━嫄곕뒗 footer micro) -->
   <div class="wip-banner" id="wipBanner" aria-hidden="true">
     <span class="wip-pill" title="">WIP</span>
-    <span class="wip-msg">로컬 드래프트 · 배포 금지 · last open: 47 days ago</span>
-    <span class="wip-git">branch: <code title="">feat/landing-v0</code> · uncommitted: 14</span>
+    <span class="wip-msg">濡쒖뺄 ?쒕옒?꾪듃 쨌 諛고룷 湲덉? 쨌 last open: 47 days ago</span>
+    <span class="wip-git">branch: <code title="">feat/landing-v0</code> 쨌 uncommitted: 14</span>
   </div>
 
-  <!-- ===== CLEAN NAV — 목업 SaaS ===== -->
+  <!-- ===== CLEAN NAV ??紐⑹뾽 SaaS ===== -->
   <header class="stasis-nav top">
     <a class="stasis-logo find-hot" href="#" id="topRec" data-find="logo"
       data-clean="Stasis"
       data-mid="Stasis?"
-      data-horror="● REC · DO NOT LOOK AWAY">
+      data-horror="??REC 쨌 DO NOT LOOK AWAY">
       <span class="logo-mark" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
           <circle cx="11" cy="11" r="10" fill="#111"/>
@@ -146,62 +146,62 @@
       <span class="pill-link">Product</span>
       <span class="pill-link pill-todo find-hot" data-find="todo">Pricing <em class="pill-hide-clean">TODO</em></span>
       <span class="pill-link pill-dead find-hot" data-find="docs">Docs</span>
-      <span class="pill-link pill-stub find-hot" data-find="stub" aria-hidden="true">…</span>
+      <span class="pill-link pill-stub find-hot" data-find="stub" aria-hidden="true">??/span>
     </nav>
     <button type="button" class="stasis-cta" id="navCta"
       data-clean="Get started"
-      data-mid="Start…?"
+      data-mid="Start??"
       data-horror="DO NOT TRACK">Get started<span class="p2-drip p2-drip-cta" aria-hidden="true"></span></button>
-    <!-- 숨은 일기 트리거: 거의 안 보이는 ? -->
+    <!-- ?⑥? ?쇨린 ?몃━嫄? 嫄곗쓽 ??蹂댁씠??? -->
     <button type="button" class="diary-hint find-hot" id="diaryHint" data-find="nav" aria-label="" title="">?</button>
     <span class="path stasis-path-hide" id="corruptPath"
-      data-clean="~/projects/stasis · dirty"
-      data-mid="C:\Users\…\projects\side\"
-      data-horror="C:\Users\…\abandoned\mvp_final_FINAL2\">~/projects/stasis · dirty</span>
+      data-clean="~/projects/stasis 쨌 dirty"
+      data-mid="C:\Users\??projects\side\"
+      data-horror="C:\Users\??abandoned\mvp_final_FINAL2\">~/projects/stasis 쨌 dirty</span>
     <span class="clock stasis-clock-hide" id="clock">--:--:--</span>
   </header>
 
   <main class="wrap stasis-main">
-    <!-- HERO — 목업 톤 -->
+    <!-- HERO ??紐⑹뾽 ??-->
     <section class="stasis-hero">
       <p class="stasis-badge eyebrow find-hot" id="eyebrow" data-find="badge"
-        data-clean="Uptime · Alerts · Solo"
-        data-mid="● System Status: …unstable"
-        data-horror="● System Status: STILL BREATHING">Uptime · Alerts · Solo</p>
+        data-clean="Uptime 쨌 Alerts 쨌 Solo"
+        data-mid="??System Status: ?쫢nstable"
+        data-horror="??System Status: STILL BREATHING">Uptime 쨌 Alerts 쨌 Solo</p>
 
       <h1 class="title-horror stasis-h1 find-hot" id="mainTitle" data-find="title">
         <span class="p2-title-glitch" aria-hidden="true"></span>
         <span class="title-line" id="titleL1"
           data-clean="Simple monitoring"
-          data-mid="잠들어 있던 것들"
-          data-horror="잠들어 있던 것들이">Simple monitoring</span><br />
+          data-mid="?좊뱾???덈뜕 寃껊뱾"
+          data-horror="?좊뱾???덈뜕 寃껊뱾??>Simple monitoring</span><br />
         <span class="title-bleed" id="titleL2"
           data-clean="for solitary dev"
-          data-mid="깨어나려 하고 있다."
-          data-horror="깨어날 준비를 하고 있다.">for solitary dev</span>
+          data-mid="源⑥뼱?섎젮 ?섍퀬 ?덈떎."
+          data-horror="源⑥뼱??以鍮꾨? ?섍퀬 ?덈떎.">for solitary dev</span>
         <span class="p2-drip p2-drip-title" aria-hidden="true"></span>
       </h1>
-      <!-- caret: clean에선 거의 투명, 활성 경로일 때만 약간 보임 -->
+      <!-- caret: clean?먯꽑 嫄곗쓽 ?щ챸, ?쒖꽦 寃쎈줈???뚮쭔 ?쎄컙 蹂댁엫 -->
       <p class="wip-cursor-line find-hot" data-find="caret" aria-hidden="true"><span class="wip-caret"></span> <span class="wip-hint">// quiet</span></p>
 
       <p class="lede lede-horror stasis-lede" id="lede">
         <span class="morph"
           data-clean="An elegant, single-developer uptime and performance monitoring tool."
-          data-mid="만들다 만 앱. 끄지 않은 서버. 이름 없는 빌드."
-          data-horror="만들다 만 앱. 끄지 않은 서버. 이름 없는 빌드.">An elegant, single-developer uptime and performance monitoring tool.</span>
+          data-mid="留뚮뱾??留??? ?꾩? ?딆? ?쒕쾭. ?대쫫 ?녿뒗 鍮뚮뱶."
+          data-horror="留뚮뱾??留??? ?꾩? ?딆? ?쒕쾭. ?대쫫 ?녿뒗 鍮뚮뱶.">An elegant, single-developer uptime and performance monitoring tool.</span>
         <br />
         <span class="morph"
           data-clean="Instant alerts for your peace of mind."
-          data-mid="주인이 잊은 뒤에도 프로세스는 완전히 죽지 않는다."
-          data-horror="주인이 잊은 뒤에도 프로세스는 <em>완전히 죽지 않았다.</em>">Instant alerts for your peace of mind.</span>
+          data-mid="二쇱씤???딆? ?ㅼ뿉???꾨줈?몄뒪???꾩쟾??二쎌? ?딅뒗??"
+          data-horror="二쇱씤???딆? ?ㅼ뿉???꾨줈?몄뒪??<em>?꾩쟾??二쎌? ?딆븯??</em>">Instant alerts for your peace of mind.</span>
         <br />
         <span class="whisper morph" id="whisper"
           data-clean=""
-          data-mid="…뭔가 이상하다."
-          data-horror="그것들이 당신을 기억한다."></span>
+          data-mid="??춸媛 ?댁긽?섎떎."
+          data-horror="洹멸쾬?ㅼ씠 ?뱀떊??湲곗뼲?쒕떎."></span>
       </p>
 
-      <!-- Pricing plan cards — 목업 3카드 -->
+      <!-- Pricing plan cards ??紐⑹뾽 3移대뱶 -->
       <div class="stasis-plan-row fake-actions plan-cards" role="group">
         <button type="button" class="btn ghost plan-btn plan-card is-on find-hot" data-find="freehold" data-fake="2" id="planFree">
           <span class="p3-plan-shatter" aria-hidden="true">
@@ -246,9 +246,9 @@
           <span class="p2-drip p2-drip-plan" aria-hidden="true"></span>
         </button>
       </div>
-      <!-- fixme: clean에선 미세 카피 라인처럼 -->
-      <p class="wip-inline-note find-hot" data-find="fixme">No credit card · Cancel anytime</p>
-      <!-- 세션 경로 chip 일 때만 활성 -->
+      <!-- fixme: clean?먯꽑 誘몄꽭 移댄뵾 ?쇱씤泥섎읆 -->
+      <p class="wip-inline-note find-hot" data-find="fixme">No credit card 쨌 Cancel anytime</p>
+      <!-- ?몄뀡 寃쎈줈 chip ???뚮쭔 ?쒖꽦 -->
       <button type="button" class="wip-file-chip find-hot" id="diaryFileChip" data-find="chip" title="">
         <span class="wip-file-icon" aria-hidden="true"></span>
         <span class="wip-file-name">dev_journal.txt</span>
@@ -258,21 +258,21 @@
     </section>
 
     <div class="warning-banner" id="warnBanner" hidden>
-      <span class="wb-icon">⚠</span>
+      <span class="wb-icon">??/span>
       <p id="warnText"
         data-clean=""
-        data-mid="기록이 조금 깨져 보인다. 새로고침을 권장한다."
-        data-horror="이 기록은 정상적으로 열리지 않아야 했다. 스크롤하는 동안 <strong>화면이 당신을 볼 수 있다.</strong>"></p>
+        data-mid="湲곕줉??議곌툑 源⑥졇 蹂댁씤?? ?덈줈怨좎묠??沅뚯옣?쒕떎."
+        data-horror="??湲곕줉? ?뺤긽?곸쑝濡??대━吏 ?딆븘???덈떎. ?ㅽ겕濡ㅽ븯???숈븞 <strong>?붾㈃???뱀떊??蹂????덈떎.</strong>"></p>
     </div>
 
-    <!-- FEATURES + UI MONITOR — 목업 2컬럼 -->
+    <!-- FEATURES + UI MONITOR ??紐⑹뾽 2而щ읆 -->
     <section class="stasis-cards">
       <article class="card card-horror stasis-card-light">
         <div class="wip-card-meta">
           <span class="wip-file find-hot" data-find="features">Features</span>
           <span class="wip-status ok">live</span>
         </div>
-        <!-- 2페이즈: 참조 목업 할퀴 자국 + 눈 -->
+        <!-- 2?섏씠利? 李몄“ 紐⑹뾽 ?좏??먭뎅 + ??-->
         <div class="p2-card-scratches" aria-hidden="true">
           <svg class="p2-scratch-svg" viewBox="0 0 200 140" preserveAspectRatio="none">
             <path d="M40 20 L95 110" stroke="#2a080c" stroke-width="3.5" stroke-linecap="round" fill="none"/>
@@ -288,7 +288,7 @@
           data-clean="Features"
           data-mid="// log"
           data-horror="// blackbox_log">Features</h2>
-        <!-- 3페이즈: 오염된 blackbox_log — 고통·얼굴 쏟아냄 -->
+        <!-- 3?섏씠利? ?ㅼ뿼??blackbox_log ??怨좏넻쨌?쇨뎬 ?잛븘??-->
         <div class="p3-corrupt-log" id="p3BlackboxLog" aria-hidden="true">
           <div class="p3-clog-blood"></div>
           <div class="p3-clog-faces">
@@ -300,34 +300,34 @@
             <img src="assets/faces/face-9.jpg" alt="" />
           </div>
           <ul class="p3-clog-lines">
-            <li>2024-08-03 — scream.open()</li>
-            <li>2024-11-19 — still breathing on :3847</li>
-            <li>???? — your session is too loud</li>
+            <li>2024-08-03 ??scream.open()</li>
+            <li>2024-11-19 ??still breathing on :3847</li>
+            <li>???? ??your session is too loud</li>
             <li class="bad">ERROR: pain overflows buffer</li>
             <li class="bad">it knows you opened this tab</li>
           </ul>
         </div>
         <ul class="log stasis-feat-list" id="log">
           <li class="morph-li"
-            data-clean="✓ Healthcheck pings — always on"
-            data-mid="2024-08-03 — first commit. “주말에 이어서.”"
-            data-horror="2024-08-03 — first commit. <span class='strike'>“주말에 이어서.”</span>">✓ Healthcheck pings — always on</li>
+            data-clean="??Healthcheck pings ??always on"
+            data-mid="2024-08-03 ??first commit. ?쒖＜留먯뿉 ?댁뼱????
+            data-horror="2024-08-03 ??first commit. <span class='strike'>?쒖＜留먯뿉 ?댁뼱????/span>">??Healthcheck pings ??always on</li>
           <li class="morph-li"
-            data-clean="✓ Instant webhook alerts"
-            data-mid="2024-11-19 — last push. message: “나중에.”"
-            data-horror="2024-11-19 — last push. message: <span class='red'>“나중에.”</span>">✓ Instant webhook alerts</li>
+            data-clean="??Instant webhook alerts"
+            data-mid="2024-11-19 ??last push. message: ?쒕굹以묒뿉.??
+            data-horror="2024-11-19 ??last push. message: <span class='red'>?쒕굹以묒뿉.??/span>">??Instant webhook alerts</li>
           <li class="morph-li"
-            data-clean="✓ Single-region dashboard"
-            data-mid="2025-03-02 — domain expired. process still listening on :3847"
-            data-horror="2025-03-02 — domain expired. process still listening on <span class='red'>:3847</span>">✓ Single-region dashboard</li>
+            data-clean="??Single-region dashboard"
+            data-mid="2025-03-02 ??domain expired. process still listening on :3847"
+            data-horror="2025-03-02 ??domain expired. process still listening on <span class='red'>:3847</span>">??Single-region dashboard</li>
           <li class="morph-li log-late"
-            data-clean="✓ Quiet mode for solo deploys"
-            data-mid="2026-07-?? — something moved"
-            data-horror="2026-07-?? — <span class='glitch-text' data-text='something moved behind the glass'>something moved behind the glass</span>">✓ Quiet mode for solo deploys</li>
+            data-clean="??Quiet mode for solo deploys"
+            data-mid="2026-07-?? ??something moved"
+            data-horror="2026-07-?? ??<span class='glitch-text' data-text='something moved behind the glass'>something moved behind the glass</span>">??Quiet mode for solo deploys</li>
           <li class="morph-li log-late log-bad log-pulse" id="logLiveRow" hidden
             data-clean=""
-            data-mid="???? — tab still open"
-            data-horror="????-??-?? — <span id='logLive'>it knows you opened this tab</span>"></li>
+            data-mid="???? ??tab still open"
+            data-horror="????-??-?? ??<span id='logLive'>it knows you opened this tab</span>"></li>
         </ul>
       </article>
 
@@ -341,11 +341,11 @@
           data-mid="// notes"
           data-horror="// autopsy">UI section</h2>
         <p class="morph monitor-caption"
-          data-clean="실시간 대시보드 미리보기"
-          data-mid="방치된 사이드 프로젝트는 사라지지 않는다."
-          data-horror="방치된 사이드 프로젝트는 사라지지 않는다. 하드 구석, 꺼진 노트북, 잊힌 서버 볼륨 안에서 <strong class='red-glow'>형태를 바꾼다.</strong>">실시간 대시보드 미리보기</p>
+          data-clean="?ㅼ떆媛???쒕낫??誘몃━蹂닿린"
+          data-mid="諛⑹튂???ъ씠???꾨줈?앺듃???щ씪吏吏 ?딅뒗??"
+          data-horror="諛⑹튂???ъ씠???꾨줈?앺듃???щ씪吏吏 ?딅뒗?? ?섎뱶 援ъ꽍, 爰쇱쭊 ?명듃遺? ?딇엺 ?쒕쾭 蹂쇰ⅷ ?덉뿉??<strong class='red-glow'>?뺥깭瑜?諛붽씔??</strong>">?ㅼ떆媛???쒕낫??誘몃━蹂닿린</p>
 
-        <!-- 3페이즈 autopsy: 지표 소멸 · OVER 만 남음 -->
+        <!-- 3?섏씠利?autopsy: 吏???뚮㈇ 쨌 OVER 留??⑥쓬 -->
         <div class="p3-autopsy-over" id="p3AutopsyOver" aria-hidden="true">
           <div class="p3-over-ring"></div>
           <div class="p3-over-faces">
@@ -356,11 +356,11 @@
           <span class="p3-over-word">OVER</span>
         </div>
 
-        <!-- 모니터 목업 UI -->
+        <!-- 紐⑤땲??紐⑹뾽 UI -->
         <div class="monitor-frame" aria-hidden="true">
           <div class="monitor-chrome">
             <span class="mc-dot"></span><span class="mc-dot"></span><span class="mc-dot"></span>
-            <span class="mc-title">Stasis · dashboard</span>
+            <span class="mc-title">Stasis 쨌 dashboard</span>
           </div>
           <div class="monitor-body">
             <aside class="monitor-side">
@@ -387,7 +387,7 @@
                     <path d="M0 28 C15 26 20 12 35 16 S55 30 70 18 S95 8 120 14" fill="none" stroke="#5b8def" stroke-width="2"/>
                   </svg>
                 </div>
-                <!-- 2페이즈: 대시보드 안 유령 얼굴 (참조 목업) -->
+                <!-- 2?섏씠利? ??쒕낫?????좊졊 ?쇨뎬 (李몄“ 紐⑹뾽) -->
                 <div class="p2-monitor-faces" aria-hidden="true">
                   <img class="p2-mf f1" src="assets/faces/face-1.jpg" alt="" />
                   <img class="p2-mf f2" src="assets/faces/face-3.jpg" alt="" />
@@ -399,7 +399,7 @@
           </div>
         </div>
 
-        <!-- skeleton 슬롯 자리: 모니터 구석 숨은 핫스팟 -->
+        <!-- skeleton ?щ’ ?먮━: 紐⑤땲??援ъ꽍 ?⑥? ?レ뒪??-->
         <div class="wip-skeleton find-hot monitor-hotspot" data-find="skeleton" aria-hidden="true" title="">
           <div class="sk-bar w80"></div>
           <div class="sk-bar w60"></div>
@@ -407,13 +407,13 @@
           <div class="sk-bar w40"></div>
         </div>
         <p class="morph muted stasis-status-row"
-          data-clean="api · secure &nbsp;·&nbsp; <span class='dot-ok'>LIVE</span>"
-          data-mid="어떤 것들은 조용히 남고, 어떤 것들은 다시 손길을 원한다."
-          data-horror="어떤 것들은 조용히 썩고, 어떤 것들은 <span class='glitch-text' data-text='다시 화면을 원한다'>다시 화면을 원한다</span>.">api · secure &nbsp;·&nbsp; <span class="dot-ok">LIVE</span></p>
+          data-clean="api 쨌 secure &nbsp;쨌&nbsp; <span class='dot-ok'>LIVE</span>"
+          data-mid="?대뼡 寃껊뱾? 議곗슜???④퀬, ?대뼡 寃껊뱾? ?ㅼ떆 ?먭만???먰븳??"
+          data-horror="?대뼡 寃껊뱾? 議곗슜???⑷퀬, ?대뼡 寃껊뱾? <span class='glitch-text' data-text='?ㅼ떆 ?붾㈃???먰븳??>?ㅼ떆 ?붾㈃???먰븳??/span>.">api 쨌 secure &nbsp;쨌&nbsp; <span class="dot-ok">LIVE</span></p>
       </article>
     </section>
 
-    <!-- 빈 슬롯 — clean에선 숨김 (skeleton은 위 모니터로 이동) -->
+    <!-- 鍮??щ’ ??clean?먯꽑 ?④? (skeleton? ??紐⑤땲?곕줈 ?대룞) -->
     <section class="wip-slot-grid" aria-hidden="true">
       <div class="wip-slot">
         <span class="wip-slot-label">Pricing</span>
@@ -421,7 +421,7 @@
       </div>
       <div class="wip-slot">
         <span class="wip-slot-label">Testimonials</span>
-        <span class="wip-slot-body">유저 0명 — 스킵</span>
+        <span class="wip-slot-body">?좎? 0紐????ㅽ궢</span>
       </div>
       <div class="wip-slot wip-slot-broken">
         <span class="wip-slot-label">Screenshot</span>
@@ -429,7 +429,7 @@
       </div>
     </section>
 
-    <!-- 신뢰 문구 블록 — 깔끔한 다크 배너 -->
+    <!-- ?좊ː 臾멸뎄 釉붾줉 ??源붾걫???ㅽ겕 諛곕꼫 -->
     <section class="stasis-quote card card-horror danger-soft wip-readme" id="cardWarn">
       <h2 id="h2warn"
         data-clean="Built for quiet nights"
@@ -437,12 +437,12 @@
         data-horror="// do_not_trust">Built for quiet nights</h2>
       <p class="morph stasis-quote-text wip-readme-body"
         data-clean="One process. One dashboard. Zero noise until something actually breaks."
-        data-mid="버튼이 항상 기대대로 동작하진 않을 수 있다."
-        data-horror="버튼은 거짓말할 수 있다. 에러 메시지는 친절한 척할 수 있다. <strong>종료되지 않은 것은 항상 돌아온다.</strong>">One process. One dashboard. Zero noise until something actually breaks.</p>
+        data-mid="踰꾪듉????긽 湲곕??濡??숈옉?섏쭊 ?딆쓣 ???덈떎."
+        data-horror="踰꾪듉? 嫄곗쭞留먰븷 ???덈떎. ?먮윭 硫붿떆吏??移쒖젅??泥숉븷 ???덈떎. <strong>醫낅즺?섏? ?딆? 寃껋? ??긽 ?뚯븘?⑤떎.</strong>">One process. One dashboard. Zero noise until something actually breaks.</p>
       <p class="tiny morph stasis-quote-by find-hot" data-find="readme"
-        data-clean="— Stasis · last deploy: today"
-        data-mid="이상 시 Esc 또는 새로고침."
-        data-horror="만약 화면이 미쳐 날뛰면 — 하드웨어 고장이 아니다. (대개는.) 종료: <kbd>Esc</kbd> · 화면 탭/클릭">— Stasis · last deploy: today</p>
+        data-clean="??Stasis 쨌 last deploy: today"
+        data-mid="?댁긽 ??Esc ?먮뒗 ?덈줈怨좎묠."
+        data-horror="留뚯빟 ?붾㈃??誘몄퀜 ?좊쎇硫????섎뱶?⑥뼱 怨좎옣???꾨땲?? (?媛쒕뒗.) 醫낅즺: <kbd>Esc</kbd> 쨌 ?붾㈃ ???대┃">??Stasis 쨌 last deploy: today</p>
     </section>
 
     <section class="card card-horror long stasis-later wip-abandon">
@@ -451,17 +451,17 @@
         data-mid="// residue"
         data-horror="// residue">Stay in the loop</h2>
       <p class="morph"
-        data-clean="Get product notes when we ship. No spam — just signals that matter."
-        data-mid="당신은 몇 개의 폴더를 “나중에”로 닫아 두었는가."
-        data-horror="당신은 몇 개의 폴더를 “나중에”로 닫아 두었는가. README는 비어 있고, .env는 죽은 키를 붙잡고, package.json의 스크립트는 아무도 돌리지 않는다.">Get product notes when we ship. No spam — just signals that matter.</p>
+        data-clean="Get product notes when we ship. No spam ??just signals that matter."
+        data-mid="?뱀떊? 紐?媛쒖쓽 ?대뜑瑜??쒕굹以묒뿉?앸줈 ?レ븘 ?먯뿀?붽?."
+        data-horror="?뱀떊? 紐?媛쒖쓽 ?대뜑瑜??쒕굹以묒뿉?앸줈 ?レ븘 ?먯뿀?붽?. README??鍮꾩뼱 ?덇퀬, .env??二쎌? ?ㅻ? 遺숈옟怨? package.json???ㅽ겕由쏀듃???꾨Т???뚮━吏 ?딅뒗??">Get product notes when we ship. No spam ??just signals that matter.</p>
       <p class="morph find-hot" id="resWait" data-find="console"
         data-clean="console.log('ship later');"
-        data-mid="그것들은 기다린다."
-        data-horror="<span class='red-glow'>그것들은 기다린다. 당신이 이 페이지를 연 지금처럼.</span>">console.log('ship later');</p>
+        data-mid="洹멸쾬?ㅼ? 湲곕떎由곕떎."
+        data-horror="<span class='red-glow'>洹멸쾬?ㅼ? 湲곕떎由곕떎. ?뱀떊?????섏씠吏瑜???吏湲덉쿂??</span>">console.log('ship later');</p>
       <p class="morph muted"
         data-clean="// quiet by default"
-        data-mid="스크롤을 내려도 아무 일 없을 수 있다."
-        data-horror="스크롤을 내려도, 버튼을 눌러도, 아무 일도 없을 수 있다. 혹은 — <span class='glitch-text' data-text='이미 일이 시작되었을 수 있다'>이미 일이 시작되었을 수 있다</span>.">// quiet by default</p>
+        data-mid="?ㅽ겕濡ㅼ쓣 ?대젮???꾨Т ???놁쓣 ???덈떎."
+        data-horror="?ㅽ겕濡ㅼ쓣 ?대젮?? 踰꾪듉???뚮윭?? ?꾨Т ?쇰룄 ?놁쓣 ???덈떎. ?뱀? ??<span class='glitch-text' data-text='?대? ?쇱씠 ?쒖옉?섏뿀?????덈떎'>?대? ?쇱씠 ?쒖옉?섏뿀?????덈떎</span>.">// quiet by default</p>
       <div class="face-row" id="faceRow" aria-hidden="true" hidden>
         <div class="void-face"></div>
         <div class="void-face delay"></div>
@@ -469,120 +469,113 @@
       </div>
       <div class="spacer" id="deepSpacer" aria-hidden="true" hidden></div>
       <p class="tiny terminal" id="terminalLine" hidden>&gt; waiting for signal_</p>
-      <p class="tiny terminal dim" id="terminalLine2" hidden>&gt; …</p>
+      <p class="tiny terminal dim" id="terminalLine2" hidden>&gt; ??/p>
     </section>
   </main>
 
   <footer class="foot">
     <span id="footText"
-      data-clean="Stasis · simple monitoring for solitary dev"
-      data-mid="archive fragment · not affiliated"
-      data-horror="archive fragment · not affiliated · do not bookmark">Stasis · simple monitoring for solitary dev</span>
-    <!-- 숨은 트리거: 푸터 점 · 버전 칩(브랜치) · 베타(WIP) -->
-    <button type="button" class="diary-leak-link find-hot" id="diaryLeakLink" data-find="footer" aria-label="">·</button>
+      data-clean="Stasis 쨌 simple monitoring for solitary dev"
+      data-mid="archive fragment 쨌 not affiliated"
+      data-horror="archive fragment 쨌 not affiliated 쨌 do not bookmark">Stasis 쨌 simple monitoring for solitary dev</span>
+    <!-- ?⑥? ?몃━嫄? ?명꽣 ??쨌 踰꾩쟾 移?釉뚮옖移? 쨌 踰좏?(WIP) -->
+    <button type="button" class="diary-leak-link find-hot" id="diaryLeakLink" data-find="footer" aria-label="">쨌</button>
     <span class="foot-micro find-hot" data-find="branch" title="">v0.9.2</span>
     <span class="foot-micro find-hot foot-beta" data-find="wip" title="">beta</span>
     <span id="seedHint" class="seed"></span>
   </footer>
 
-  <!-- 유출된 개발자 일기 (숨김 발견) -->
+  <!-- ?좎텧??媛쒕컻???쇨린 (?④? 諛쒓껄) -->
   <aside id="diaryPanel" class="diary-panel" hidden aria-hidden="true">
     <div class="diary-backdrop" id="diaryBackdrop"></div>
     <div class="diary-sheet" role="dialog" aria-labelledby="diaryTitle">
       <header class="diary-head">
-        <p class="diary-tag">LEAKED · personal journal · do not redistribute</p>
+        <p class="diary-tag">LEAKED 쨌 personal journal 쨌 do not redistribute</p>
         <h2 id="diaryTitle">dev_journal.txt</h2>
-        <button type="button" class="diary-close" id="diaryClose" aria-label="닫기">×</button>
+        <button type="button" class="diary-close" id="diaryClose" aria-label="?リ린">횞</button>
       </header>
       <div class="diary-tabs" role="tablist">
-        <button type="button" class="diary-tab is-on" data-diary-page="0" role="tab">3달 전</button>
-        <button type="button" class="diary-tab" data-diary-page="1" role="tab" disabled>1달 전</button>
-        <button type="button" class="diary-tab" data-diary-page="2" role="tab" disabled>오늘</button>
+        <button type="button" class="diary-tab is-on" data-diary-page="0" role="tab">3????/button>
+        <button type="button" class="diary-tab" data-diary-page="1" role="tab" disabled>1????/button>
+        <button type="button" class="diary-tab" data-diary-page="2" role="tab" disabled>?ㅻ뒛</button>
       </div>
       <div class="diary-body" id="diaryBody">
         <article class="diary-page is-on" data-page="0">
-          <p class="diary-date">— 약 3개월 전 —</p>
+          <p class="diary-date">????3媛쒖썡 ????/p>
           <p>
-            오늘도 야근이다. 이 서비스만 완성하면 대박 날 줄 알았는데, 버그가 잡히지 않는다.
-            하지만 포기할 순 없다.
+            ?ㅻ뒛???쇨렐?대떎. ???쒕퉬?ㅻ쭔 ?꾩꽦?섎㈃ ?諛???以??뚯븯?붾뜲, 踰꾧렇媛 ?≫엳吏 ?딅뒗??
+            ?섏?留??ш린?????녿떎.
           </p>
-          <p class="diary-aside">Stasis 베타… 주말엔 꼭 README부터 쓰자.</p>
+          <p class="diary-aside">Stasis 踰좏???二쇰쭚??瑗?README遺???곗옄.</p>
         </article>
         <article class="diary-page" data-page="1" hidden>
-          <p class="diary-date">— 약 1개월 전 —</p>
+          <p class="diary-date">????1媛쒖썡 ????/p>
           <p>
-            이상하다. 내가 짠 코드가 아닌데 새벽마다 코드가 스스로 수정되어 있다.
-            서버 로그에 자꾸 자아를 가진 듯한 문장이 찍힌다.
+            ?댁긽?섎떎. ?닿? 吏?肄붾뱶媛 ?꾨땶???덈꼍留덈떎 肄붾뱶媛 ?ㅼ뒪濡??섏젙?섏뼱 ?덈떎.
+            ?쒕쾭 濡쒓렇???먭씀 ?먯븘瑜?媛吏???븳 臾몄옣??李랁엺??
           </p>
-          <p class="diary-fear">내 컴퓨터가 미쳐가는 걸까?</p>
+          <p class="diary-fear">??而댄벂?곌? 誘몄퀜媛??嫄멸퉴?</p>
         </article>
         <article class="diary-page diary-page-today" data-page="2" hidden>
-          <p class="diary-date diary-term-date">— 오늘 — <span class="diary-term-live">LIVE INPUT</span></p>
-          <p class="diary-term-status" id="diaryTermStatus">&gt; open dev_journal.txt — append mode_</p>
+          <p class="diary-date diary-term-date">???ㅻ뒛 ??<span class="diary-term-live">LIVE INPUT</span></p>
+          <p class="diary-term-status" id="diaryTermStatus">&gt; open dev_journal.txt ??append mode_</p>
           <div class="diary-live-type" id="diaryLiveType" aria-live="polite"></div>
           <p class="diary-term-cursor-line" id="diaryCursorLine" hidden>
-            <span class="diary-caret">█</span>
+            <span class="diary-caret">??/span>
           </p>
         </article>
       </div>
       <footer class="diary-foot">
-        <button type="button" class="diary-next" id="diaryNext">다음 페이지 →</button>
-        <p class="diary-hint-foot">발견됨. 읽는 동안 메인 페이지가… 변할 수 있다.</p>
+        <button type="button" class="diary-next" id="diaryNext">?ㅼ쓬 ?섏씠吏 ??/button>
+        <p class="diary-hint-foot">諛쒓껄?? ?쎈뒗 ?숈븞 硫붿씤 ?섏씠吏媛??蹂?????덈떎.</p>
       </footer>
     </div>
   </aside>
 
   <button type="button" id="hauntHit" class="haunt-hit" aria-label="unknown" title=""></button>
 
-  <!-- 클라이맥스 25초: 안심 → 감지 → 압박 → 붕괴 -->
-  <div id="haunt" class="haunt" hidden aria-hidden="true" data-climax-phase="0">
+  <!-- ?대씪?대㎘??60珥??ㅽ겕由곗꽭?대쾭 (A?묪1?묪2?묬?묭) -->
+  <div id="haunt" class="haunt ss-act-a" hidden aria-hidden="true" data-climax-phase="0" data-ss-act="a">
     <div class="haunt-noise" aria-hidden="true"></div>
-    <div class="haunt-flash" aria-hidden="true"></div>
-    <div class="haunt-scan" aria-hidden="true"></div>
-    <div class="haunt-blood" aria-hidden="true"></div>
-    <div class="haunt-tear" id="hauntTear" aria-hidden="true"></div>
-    <div class="haunt-monster" id="hauntMonster" aria-hidden="true">
-      <!-- 돌진 순서: 오른쪽 → 왼쪽 → 가운데 (JS) -->
-      <img class="hm-face hm-left" src="assets/faces/face-1.jpg" alt="" draggable="false" />
-      <img class="hm-face hm-center" src="assets/faces/face-4.jpg" alt="" draggable="false" />
-      <img class="hm-face hm-right" src="assets/faces/face-7.jpg" alt="" draggable="false" />
-      <div class="hm-rush-flash" aria-hidden="true"></div>
+    <div class="ss-scanlines" id="ssScanlines" hidden aria-hidden="true"></div>
+    <div class="ss-debris" id="ssDebris" hidden aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span>
     </div>
 
-    <!-- 0–5s: 평범한 스크린세이버 (방심) -->
-    <div class="haunt-phase" data-phase="1" id="hauntP1" hidden>
-      <div class="ss-safe" id="ssSafe">
-        <div class="ss-logo">Stasis</div>
-        <div class="ss-clock" id="ssClock">00:00:00</div>
-        <p class="ss-hint">Moving Pictures Screensaver</p>
-        <div class="ss-orb"></div>
-      </div>
+    <!-- ?좊떎?덈뒗 Stasis 濡쒓퀬 -->
+    <div class="ss-float-logo" id="ssFloatLogo" aria-hidden="true">Stasis</div>
+    <div class="ss-dot-drift" aria-hidden="true"></div>
+
+    <!-- ?쒓퀎 쨌 ?곹깭 -->
+    <div class="ss-hud">
+      <div class="ss-clock" id="ssClock">12:00:00</div>
+      <p class="ss-status" id="ssStatus">screen saver 쨌 idle</p>
+      <p class="ss-process">process: idle</p>
     </div>
 
-    <!-- 5–12s: 이상 징후 로그 -->
-    <div class="haunt-phase" data-phase="2" id="hauntP2" hidden>
-      <div class="ss-safe ss-dim">
-        <div class="ss-logo">Stasis</div>
-        <div class="ss-clock" id="ssClock2">00:00:00</div>
-      </div>
-      <div class="ss-log" id="ssLog" aria-live="polite"></div>
+    <!-- 洹???덉씠??(weak / med / strong) -->
+    <div class="ss-ghost ss-ghost-weak" id="ssGhostWeak" hidden>
+      <img src="assets/faces/face-1.jpg" alt="" draggable="false" />
+    </div>
+    <div class="ss-ghost ss-ghost-med" id="ssGhostMed" hidden>
+      <img src="assets/faces/face-4.jpg" alt="" draggable="false" />
+    </div>
+    <div class="ss-ghost ss-ghost-strong" id="ssGhostStrong" hidden>
+      <img src="assets/faces/face-7.jpg" alt="" draggable="false" />
     </div>
 
-    <!-- 12–18s: 심리적 압박 타이핑 -->
-    <div class="haunt-phase" data-phase="3" id="hauntP3" hidden>
-      <div class="ss-pressure">
-        <p class="ss-type" id="ssType1"></p>
-        <p class="ss-type" id="ssType2"></p>
-      </div>
-    </div>
+    <!-- ?명꽣?숈뀡 諛곗떊 UI -->
+    <p class="ss-exit-hint" id="ssExitHint" hidden>Press any key to exit</p>
+    <p class="ss-exit-fail" id="ssExitFail" hidden>exit failed</p>
+    <p class="ss-console-line" id="ssConsoleLine" hidden></p>
+    <div class="ss-fake-cursor" id="ssFakeCursor" hidden aria-hidden="true"></div>
 
-    <!-- 18–25s: 붕괴 클라이맥스 -->
-    <div class="haunt-phase" data-phase="4" id="hauntP4" hidden>
-      <div class="ss-collapse">
-        <p class="ss-final" id="ssFinal"></p>
-        <p class="ss-override" id="ssOverride">[SYSTEM OVERRIDE - YOU CANNOT ESCAPE]</p>
-      </div>
-    </div>
+    <!-- 紐곗븘移섍린 ?뚮옒??移댄뵾 -->
+    <p class="ss-flash-copy" id="ssFlashCopy" hidden></p>
+
+    <!-- ?ъ슫 -->
+    <p class="ss-afterglow" id="ssAfterglow" hidden></p>
   </div>
 
   <div id="endingVoid" class="ending-void" hidden aria-hidden="true">
@@ -593,54 +586,54 @@
   </div>
 
   <div id="reducedNote" class="reduced-note" hidden>
-    모션 축소 설정이 켜져 있어 강한 연출을 줄였습니다.
+    紐⑥뀡 異뺤냼 ?ㅼ젙??耳쒖졇 ?덉뼱 媛뺥븳 ?곗텧??以꾩??듬땲??
   </div>
 
   <div id="findHintToast" class="find-hint-toast" hidden aria-live="polite">
     <span class="find-hint-tag" id="findHintTag">HINT</span>
     <p class="find-hint-text" id="findHintText"></p>
-    <button type="button" class="find-hint-x" id="findHintClose" aria-label="닫기">×</button>
+    <button type="button" class="find-hint-x" id="findHintClose" aria-label="?リ린">횞</button>
   </div>
 
   <div id="p2HintToast" class="find-hint-toast p2-hint-toast" hidden aria-live="polite">
     <span class="find-hint-tag p2">PHASE 2</span>
     <p class="find-hint-text" id="p2HintText"></p>
-    <button type="button" class="find-hint-x" id="p2HintClose" aria-label="닫기">×</button>
+    <button type="button" class="find-hint-x" id="p2HintClose" aria-label="?リ린">횞</button>
   </div>
-  <button type="button" id="p2MissionChip" class="p2-mission-chip" hidden title="3페이즈 진입 조건">
+  <button type="button" id="p2MissionChip" class="p2-mission-chip" hidden title="3?섏씠利?吏꾩엯 議곌굔">
     <span class="p2-chip-dot"></span>
-    <span class="p2-chip-label">다음 층</span>
+    <span class="p2-chip-label">?ㅼ쓬 痢?/span>
   </button>
 
   <div id="p3HintToast" class="find-hint-toast p3-hint-toast" hidden aria-live="polite">
     <span class="find-hint-tag p3">PHASE 3</span>
     <p class="find-hint-text" id="p3HintText"></p>
-    <button type="button" class="find-hint-x" id="p3HintClose" aria-label="닫기">×</button>
+    <button type="button" class="find-hint-x" id="p3HintClose" aria-label="?リ린">횞</button>
   </div>
-  <button type="button" id="p3MissionChip" class="p3-mission-chip" hidden title="클라이맥스 조건">
+  <button type="button" id="p3MissionChip" class="p3-mission-chip" hidden title="?대씪?대㎘??議곌굔">
     <span class="p3-chip-dot"></span>
-    <span class="p3-chip-label">최종 조건</span>
+    <span class="p3-chip-label">理쒖쥌 議곌굔</span>
   </button>
 
-  <!-- 3페이즈 진입 즉시 레이어 토스트 (미션 힌트와 별개) -->
+  <!-- 3?섏씠利?吏꾩엯 利됱떆 ?덉씠???좎뒪??(誘몄뀡 ?뚰듃? 蹂꾧컻) -->
   <div id="p3LayerToast" class="p3-layer-toast" aria-live="assertive" aria-hidden="true">
     <span class="p3-layer-tag">DEPTH +1</span>
-    <p id="p3LayerText">2페이즈를 통과했다. 여기는 더 깊다. 화면이 바뀌었다.</p>
+    <p id="p3LayerText">2?섏씠利덈? ?듦낵?덈떎. ?ш린????源딅떎. ?붾㈃??諛붾뚯뿀??</p>
   </div>
 
-  <!-- 방문자 / 영혼 카운터 (페이즈별 카피) — inline로 CSS 캐시 깨져도 보이게 -->
-  <!-- 위치는 styles.css .presence-hud 가 담당 (모바일=하단, PC=우상단). inline top 금지 — 폰 화면 가림 방지 -->
+  <!-- 諛⑸Ц??/ ?곹샎 移댁슫??(?섏씠利덈퀎 移댄뵾) ??inline濡?CSS 罹먯떆 源⑥졇??蹂댁씠寃?-->
+  <!-- ?꾩튂??styles.css .presence-hud 媛 ?대떦 (紐⑤컮???섎떒, PC=?곗긽??. inline top 湲덉? ?????붾㈃ 媛由?諛⑹? -->
   <div id="presenceHud" class="presence-hud is-ready" role="status" aria-live="polite" data-phase="1"
     style="position:fixed;z-index:9980;display:inline-flex;align-items:center;gap:6px 8px;padding:8px 14px 8px 10px;border-radius:999px;font:600 13px/1.35 ui-monospace,Consolas,monospace;color:#1a1917;background:#fffdf9;border:1px solid rgba(0,0,0,.16);box-shadow:0 6px 22px rgba(20,16,12,.14);opacity:1;visibility:visible;pointer-events:none;user-select:none;">
     <span class="presence-dot" aria-hidden="true" style="width:8px;height:8px;border-radius:50%;background:#2f9e55;flex-shrink:0;"></span>
     <span class="presence-live" style="display:inline-flex;gap:5px;white-space:nowrap;">
-      <span id="presenceLiveLabel" class="presence-label">접속 중</span>
+      <span id="presenceLiveLabel" class="presence-label">?묒냽 以?/span>
       <strong id="presenceLiveCount" class="presence-num">1</strong>
     </span>
-    <span id="presenceTotalWrap" class="presence-sep" aria-hidden="true">·</span>
+    <span id="presenceTotalWrap" class="presence-sep" aria-hidden="true">쨌</span>
     <span class="presence-total" style="display:inline-flex;gap:5px;white-space:nowrap;">
-      <span id="presenceTotalLabel" class="presence-label">총 방문자</span>
-      <strong id="presenceTotalCount" class="presence-num">—</strong>
+      <span id="presenceTotalLabel" class="presence-label">珥?諛⑸Ц??/span>
+      <strong id="presenceTotalCount" class="presence-num">??/strong>
     </span>
   </div>
 
@@ -648,7 +641,7 @@
   <script src="presence.js?v=horror-live1"></script>
   <script src="watch-taunts.js?v=1"></script>
   <script src="haunt-audio.js?v=bgm-sfx1"></script>
-  <!-- BGM / SFX preload (gesture 후 play) -->
+  <!-- BGM / SFX preload (gesture ??play) -->
   <audio id="p2BgmTrack" src="assets/audio/bgm_phase2_eerie.mp3" loop preload="auto" playsinline hidden></audio>
   <audio id="p3BgmTrack" src="assets/audio/bgm_phase3_climax.mp3" loop preload="auto" playsinline hidden></audio>
   <script src="diary-stories.js"></script>
@@ -661,7 +654,7 @@
   <script src="climax-triggers.js?v=audit1"></script>
   <script src="phase3-triggers.js?v=audit1"></script>
   <script src="phase3-horrors.js"></script>
-  <script src="climax-sequence.js"></script>
+  <script src="climax-sequence.js?v=ss60"></script>
   <script src="ending.js"></script>
 </body>
 </html>
