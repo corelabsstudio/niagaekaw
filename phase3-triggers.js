@@ -62,7 +62,8 @@
 
   function markHot(el, extraClass) {
     if (!el) return null;
-    el.classList.add("p2-trig-hot", "p3-trig-hot");
+    // 1페이즈 find-flash 와 동일한 노란 반짝
+    el.classList.add("p2-trig-hot", "p3-trig-hot", "find-flash");
     if (extraClass) el.classList.add(extraClass);
     el.style.pointerEvents = "auto";
     el.style.cursor = "pointer";
@@ -80,6 +81,19 @@
     } catch (e1) {}
     if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
     return el;
+  }
+
+  function clearHotGlow() {
+    for (var i = 0; i < hotTargets.length; i++) {
+      var el = hotTargets[i];
+      if (!el || !el.classList) continue;
+      el.classList.remove(
+        "find-flash",
+        "find-flash-hit",
+        "climax-holding",
+        "p3-holding"
+      );
+    }
   }
 
   function showTypeGuide(text) {
@@ -130,6 +144,7 @@
       s.classList.remove("is-on");
       s.hidden = true;
     }
+    clearHotGlow();
     document.body.classList.remove("trig-hint-live", "p3-trig-reveal");
     document.documentElement.classList.remove("trig-hint-live");
   }
@@ -168,7 +183,7 @@
     function clear() {
       if (t) clearTimeout(t);
       t = null;
-      el.classList.remove(cls);
+      el.classList.remove(cls, "find-flash-hit");
     }
     el.addEventListener("pointerdown", function (e) {
       if (!phase3Ready() || busy()) return;
@@ -176,7 +191,7 @@
       try {
         e.preventDefault();
       } catch (err) {}
-      el.classList.add(cls);
+      el.classList.add(cls, "find-flash-hit");
       var holdFor = missionRevealed ? Math.min(ms, 1600) : ms;
       t = setTimeout(function () {
         clear();

@@ -421,7 +421,8 @@
 
   function markHot(el, extraClass) {
     if (!el) return null;
-    el.classList.add("p2-trig-hot");
+    // 1페이즈 find-flash 와 동일한 노란 반짝 클래스
+    el.classList.add("p2-trig-hot", "find-flash");
     if (extraClass) el.classList.add(extraClass);
     el.style.pointerEvents = "auto";
     el.style.cursor = "pointer";
@@ -440,6 +441,19 @@
     } catch (e1) {}
     if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
     return el;
+  }
+
+  function clearHotGlow() {
+    for (var i = 0; i < hotTargets.length; i++) {
+      var el = hotTargets[i];
+      if (!el || !el.classList) continue;
+      el.classList.remove(
+        "find-flash",
+        "find-flash-hit",
+        "climax-holding",
+        "p3-holding"
+      );
+    }
   }
 
   function showTypeGuide(text) {
@@ -495,6 +509,7 @@
       s.classList.remove("is-on");
       s.hidden = true;
     }
+    clearHotGlow();
     document.body.classList.remove("trig-hint-live", "p2-trig-reveal");
     document.documentElement.classList.remove("trig-hint-live");
   }
@@ -587,7 +602,7 @@
     function clear() {
       if (t) clearTimeout(t);
       t = null;
-      el.classList.remove(cls);
+      el.classList.remove(cls, "find-flash-hit");
     }
     el.addEventListener("pointerdown", function (e) {
       if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
@@ -595,7 +610,7 @@
       try {
         e.preventDefault();
       } catch (err) {}
-      el.classList.add(cls);
+      el.classList.add(cls, "find-flash-hit");
       var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
       t = setTimeout(function () {
         clear();
@@ -624,7 +639,7 @@
     function clearHold(el) {
       if (t) clearTimeout(t);
       t = null;
-      if (el) el.classList.remove(cls);
+      if (el) el.classList.remove(cls, "find-flash-hit");
     }
 
     function bind(el) {
@@ -646,9 +661,13 @@
         try {
           e.preventDefault();
         } catch (err) {}
-        target.classList.add(cls);
         var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
-        clearHold(target);
+        if (t) clearTimeout(t);
+        t = null;
+        bound.forEach(function (b) {
+          if (b) b.classList.remove(cls, "find-flash-hit");
+        });
+        target.classList.add(cls, "find-flash-hit");
         t = setTimeout(function () {
           clearHold(target);
           done();

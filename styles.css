@@ -2452,18 +2452,38 @@ body:not(.stage-clean) .stasis-clock-hide.p2-trig-hot,
 body:not(.stage-clean) .p2-trig-hot {
   color: rgba(255, 170, 185, 0.72);
 }
-/* 2·3페이즈 트리거 핫존 — 힌트 전: 은은 / 힌트 후: 확실히 보이게 */
+/* 2·3페이즈 트리거 핫존 — 1페이즈 find-flash 와 동일한 노란 반짝 */
 .p2-trig-hot,
 .p3-trig-hot {
-  cursor: pointer;
+  cursor: pointer !important;
+  pointer-events: auto !important;
   -webkit-user-select: none;
   user-select: none;
+  position: relative;
+  z-index: 80 !important;
+  outline: 2px solid rgba(255, 230, 120, 0.95) !important;
+  outline-offset: 3px;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 4px rgba(255, 200, 60, 0.28),
+    0 0 22px 6px rgba(255, 190, 40, 0.55),
+    0 0 48px 10px rgba(255, 140, 20, 0.25) !important;
+  filter: brightness(1.18) saturate(1.15);
+  animation: find-flash-pulse 0.28s ease-in-out infinite alternate;
+  transition: box-shadow 0.08s ease, filter 0.08s ease;
 }
+/* 홀드 중 = 1페이즈 hit 플래시와 동일 (노란→붉은 반응) */
 .p2-trig-hot.climax-holding,
 .p3-trig-hot.p3-holding,
-.p2-trig-hot.p3-holding {
-  outline: 1px solid rgba(255, 80, 120, 0.4);
-  box-shadow: 0 0 14px rgba(255, 40, 80, 0.25);
+.p2-trig-hot.p3-holding,
+.p2-trig-hot.find-flash-hit,
+.p3-trig-hot.find-flash-hit {
+  animation: none;
+  box-shadow:
+    0 0 0 6px rgba(255, 80, 100, 0.5),
+    0 0 40px 12px rgba(255, 40, 70, 0.55) !important;
+  outline-color: rgba(255, 90, 110, 0.95) !important;
+  filter: brightness(1.35);
 }
 /* 숨겨진 뱃지 등 강제 표시 */
 .p2-trig-force-show {
@@ -2479,31 +2499,46 @@ body:not(.stage-clean) .p2-trig-hot {
   max-width: none !important;
   max-height: none !important;
 }
-/* 힌트가 뜬 뒤: 타깃을 풀 수 있게 강조 (토스트 닫혀도 유지) */
+/* 힌트 공개 후에도 동일 발광 유지 (빨간 아웃라인 제거) */
 body.trig-hint-live .p2-trig-hot,
 body.trig-hint-live .p3-trig-hot,
 body.p2-trig-reveal .p2-trig-hot,
 body.p3-trig-reveal .p3-trig-hot {
-  outline: 2px solid rgba(255, 70, 100, 0.85) !important;
+  outline: 2px solid rgba(255, 230, 120, 0.95) !important;
   outline-offset: 3px;
   box-shadow:
-    0 0 0 1px rgba(255, 120, 140, 0.35),
-    0 0 22px rgba(255, 40, 70, 0.45) !important;
-  animation: trigHotPulse 1.4s ease-in-out infinite;
-  position: relative;
-  z-index: 6;
+    0 0 0 4px rgba(255, 200, 60, 0.28),
+    0 0 22px 6px rgba(255, 190, 40, 0.55),
+    0 0 48px 10px rgba(255, 140, 20, 0.25) !important;
+  animation: find-flash-pulse 0.28s ease-in-out infinite alternate;
+  filter: brightness(1.18) saturate(1.15);
+  z-index: 80 !important;
 }
 body.trig-hint-live .p2-trig-banner,
 body.trig-hint-live .p2-trig-fakeurl,
 body.trig-hint-live .fake-chrome.p2-trig-fakeurl,
 html.climax-fakeurl-live.trig-hint-live #fakeUrlBar {
-  outline: 2px solid rgba(255, 90, 110, 0.8) !important;
-  outline-offset: 2px;
-  box-shadow: 0 0 20px rgba(255, 40, 70, 0.4) !important;
+  outline: 2px solid rgba(255, 230, 120, 0.95) !important;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px rgba(255, 200, 60, 0.28),
+    0 0 22px 6px rgba(255, 190, 40, 0.55),
+    0 0 48px 10px rgba(255, 140, 20, 0.25) !important;
+  animation: find-flash-pulse 0.28s ease-in-out infinite alternate;
+  filter: brightness(1.18) saturate(1.15);
 }
-@keyframes trigHotPulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.12); }
+@media (prefers-reduced-motion: reduce) {
+  .p2-trig-hot,
+  .p3-trig-hot,
+  body.trig-hint-live .p2-trig-hot,
+  body.trig-hint-live .p3-trig-hot,
+  body.p2-trig-reveal .p2-trig-hot,
+  body.p3-trig-reveal .p3-trig-hot {
+    animation: none;
+    box-shadow:
+      0 0 0 3px rgba(255, 210, 80, 0.55),
+      0 0 18px 6px rgba(255, 180, 40, 0.4) !important;
+  }
 }
 /* 키보드 미션 가이드 */
 .p2-type-guide {
