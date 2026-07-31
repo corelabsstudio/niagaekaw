@@ -4,8 +4,11 @@
 
 ## 실행
 
+저장소 루트에서 `open-local.bat` 실행 — 포트 4173 서버를 띄우고 브라우저를 연다.
+
+직접 띄우려면:
+
 ```powershell
-cd C:\Users\hysoo\projects\WakeAgain\experiments\cursed-haunt
 python -m http.server 4173
 ```
 
