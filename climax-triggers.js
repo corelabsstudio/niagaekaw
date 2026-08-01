@@ -1202,14 +1202,33 @@
     document.body.classList.remove("p2-hint-visible");
   }
   function scheduleP2Hint() {
-    /* no-op */
+    /* 힌트 UI 없음 — 단, 페이즈 진행으로 숨김 처리된 홀드 타깃은 재해석 필요 */
+    revealMissionTargets();
   }
   function markP2Entered() {
-    return !!phase2Ready();
+    if (!phase2Ready()) return false;
+    scheduleP2Hint();
+    return true;
   }
   function watchPhase2() {
     return markP2Entered();
   }
+  // phase2 진입/진행 감지 → 숨은 홀드 타깃 재바인딩 (path_hold/badge_hold/feat_hold/quote_hold)
+  document.addEventListener("haunt-stage", function (ev) {
+    var s = ev && ev.detail && ev.detail.stage;
+    if (s >= 2) watchPhase2();
+  });
+  document.addEventListener("haunt-mood", function (ev) {
+    var m = ev && ev.detail && ev.detail.mood;
+    if (m >= 3) watchPhase2();
+  });
+  document.addEventListener("haunt-diary", function () {
+    setTimeout(watchPhase2, 800);
+  });
+  // 이미 조건을 만족한 채 로드된 경우 대비 폴링 (커스텀 이벤트를 놓친 경우 안전망)
+  setInterval(function () {
+    if (!fired) watchPhase2();
+  }, 3000);
 
   // 공개 빌드: 관리자/프리패스 UI·단축키 없음
   window.__hauntCreatorPass = false;
