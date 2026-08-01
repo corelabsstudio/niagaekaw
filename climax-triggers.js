@@ -1,6 +1,7 @@
 /**
  * 2페이즈 → 3페이즈 게이트 트리거
- * - 약 20종 풀, 세션마다 1개만 활성
+ * - 1페이즈(phase1-flash.js)와 동일한 방식: 후보 20곳 중 하나가 랜덤으로 짧게(~1초) 반짝이다
+ *   사라지고, 다음 후보로 옮겨가며 반복. 반짝이는 순간 클릭하면 3페이즈로 진입.
  * - phase2Ready: 일기 발견 + stage ≥ 2
  * - 발동 시 클라이맥스가 아니라 **3페이즈 진입** (클라이맥스는 phase3-triggers.js)
  * - 공개 빌드 (관리자 프리패스 없음)
@@ -285,7 +286,6 @@
     } catch (eT) {}
 
     startPhase3FxLoops();
-    // 진입 레이어 토스트 제거 — 머무름/전환 힌트 UI 없음
   }
 
   function enterPhase3() {
@@ -311,7 +311,7 @@
     try {
       document.dispatchEvent(
         new CustomEvent("haunt-phase3", {
-          detail: { at: Date.now(), from: "p2-trigger", trigger: active && active.id },
+          detail: { at: Date.now(), from: "p2-trigger" },
         })
       );
     } catch (e3) {}
@@ -332,7 +332,7 @@
       }
     } catch (e4) {}
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[phase] entered phase 3 via", active && active.id);
+      console.log("[phase] entered phase 3 via flash-trigger");
     }
     return true;
   }
@@ -364,18 +364,6 @@
     enterPhase3();
   }
 
-  /**
-   * 2페이즈 게이트 트리거 20 — 클린 SaaS 레이아웃 기준
-   * (WIP 띠/caret/TODO 등 클린 전용 요소 사용 금지)
-   * 대상: 로고·플랜카드·제목·카드·푸터·가짜주소창·경로·시계·배지 등
-   */
-  function p2Only(fn) {
-    return function () {
-      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-      return fn.apply(this, arguments);
-    };
-  }
-
   function isMobileHaunt() {
     try {
       if (document.documentElement.classList.contains("is-mobile")) return true;
@@ -391,90 +379,7 @@
     }
   }
 
-  /** 폰에서 기본 뽑기 제외 (키보드/복사 전용) — 강제 뽑기 시 터치 대체 arm 유지 */
-  var DESKTOP_ONLY_IDS = {
-    type_kill: 1,
-    type_process: 1,
-    copy_curse: 1,
-  };
-
-  /** 힌트 UI 없음 — 처음부터 타깃 발광만 (홀드 시간 완화 플래그 상시 on) */
-  var missionRevealed = true;
-  var hotTargets = [];
-  window.__hauntHintRevealed = true;
-
-  function markHot(el, extraClass) {
-    if (!el) return null;
-    // 1페이즈 find-flash 와 동일한 노란 반짝 클래스
-    el.classList.add("p2-trig-hot", "find-flash");
-    if (extraClass) el.classList.add(extraClass);
-    el.style.pointerEvents = "auto";
-    el.style.cursor = "pointer";
-    try {
-      el.setAttribute("tabindex", "0");
-    } catch (e0) {}
-    // 숨김 요소 복구 (뱃지 등)
-    try {
-      var cs = getComputedStyle(el);
-      if (cs.display === "none" || cs.visibility === "hidden" || cs.opacity === "0") {
-        el.classList.add("p2-trig-force-show");
-      }
-      if (el.offsetParent === null && el !== document.body) {
-        el.classList.add("p2-trig-force-show");
-      }
-    } catch (e1) {}
-    if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
-    return el;
-  }
-
-  function clearHotGlow() {
-    for (var i = 0; i < hotTargets.length; i++) {
-      var el = hotTargets[i];
-      if (!el || !el.classList) continue;
-      el.classList.remove(
-        "find-flash",
-        "find-flash-hit",
-        "climax-holding",
-        "p3-holding"
-      );
-    }
-  }
-
-  function showTypeGuide() {
-    /* no-op: dwell hint guides removed */
-  }
-  function showScrollCue() {
-    /* no-op */
-  }
-
-  function hideMissionAids() {
-    var g = document.getElementById("p2TypeGuide");
-    if (g) {
-      g.classList.remove("is-on");
-      g.hidden = true;
-    }
-    var s = document.getElementById("p2ScrollCue");
-    if (s) {
-      s.classList.remove("is-on");
-      s.hidden = true;
-    }
-    clearHotGlow();
-    document.body.classList.remove("trig-hint-live", "p2-trig-reveal");
-    document.documentElement.classList.remove("trig-hint-live");
-  }
-
-  function revealMissionTargets() {
-    /* 힌트 UI 없음 — 발광은 markHot(find-flash) 만 사용 */
-    missionRevealed = true;
-    window.__hauntHintRevealed = true;
-    if (typeof window.__hauntP2RebindHold === "function") {
-      try {
-        window.__hauntP2RebindHold();
-      } catch (eRe) {}
-    }
-  }
-
-  /** 클릭/홀드 가능 여부 (display:none·0크기 제외) */
+  /** 클릭 가능 여부 (display:none·0크기 제외) */
   function isInteractable(el) {
     if (!el) return false;
     try {
@@ -493,727 +398,258 @@
     for (var i = 0; i < cands.length; i++) {
       if (isInteractable(cands[i])) return cands[i];
     }
-    // 폴백: 첫 존재하는 노드 (force-show로 살릴 수 있음)
-    for (var j = 0; j < cands.length; j++) {
-      if (cands[j]) return cands[j];
-    }
     return null;
   }
 
-  function armHold(el, ms, done, holdClass) {
-    if (!el) return false;
-    markHot(el);
-    // 힌트 후에는 홀드 시간 완화
-    var needMs = ms;
-    var t = null;
-    var cls = holdClass || "climax-holding";
-    function clear() {
-      if (t) clearTimeout(t);
-      t = null;
-      el.classList.remove(cls, "find-flash-hit");
-    }
-    el.addEventListener("pointerdown", function (e) {
-      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-      if (e.button != null && e.button !== 0) return;
-      try {
-        e.preventDefault();
-      } catch (err) {}
-      el.classList.add(cls, "find-flash-hit");
-      var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
-      t = setTimeout(function () {
-        clear();
-        done();
-      }, holdFor);
-    });
-    el.addEventListener("pointerup", clear);
-    el.addEventListener("pointerleave", clear);
-    el.addEventListener("pointercancel", clear);
-    return true;
-  }
-
   /**
-   * 페이즈 전환 후 타깃이 숨겨질 수 있는 홀드 — 힌트/입력 시점에 재해석
-   * resolve() 가 보이는 요소를 반환해야 함.
+   * 2페이즈 후보 20곳 — 1페이즈([data-find])와 동일한 방식의 리졸버 풀.
+   * 매 뽑기마다 새로 resolve 하므로, 페이즈 진행으로 숨겨지는 타깃(뱃지 등)도
+   * 별도 재바인딩 없이 항상 그 순간 보이는 요소로 연결된다.
    */
-  function armHoldResolved(resolve, ms, done, holdClass) {
-    if (typeof resolve !== "function") return armHold(resolve, ms, done, holdClass);
-    var current = resolve();
-    if (current) markHot(current);
-    var needMs = ms;
-    var t = null;
-    var cls = holdClass || "climax-holding";
-    var bound = [];
-
-    function clearHold(el) {
-      if (t) clearTimeout(t);
-      t = null;
-      if (el) el.classList.remove(cls, "find-flash-hit");
-    }
-
-    function bind(el) {
-      if (!el || bound.indexOf(el) !== -1) return;
-      bound.push(el);
-      markHot(el);
-      el.addEventListener("pointerdown", function (e) {
-        if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-        if (e.button != null && e.button !== 0) return;
-        // 숨은 타깃이면 재해석 후 재시도 안내만
-        var live = resolve();
-        if (live && live !== el) {
-          bind(live);
-          try {
-            live.scrollIntoView({ block: "center", inline: "nearest" });
-          } catch (e0) {}
-        }
-        var target = isInteractable(el) ? el : live || el;
-        try {
-          e.preventDefault();
-        } catch (err) {}
-        var holdFor = missionRevealed ? Math.min(needMs, 1600) : needMs;
-        if (t) clearTimeout(t);
-        t = null;
-        bound.forEach(function (b) {
-          if (b) b.classList.remove(cls, "find-flash-hit");
-        });
-        target.classList.add(cls, "find-flash-hit");
-        t = setTimeout(function () {
-          clearHold(target);
-          done();
-        }, holdFor);
-      });
-      el.addEventListener("pointerup", function () {
-        clearHold(el);
-      });
-      el.addEventListener("pointerleave", function () {
-        clearHold(el);
-      });
-      el.addEventListener("pointercancel", function () {
-        clearHold(el);
-      });
-    }
-
-    bind(current);
-    // 힌트 시 재해석용 훅
-    var prevReveal = window.__hauntP2RebindHold;
-    window.__hauntP2RebindHold = function () {
-      if (typeof prevReveal === "function") {
-        try {
-          prevReveal();
-        } catch (e1) {}
-      }
-      var next = resolve();
-      if (next) bind(next);
-    };
-    return true;
-  }
-
-  function armClicks(el, need, windowMs, done) {
-    if (!el) return false;
-    markHot(el);
-    var n = 0;
-    var reset = null;
-    var win = windowMs || 2200;
-    if (isMobileHaunt()) win = Math.max(win, 3200);
-    // 힌트 후: 클릭 창 더 여유
-    el.addEventListener("click", function (e) {
-      if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-      n++;
-      clearTimeout(reset);
-      var w = missionRevealed ? Math.max(win, 4000) : win;
-      reset = setTimeout(function () {
-        n = 0;
-      }, w);
-      if (n >= need) {
-        n = 0;
-        done();
-      }
-    });
-    return true;
-  }
-
-  /** 모바일 터치 대체: 대상 연타 / 길게 누르기 */
-  function armMobileTapAlt(el, need, done, hotClass) {
-    if (!el) return false;
-    markHot(el, hotClass || "mobile-trig-alt");
-    return armClicks(el, need, 3200, done);
-  }
-  function armMobileHoldAlt(el, ms, done) {
-    if (!el) return false;
-    markHot(el, "mobile-trig-alt");
-    return armHold(el, ms, done);
-  }
-
-  var TRIGGERS = [
-    {
-      id: "hold_free",
-      hint: "Free 카드 길게",
-      arm: function (done) {
-        var btn =
-          document.getElementById("planFree") ||
-          document.querySelector(".plan-card.is-on") ||
-          document.querySelector("[data-fake='2']");
-        armHold(btn, 1800, done);
-      },
+  var RESOLVERS = [
+    function () {
+      return firstInteractable([
+        document.getElementById("planFree"),
+        document.querySelector(".plan-card.is-on"),
+      ]);
     },
-    {
-      id: "triple_logo",
-      hint: "로고 3연타",
-      arm: function (done) {
-        armClicks(document.getElementById("topRec"), 3, 1400, done);
-      },
+    function () {
+      return document.getElementById("topRec");
     },
-    {
-      id: "type_kill",
-      hint: "키보드 kill / wake",
-      arm: function (done) {
-        var buf = "";
-        document.addEventListener("keydown", function (e) {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-          if (e.metaKey || e.ctrlKey || e.altKey) return;
-          if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
-          buf = (buf + e.key.toLowerCase()).slice(-8);
-          if (buf.indexOf("kill") !== -1 || buf.indexOf("wake") !== -1) {
-            buf = "";
-            done();
-          }
-        });
-        var team =
-          document.getElementById("planTeam") ||
-          document.querySelector("[data-fake='3']");
-        // 데스크톱도 힌트 후 Team 7연타 대체 가능
-        armMobileTapAlt(team, isMobileHaunt() ? 7 : 5, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("planTeam"),
+        document.querySelector(".plan-card.danger-btn"),
+      ]);
     },
-    {
-      id: "deep_hold",
-      hint: "맨 아래 스크롤 유지",
-      arm: function (done) {
-        var hold = 0;
-        var last = 0;
-        setInterval(function () {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) {
-            hold = 0;
-            last = 0;
-            return;
-          }
-          var el = document.documentElement;
-          var max = el.scrollHeight - el.clientHeight;
-          var r = max <= 0 ? 1 : el.scrollTop / max;
-          var now = Date.now();
-          var need = missionRevealed ? 2200 : 3000;
-          var thr = missionRevealed ? 0.88 : 0.9;
-          if (r >= thr) {
-            if (!last) last = now;
-            hold += now - last;
-            last = now;
-            if (hold >= need) {
-              hold = 0;
-              done();
-            }
-          } else {
-            last = 0;
-            hold = 0;
-          }
-        }, 200);
-      },
+    function () {
+      return document.querySelector("footer.foot");
     },
-    {
-      id: "team_spam",
-      hint: "Team 카드 연타",
-      arm: function (done) {
-        var btn =
-          document.getElementById("planTeam") ||
-          document.querySelector("[data-fake='3']") ||
-          document.querySelector(".plan-card.danger-btn");
-        armClicks(btn, 5, 3200, done);
-      },
+    function () {
+      return document.getElementById("planPro");
     },
-    {
-      id: "fakeurl_double",
-      hint: "가짜 주소창 더블클릭",
-      arm: function (done) {
-        var bar = document.getElementById("fakeUrlBar");
-        if (!bar) return;
-        document.documentElement.classList.add("climax-fakeurl-live");
-        markHot(bar, "mobile-trig-alt");
-        var chrome = document.querySelector(".fake-chrome");
-        if (chrome) chrome.classList.add("p2-trig-fakeurl");
-        var last = 0;
-        var dblMs = isMobileHaunt() ? 700 : 500;
-        bar.addEventListener("click", function (e) {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-          e.preventDefault();
-          var now = Date.now();
-          if (now - last < dblMs) {
-            last = 0;
-            done();
-          } else last = now;
-        });
-      },
+    function () {
+      return document.getElementById("fakeUrlBar");
     },
-    {
-      id: "copy_curse",
-      hint: "아무 텍스트나 복사",
-      arm: function (done) {
-        document.addEventListener("copy", function () {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-          done();
-        });
-        var lede =
-          document.getElementById("lede") ||
-          document.querySelector(".stasis-lede") ||
-          document.getElementById("mainTitle");
-        markHot(lede);
-        // 데스크톱도 길게 누르기로 대체 가능
-        armHold(lede, 2000, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("lede"),
+        document.querySelector(".stasis-lede"),
+      ]);
     },
-    {
-      id: "wait_triple",
-      hint: "하단 기다림 문장 3번",
-      arm: function (done) {
-        var el =
-          document.getElementById("resWait") ||
-          document.querySelector("[data-find='console']") ||
-          document.querySelector(".stasis-later .morph");
-        armClicks(el, 3, 2800, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("resWait"),
+        document.querySelector("[data-find='console']"),
+      ]);
     },
-    {
-      id: "beta_quad",
-      hint: "푸터 beta 4번",
-      arm: function (done) {
-        var el =
-          document.querySelector(".foot-beta") ||
-          document.querySelector("[data-find='wip']");
-        armClicks(el, 4, 3200, done);
-      },
+    function () {
+      return document.querySelector(".foot-beta");
     },
-    {
-      id: "version_triple",
-      hint: "푸터 버전 3번",
-      arm: function (done) {
-        var el =
-          document.querySelector(".foot-micro:not(.foot-beta)") ||
-          document.querySelector("[data-find='branch']");
-        armClicks(el, 3, 3200, done);
-      },
+    function () {
+      return document.querySelector(".foot-micro:not(.foot-beta)");
     },
-    {
-      id: "title_mash",
-      hint: "제목 5연타",
-      arm: function (done) {
-        armClicks(document.getElementById("mainTitle"), 5, 2800, done);
-      },
+    function () {
+      return document.getElementById("mainTitle");
     },
-    {
-      id: "scroll_bounce",
-      hint: "맨 아래 → 맨 위 빠르게",
-      arm: function (done) {
-        var sawDeep = false;
-        var deepAt = 0;
-        window.addEventListener(
-          "scroll",
-          function () {
-            if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-            var el = document.documentElement;
-            var max = el.scrollHeight - el.clientHeight;
-            var r = max <= 0 ? 1 : el.scrollTop / max;
-            var deepThr = missionRevealed ? 0.85 : 0.9;
-            var topThr = missionRevealed ? 0.18 : 0.12;
-            var win = missionRevealed ? 5000 : 4000;
-            if (r >= deepThr) {
-              sawDeep = true;
-              deepAt = Date.now();
-            }
-            if (sawDeep && r <= topThr && Date.now() - deepAt < win) {
-              sawDeep = false;
-              done();
-            }
-          },
-          { passive: true }
-        );
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("navCta"),
+        document.getElementById("topRec"),
+      ]);
     },
-    {
-      id: "plan_sequence",
-      hint: "Free → Team → Free 순서",
-      arm: function (done) {
-        var seq = [];
-        var need = ["2", "3", "2"];
-        document.querySelectorAll("[data-fake]").forEach(function (btn) {
-          markHot(btn);
-          btn.addEventListener("click", function () {
-            if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-            var id = btn.getAttribute("data-fake");
-            seq.push(id);
-            if (seq.length > 3) seq.shift();
-            if (
-              seq.length === 3 &&
-              seq[0] === need[0] &&
-              seq[1] === need[1] &&
-              seq[2] === need[2]
-            ) {
-              seq = [];
-              done();
-            }
-          });
-        });
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("planFree"),
+        document.getElementById("planTeam"),
+      ]);
     },
-    {
-      id: "idle_haunt",
-      hint: "가만히 있기 (무입력)",
-      arm: function (done) {
-        var last = Date.now();
-        function bump() {
-          last = Date.now();
-        }
-        ["mousemove", "keydown", "scroll", "touchstart", "click"].forEach(function (ev) {
-          window.addEventListener(ev, bump, { passive: true });
-        });
-        setInterval(function () {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) {
-            last = Date.now();
-            return;
-          }
-          // 힌트 전 20초 / 힌트 후 12초
-          var need = missionRevealed ? 12000 : 20000;
-          if (Date.now() - last >= need) {
-            last = Date.now() + 999999;
-            done();
-          }
-        }, 500);
-      },
+    function () {
+      return document.getElementById("eyebrow");
     },
-    {
-      id: "type_process",
-      hint: "키보드 process",
-      arm: function (done) {
-        var buf = "";
-        document.addEventListener("keydown", function (e) {
-          if (!phase2Ready() || busy() || window.__hauntPhase3Active) return;
-          if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
-          buf = (buf + e.key.toLowerCase()).slice(-12);
-          if (buf.indexOf("process") !== -1) {
-            buf = "";
-            done();
-          }
-        });
-        armMobileTapAlt(document.getElementById("mainTitle"), 5, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("mainTitle"),
+        document.getElementById("planTeam"),
+      ]);
     },
-    {
-      id: "path_hold",
-      hint: "상단 경로 문자열 길게",
-      arm: function (done) {
-        // 2페이즈에서 경로가 숨겨지면 Get started / 로고로 폴백 (힌트 시 재해석)
-        armHoldResolved(
-          function () {
-            return firstInteractable([
-              document.getElementById("corruptPath"),
-              document.querySelector(".stasis-path-hide"),
-              document.getElementById("navCta"),
-              document.getElementById("topRec"),
-            ]);
-          },
-          1800,
-          done
-        );
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("corruptPath"),
+        document.querySelector(".stasis-path-hide"),
+        document.getElementById("navCta"),
+        document.getElementById("topRec"),
+      ]);
     },
-    {
-      id: "badge_hold",
-      hint: "상태 뱃지 길게",
-      arm: function (done) {
-        // stage-corrupt/dread 에서 eyebrow display:none → 큰 제목으로 폴백
-        armHoldResolved(
-          function () {
-            return firstInteractable([
-              document.getElementById("eyebrow"),
-              document.querySelector(".stasis-badge"),
-              document.querySelector("[data-find='badge']"),
-              document.getElementById("mainTitle"),
-              document.getElementById("topRec"),
-            ]);
-          },
-          1600,
-          done
-        );
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("eyebrow"),
+        document.querySelector(".stasis-badge"),
+        document.getElementById("mainTitle"),
+        document.getElementById("topRec"),
+      ]);
     },
-    {
-      id: "feat_hold",
-      hint: "Features 제목 길게",
-      arm: function (done) {
-        armHoldResolved(
-          function () {
-            return firstInteractable([
-              document.getElementById("h2log"),
-              document.querySelector(".stasis-card-light h2"),
-              document.querySelector("[data-find='features']"),
-              document.getElementById("mainTitle"),
-            ]);
-          },
-          1600,
-          done
-        );
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("h2log"),
+        document.querySelector(".stasis-card-light h2"),
+        document.getElementById("mainTitle"),
+      ]);
     },
-    {
-      id: "quote_hold",
-      hint: "하단 서명 줄 길게",
-      arm: function (done) {
-        armHoldResolved(
-          function () {
-            var ban =
-              document.getElementById("cardWarn") ||
-              document.querySelector(".stasis-quote");
-            if (ban) ban.classList.add("p2-trig-banner");
-            var el = firstInteractable([
-              document.querySelector(".stasis-quote-by"),
-              document.querySelector("[data-find='readme']"),
-              ban,
-            ]);
-            if (el && el.classList.contains("stasis-quote-by")) {
-              markHot(el, "p2-trig-signature");
-            }
-            return el;
-          },
-          1600,
-          done
-        );
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector(".stasis-quote-by"),
+        document.getElementById("cardWarn"),
+        document.querySelector(".stasis-quote"),
+      ]);
     },
-    {
-      id: "hit_pulse",
-      hint: "깜빡이는 점 더블클릭 (초 짝수)",
-      arm: function (done) {
-        window.__hauntHitPulseMode = true;
-        document.body.classList.add("hit-pulse-mode");
-        document.documentElement.classList.add("hit-pulse-mode");
-        var clk = document.getElementById("clock");
-        if (clk) {
-          markHot(clk);
-          clk.classList.add("hit-pulse-clock");
-        }
-        document.addEventListener("haunt-hit-success", function onHit() {
-          document.removeEventListener("haunt-hit-success", onHit);
-          document.body.classList.remove("hit-pulse-mode");
-          document.documentElement.classList.remove("hit-pulse-mode");
-          done();
-        });
-      },
+    function () {
+      return document.getElementById("clock");
     },
   ];
 
-  var USED_KEY = "haunt_climax_used";
-  var CURRENT_KEY = "haunt_climax_trigger"; // 이번 로드 전용 (새로고침 시 재사용 안 함)
+  var state = {
+    timer: null,
+    activeEl: null,
+    running: false,
+    flashCount: 0,
+    lastIdx: -1,
+  };
 
-  function readUsed() {
+  var reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function glowMs() {
+    if (reduced) return isMobileHaunt() ? 1800 : 900;
+    if (isMobileHaunt()) return 1000 + Math.random() * 1000; // 1~2s
+    return 400 + Math.random() * 600; // 0.4~1s
+  }
+
+  function gapMs() {
+    if (reduced) return 2800 + Math.random() * 2000;
+    if (isMobileHaunt()) return 1400 + Math.random() * 2200;
+    return 900 + Math.random() * 2200;
+  }
+
+  function blocked() {
+    return !phase2Ready() || busy() || !!window.__hauntPhase3Active;
+  }
+
+  function markHot(el) {
+    if (!el) return null;
+    el.style.pointerEvents = "auto";
+    el.style.cursor = "pointer";
     try {
-      var raw = localStorage.getItem(USED_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
+      el.setAttribute("tabindex", "0");
+    } catch (e0) {}
+    return el;
+  }
+
+  function candidates() {
+    var list = [];
+    for (var i = 0; i < RESOLVERS.length; i++) {
+      var el = RESOLVERS[i]();
+      if (el) list.push(el);
+    }
+    return list;
+  }
+
+  function clearFlash() {
+    if (state.activeEl) {
+      state.activeEl.classList.remove("p2-trig-hot", "find-flash", "find-flash-hit");
+      state.activeEl = null;
     }
   }
 
-  function writeUsed(arr) {
-    try {
-      localStorage.setItem(USED_KEY, JSON.stringify(arr));
-    } catch (e) {}
+  function armFlash(el, idx) {
+    clearFlash();
+    if (!el || blocked()) return;
+    markHot(el);
+    el.classList.add("p2-trig-hot", "find-flash");
+    state.activeEl = el;
+    state.flashCount++;
+    state.lastIdx = idx;
+    var ms = glowMs();
+    state.timer = setTimeout(function () {
+      clearFlash();
+      scheduleNext(gapMs());
+    }, ms);
   }
 
-  function markUsed(id) {
-    var used = readUsed();
-    if (used.indexOf(id) === -1) {
-      used.push(id);
-      writeUsed(used);
+  function pickAndFlash() {
+    if (blocked()) {
+      stop();
+      return;
     }
-    return used;
-  }
-
-  function filterMobilePool(list) {
-    if (!isMobileHaunt()) return list.slice();
-    return list.filter(function (t) {
-      return !DESKTOP_ONLY_IDS[t.id];
-    });
-  }
-
-  function unusedPool() {
-    var used = readUsed();
-    var base = filterMobilePool(TRIGGERS);
-    var pool = base.filter(function (t) {
-      return used.indexOf(t.id) === -1;
-    });
-    // 다 쓰면 리셋 후 모바일 안전 풀 전체
+    var pool = candidates();
     if (!pool.length) {
-      // used 중 모바일 가능 id만 리셋 대상 — 전체 used 클리어 후 모바일 풀
-      writeUsed([]);
-      return filterMobilePool(TRIGGERS);
+      scheduleNext(2000);
+      return;
     }
-    return pool;
-  }
-
-  /**
-   * 1) 새로고침마다 새로 뽑음 (session sticky 제거)
-   * 2) 이미 뽑힌 트리거는 localStorage 로 제외, 전부 소진 시 리셋
-   */
-  function pickTrigger() {
-    try {
-      // 이전 세션 고정값 제거 — 새로고침 = 새 뽑기
-      try {
-        sessionStorage.removeItem(CURRENT_KEY);
-      } catch (e0) {}
-
-      var forced = /[?&]p3=([a-z0-9_]+)/.exec(location.search || "");
-      if (forced) {
-        for (var i = 0; i < TRIGGERS.length; i++) {
-          if (TRIGGERS[i].id === forced[1]) {
-            markUsed(forced[1]);
-            try {
-              sessionStorage.setItem(CURRENT_KEY, forced[1]);
-            } catch (e1) {}
-            return TRIGGERS[i];
-          }
-        }
-      }
-
-      var pool = unusedPool();
-      var pick = pool[(Math.random() * pool.length) | 0];
-      markUsed(pick.id);
-      try {
-        sessionStorage.setItem(CURRENT_KEY, pick.id);
-      } catch (e2) {}
-      return pick;
-    } catch (e) {
-      var fb = filterMobilePool(TRIGGERS);
-      return fb[(Math.random() * fb.length) | 0];
+    var idx = (Math.random() * pool.length) | 0;
+    if (pool.length > 1 && idx === state.lastIdx) {
+      idx = (idx + 1) % pool.length;
     }
+    armFlash(pool[idx], idx);
   }
 
-  var active = pickTrigger();
-  var fired = false;
-  window.__hauntClimaxTrigger = active.id;
-  document.body.setAttribute("data-p3-trigger", active.id);
-  document.body.setAttribute(
-    "data-p3-remaining",
-    String(
-      Math.max(
-        0,
-        TRIGGERS.length -
-          readUsed().filter(function (id) {
-            return TRIGGERS.some(function (t) {
-              return t.id === id;
-            });
-          }).length
-      )
-    )
-  );
-
-  /** 유저용 미션 힌트 — 힌트가 뜨면 풀 수 있을 만큼 구체적으로 */
-  var MISSION = {
-    hold_free: "요금제 ‘Free’ 카드(빛나는 테두리)를 길게 누르세요.",
-    triple_logo: "왼쪽 위 ‘Stasis’ 로고를 세 번 클릭하세요.",
-    type_kill: "키보드로 kill 또는 wake 입력. (또는 빨간 테두리 Team 카드 연타)",
-    deep_hold: "페이지 맨 아래까지 스크롤한 뒤 2~3초 머무르세요.",
-    team_spam: "‘Team’ 요금 카드를 빠르게 다섯 번 클릭하세요.",
-    fakeurl_double: "맨 위 가짜 주소창(URL 바)을 더블클릭하세요.",
-    copy_curse: "아무 글이나 드래그해 Ctrl+C. (또는 본문 길게 누르기)",
-    wait_triple: "페이지 아래 ‘기다린다’ 문장을 세 번 클릭하세요.",
-    beta_quad: "맨 아래 푸터의 beta 글자를 네 번 클릭하세요.",
-    version_triple: "맨 아래 푸터 버전(v0.x)을 세 번 클릭하세요.",
-    title_mash: "화면 큰 제목을 빠르게 다섯 번 클릭하세요.",
-    scroll_bounce: "맨 아래까지 스크롤 → 바로 맨 위로 올리세요.",
-    plan_sequence: "요금 카드 순서: Free → Team → Free 클릭.",
-    idle_haunt: "마우스·키보드 손 떼고 가만히 계세요. (힌트 후 약 12초)",
-    type_process: "키보드로 process 입력. (또는 큰 제목 다섯 번)",
-    path_hold: "상단 경로 글자(또는 Get started)를 길게 누르세요.",
-    badge_hold:
-      "큰 제목(Simple monitoring…)을 길게 누르세요. (2페이즈에선 상단 뱃지 숨김)",
-    feat_hold:
-      "아래로 스크롤 → Features 카드 큰 제목(// blackbox_log 등)을 길게 누르세요.",
-    quote_hold:
-      "아래로 스크롤 → 어두운 인용 카드 맨 아랫줄 서명을 길게 누르세요.",
-    hit_pulse: "상단 시계가 ·GO(짝수 초)일 때, 빨간 깜빡 점을 더블클릭.",
-  };
-  var MISSION_MOBILE = {
-    type_kill: "빨간 테두리 ‘Team’ 카드를 일곱 번 탭하세요.",
-    type_process: "큰 제목을 다섯 번 탭하세요.",
-    copy_curse: "본문(설명 문단)을 길게 누르세요.",
-    fakeurl_double: "맨 위 가짜 주소창을 빠르게 두 번 탭하세요.",
-    path_hold: "상단 경로 글자(또는 Get started)를 길게 누르세요.",
-    badge_hold: "큰 제목을 길게 누르세요.",
-    quote_hold: "어두운 카드 맨 아랫줄(서명)을 길게 누르세요.",
-    hit_pulse: "상단 시계 ·GO 일 때, 빨간 깜빡 점을 두 번 탭하세요.",
-    idle_haunt: "손 떼고 가만히. 힌트 후 약 12초.",
-  };
-  if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
-    active.mission = MISSION_MOBILE[active.id];
-  } else {
-    active.mission = MISSION[active.id] || active.hint || "이상 속에서 다음 층으로 가는 조건을 찾아라.";
-  }
-  if (isMobileHaunt()) {
-    document.documentElement.classList.add("haunt-mobile-opt");
+  function scheduleNext(ms) {
+    if (state.timer) clearTimeout(state.timer);
+    if (blocked()) return;
+    state.timer = setTimeout(pickAndFlash, Math.max(80, ms | 0));
   }
 
   function onDone() {
-    if (fired || busy()) return;
+    if (busy()) return;
     if (!phase2Ready()) return;
-    // 이미 3페이즈면 무시 (클라이맥스는 phase3-triggers)
     if (window.__hauntPhase3Active) return;
-    fired = true;
-    hideMissionAids();
-    hideP2Hint(true);
+    stop();
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[p2→p3] gate trigger fired:", active.id);
+      console.log("[p2→p3] flash trigger clicked");
     }
     tryEnterPhase3Strict();
   }
 
-  // 트리거 장착 (항상 리스너 등록, 발동은 phase2Ready 검사)
-  try {
-    active.arm(onDone);
-  } catch (e) {
-    if (window.console) console.warn("[climax] arm failed", active.id, e);
+  function onPointer(ev) {
+    if (blocked()) return;
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var el = t.closest(".find-flash");
+    if (!el || el !== state.activeEl) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    try {
+      var a = window.__hauntAudio;
+      if (a) {
+        if (a.unlock) a.unlock();
+        if (a.playSfx) a.playSfx("glitch", { vol: 0.65, minGapMs: 400 });
+      }
+    } catch (e0) {}
+    onDone();
   }
 
-  // ----- 2페이즈 미션 힌트 UI: 전부 비활성 (토스트·칩·타이머 없음) -----
-  var p2Toast = document.getElementById("p2HintToast");
-  var p2Chip = document.getElementById("p2MissionChip");
-  if (p2Toast) {
-    p2Toast.hidden = true;
-    p2Toast.setAttribute("aria-hidden", "true");
-  }
-  if (p2Chip) {
-    p2Chip.hidden = true;
-    p2Chip.setAttribute("aria-hidden", "true");
+  function start() {
+    if (state.running || blocked()) return;
+    state.running = true;
+    scheduleNext(600 + Math.random() * 900);
   }
 
-  function showP2Hint() {
-    /* no-op: dwell hints removed */
+  function stop() {
+    state.running = false;
+    if (state.timer) clearTimeout(state.timer);
+    state.timer = null;
+    clearFlash();
   }
-  function hideP2Hint() {
-    if (p2Toast) p2Toast.hidden = true;
-    if (p2Chip) p2Chip.hidden = true;
-    document.body.classList.remove("p2-hint-visible");
-  }
-  function scheduleP2Hint() {
-    /* 힌트 UI 없음 — 단, 페이즈 진행으로 숨김 처리된 홀드 타깃은 재해석 필요 */
-    revealMissionTargets();
-  }
-  function markP2Entered() {
-    if (!phase2Ready()) return false;
-    scheduleP2Hint();
-    return true;
-  }
+
   function watchPhase2() {
-    return markP2Entered();
+    if (blocked()) {
+      stop();
+    } else if (!state.running) {
+      start();
+    }
   }
-  // phase2 진입/진행 감지 → 숨은 홀드 타깃 재바인딩 (path_hold/badge_hold/feat_hold/quote_hold)
+
   document.addEventListener("haunt-stage", function (ev) {
     var s = ev && ev.detail && ev.detail.stage;
     if (s >= 2) watchPhase2();
@@ -1226,9 +662,10 @@
     setTimeout(watchPhase2, 800);
   });
   // 이미 조건을 만족한 채 로드된 경우 대비 폴링 (커스텀 이벤트를 놓친 경우 안전망)
-  setInterval(function () {
-    if (!fired) watchPhase2();
-  }, 3000);
+  setInterval(watchPhase2, 2000);
+
+  document.addEventListener("click", onPointer, true);
+  document.addEventListener("pointerup", onPointer, true);
 
   // 공개 빌드: 관리자/프리패스 UI·단축키 없음
   window.__hauntCreatorPass = false;
@@ -1237,58 +674,26 @@
   try {
     if (sessionStorage.getItem("haunt_phase3") === "1" && window.__hauntDiaryDiscovered) {
       window.__hauntPhase3Active = true;
-      fired = true;
-      hideP2Hint(true);
       applyPhase3Visuals({ quiet: true });
       document.body.classList.add("phase3-settled");
     }
   } catch (eRestore) {}
 
-  if (window.console && /[?&]debug=1/.test(location.search || "")) {
-    var usedNow = readUsed();
-    console.log(
-      "[climax] this load trigger:",
-      active.id,
-      "—",
-      active.hint,
-      "| used",
-      usedNow.length + "/" + TRIGGERS.length,
-      usedNow,
-      "| remaining after this pick",
-      unusedPool()
-        .filter(function (t) {
-          return t.id !== active.id;
-        })
-        .map(function (t) {
-          return t.id;
-        })
-    );
-  }
+  // 이미 phase2Ready 인 채로 로드된 경우 바로 시작
+  setTimeout(watchPhase2, 600);
 
   window.__hauntClimax = {
-    id: active.id,
-    hint: active.hint,
-    mission: active.mission,
     role: "p2-to-p3-gate",
-    all: TRIGGERS.map(function (t) {
-      return { id: t.id, hint: t.hint, mission: MISSION[t.id] || t.hint };
-    }),
-    used: function () {
-      return readUsed().slice();
-    },
-    remaining: function () {
-      return unusedPool().map(function (t) {
-        return t.id;
-      });
-    },
-    resetUsed: function () {
-      writeUsed([]);
-      try {
-        sessionStorage.removeItem(CURRENT_KEY);
-      } catch (e) {}
-    },
-    showHint: showP2Hint,
+    phase2Ready: phase2Ready,
     enterPhase3: enterPhase3,
+    status: function () {
+      return {
+        running: state.running,
+        flashCount: state.flashCount,
+        poolSize: candidates().length,
+      };
+    },
+    flashNow: pickAndFlash,
     summon: function () {
       window.__hauntCreatorPass = true;
       window.__hauntDiaryDiscovered = true;
@@ -1296,7 +701,6 @@
       if (!window.__hauntPhase3Active) enterPhase3();
       summon();
     },
-    phase2Ready: phase2Ready,
   };
 
   window.__hauntEnterPhase3 = enterPhase3;

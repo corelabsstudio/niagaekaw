@@ -1,17 +1,13 @@
 /**
  * 3페이즈 → 클라이맥스 트리거
- * - 별도 20종 풀 (2페이즈 게이트 트리거와 분리)
+ * - 1페이즈(phase1-flash.js)·2페이즈(climax-triggers.js)와 동일한 방식: 후보 20곳 중 하나가
+ *   랜덤으로 짧게(~1초) 반짝이다 사라지고, 다음 후보로 옮겨가며 반복. 반짝이는 순간 클릭하면
+ *   클라이맥스가 발동.
  * - phase3Ready: __hauntPhase3Active (2페이즈 게이트 통과 후)
- * - 힌트: 3페이즈 진입 후 2분 (2페이즈와 동일). ?hintfast=1 → 8초, ?p3hint=1 → 3초
  * - 공개 빌드 (관리자 프리패스 없음)
  */
 (function () {
   "use strict";
-
-  function stage() {
-    if (typeof window.__hauntStage === "function") return window.__hauntStage();
-    return parseInt(document.body.getAttribute("data-stage") || "0", 10) || 0;
-  }
 
   function phase3Ready() {
     if (window.__hauntPhase3Active) return true;
@@ -48,137 +44,6 @@
     }
   }
 
-  var DESKTOP_ONLY_IDS = {
-    type_stasis: 1,
-    type_wakeagain: 1,
-    type_escape: 1,
-    arrow_sigil: 1,
-    space_ritual: 1,
-    select_all_curse: 1,
-  };
-
-  /** 힌트 UI 없음 — 처음부터 타깃 발광만 */
-  var missionRevealed = true;
-  var hotTargets = [];
-  window.__hauntP3HintRevealed = true;
-
-  function markHot(el, extraClass) {
-    if (!el) return null;
-    // 1페이즈 find-flash 와 동일한 노란 반짝
-    el.classList.add("p2-trig-hot", "p3-trig-hot", "find-flash");
-    if (extraClass) el.classList.add(extraClass);
-    el.style.pointerEvents = "auto";
-    el.style.cursor = "pointer";
-    try {
-      el.setAttribute("tabindex", "0");
-    } catch (e0) {}
-    try {
-      var cs = getComputedStyle(el);
-      if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) === 0) {
-        el.classList.add("p2-trig-force-show");
-      }
-      if (el.offsetParent === null && el !== document.body) {
-        el.classList.add("p2-trig-force-show");
-      }
-    } catch (e1) {}
-    if (hotTargets.indexOf(el) === -1) hotTargets.push(el);
-    return el;
-  }
-
-  function clearHotGlow() {
-    for (var i = 0; i < hotTargets.length; i++) {
-      var el = hotTargets[i];
-      if (!el || !el.classList) continue;
-      el.classList.remove(
-        "find-flash",
-        "find-flash-hit",
-        "climax-holding",
-        "p3-holding"
-      );
-    }
-  }
-
-  function showTypeGuide() {
-    /* no-op: dwell hint guides removed */
-  }
-  function showScrollCue() {
-    /* no-op */
-  }
-
-  function hideMissionAids() {
-    var g = document.getElementById("p3TypeGuide");
-    if (g) {
-      g.classList.remove("is-on");
-      g.hidden = true;
-    }
-    var s = document.getElementById("p3ScrollCue");
-    if (s) {
-      s.classList.remove("is-on");
-      s.hidden = true;
-    }
-    clearHotGlow();
-    document.body.classList.remove("trig-hint-live", "p3-trig-reveal");
-    document.documentElement.classList.remove("trig-hint-live");
-  }
-
-  function revealMissionTargets() {
-    /* 힌트 UI 없음 — 발광은 markHot(find-flash) 만 */
-    missionRevealed = true;
-    window.__hauntP3HintRevealed = true;
-  }
-
-  function armHoldEl(el, ms, done, holdClass) {
-    if (!el) return false;
-    markHot(el);
-    var t = null;
-    var cls = holdClass || "p3-holding";
-    function clear() {
-      if (t) clearTimeout(t);
-      t = null;
-      el.classList.remove(cls, "find-flash-hit");
-    }
-    el.addEventListener("pointerdown", function (e) {
-      if (!phase3Ready() || busy()) return;
-      if (e.button != null && e.button !== 0) return;
-      try {
-        e.preventDefault();
-      } catch (err) {}
-      el.classList.add(cls, "find-flash-hit");
-      var holdFor = missionRevealed ? Math.min(ms, 1600) : ms;
-      t = setTimeout(function () {
-        clear();
-        done();
-      }, holdFor);
-    });
-    el.addEventListener("pointerup", clear);
-    el.addEventListener("pointerleave", clear);
-    el.addEventListener("pointercancel", clear);
-    return true;
-  }
-
-  function armTapEl(el, need, windowMs, done) {
-    if (!el) return false;
-    markHot(el, "mobile-trig-alt");
-    var n = 0;
-    var reset = null;
-    var win = windowMs || 2500;
-    if (isMobileHaunt()) win = Math.max(win, 3000);
-    el.addEventListener("click", function () {
-      if (!phase3Ready() || busy()) return;
-      n++;
-      clearTimeout(reset);
-      var w = missionRevealed ? Math.max(win, 4000) : win;
-      reset = setTimeout(function () {
-        n = 0;
-      }, w);
-      if (n >= need) {
-        n = 0;
-        done();
-      }
-    });
-    return true;
-  }
-
   function summon() {
     if (typeof window.__hauntSummon === "function") {
       window.__hauntSummon();
@@ -187,508 +52,239 @@
     return false;
   }
 
-  // ---------- 20 NEW climax-unlock triggers (2페이즈 게이트와 다른 동작) ----------
-  var TRIGGERS = [
-    {
-      id: "logo_hold",
-      hint: "로고 길게",
-      arm: function (done) {
-        armHoldEl(document.getElementById("topRec"), 3000, done);
-      },
+  /** 클릭 가능 여부 (display:none·0크기 제외) */
+  function isInteractable(el) {
+    if (!el) return false;
+    try {
+      var cs = getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden") return false;
+      if (parseFloat(cs.opacity) === 0) return false;
+      var r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function firstInteractable(cands) {
+    for (var i = 0; i < cands.length; i++) {
+      if (isInteractable(cands[i])) return cands[i];
+    }
+    return null;
+  }
+
+  /**
+   * 3페이즈 후보 20곳 — 1·2페이즈와 동일한 방식의 리졸버 풀.
+   * 매 뽑기마다 새로 resolve 하므로, 3페이즈 진행으로 바뀌는 UI(모니터 카드가
+   * OVER 패널로 교체되는 등)도 항상 그 순간 보이는 요소로 자연스럽게 연결된다.
+   */
+  var RESOLVERS = [
+    function () {
+      return document.getElementById("topRec");
     },
-    {
-      id: "type_stasis",
-      hint: "키보드 stasis",
-      arm: function (done) {
-        var buf = "";
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if (e.metaKey || e.ctrlKey || e.altKey) return;
-          if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
-          buf = (buf + e.key.toLowerCase()).slice(-12);
-          if (buf.indexOf("stasis") !== -1) {
-            buf = "";
-            done();
-          }
-        });
-        // 모바일: 로고 6연타
-        armTapEl(document.getElementById("topRec"), 6, 3200, done);
-      },
+    function () {
+      return document.getElementById("navCta");
     },
-    {
-      id: "type_wakeagain",
-      hint: "키보드 wakeagain",
-      arm: function (done) {
-        var buf = "";
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if (e.metaKey || e.ctrlKey || e.altKey) return;
-          if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
-          buf = (buf + e.key.toLowerCase()).slice(-16);
-          if (buf.indexOf("wakeagain") !== -1) {
-            buf = "";
-            done();
-          }
-        });
-        // 모바일: Get started 6연타
-        armTapEl(document.getElementById("navCta"), 6, 3200, done);
-      },
+    function () {
+      return document.getElementById("planPro");
     },
-    {
-      id: "cta_hold",
-      hint: "Get started 길게",
-      arm: function (done) {
-        var btn = document.getElementById("navCta");
-        armHoldEl(btn, 2500, done);
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector("[data-find='docs']"),
+        document.querySelector(".pill-dead"),
+      ]);
     },
-    {
-      id: "pro_spam",
-      hint: "Pro 카드 연타",
-      arm: function (done) {
-        var btn = document.getElementById("planPro");
-        if (!btn) return;
-        try {
-          btn.disabled = false;
-          btn.removeAttribute("disabled");
-        } catch (e) {}
-        markHot(btn);
-        armTapEl(btn, 7, 3200, done);
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector("[data-find='todo']"),
+        document.querySelector(".pill-todo"),
+      ]);
     },
-    {
-      id: "docs_triple",
-      hint: "Docs 3연타",
-      arm: function (done) {
-        var el = document.querySelector("[data-find='docs']") || document.querySelector(".pill-dead");
-        armTapEl(el, 3, 2800, done);
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector(".stasis-monitor-card"),
+        document.getElementById("p3AutopsyOver"),
+        document.querySelector(".monitor-frame"),
+      ]);
     },
-    {
-      id: "pricing_hold",
-      hint: "Pricing 길게",
-      arm: function (done) {
-        var el = document.querySelector("[data-find='todo']") || document.querySelector(".pill-todo");
-        armHoldEl(el, 2200, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("eyebrow"),
+        document.querySelector(".stasis-badge"),
+        document.getElementById("mainTitle"),
+      ]);
     },
-    {
-      id: "monitor_quad",
-      hint: "Live preview 카드 4번",
-      arm: function (done) {
-        // 3페이즈에선 .monitor-frame 이 display:none (OVER 패널로 교체) → 숨은 요소에 붙이면 클리어 불가
-        function isVisible(el) {
-          if (!el) return false;
-          try {
-            var cs = getComputedStyle(el);
-            if (cs.display === "none" || cs.visibility === "hidden") return false;
-            if (el.offsetParent === null && el !== document.body) {
-              // fixed 등 예외 제외 — 여기선 카드/프레임만
-              if (cs.position !== "fixed") return false;
-            }
-            return true;
-          } catch (e) {
-            return !!el;
-          }
-        }
-        var frame = document.querySelector(".monitor-frame");
-        var card =
-          document.querySelector(".stasis-monitor-card") ||
-          document.querySelector("article.stasis-card-dark") ||
-          document.querySelector(".stasis-card-dark");
-        var over = document.getElementById("p3AutopsyOver");
-        // 보이는 대상 우선: 카드 전체 > OVER 패널 > 모니터 프레임
-        var el = null;
-        if (card && isVisible(card)) el = card;
-        else if (over && isVisible(over)) el = over;
-        else if (frame && isVisible(frame)) el = frame;
-        else el = card || over || frame;
-        armTapEl(el, 4, 3000, done);
-      },
+    function () {
+      return document.getElementById("mainTitle");
     },
-    {
-      id: "badge_mash",
-      hint: "상단 뱃지 5연타",
-      arm: function (done) {
-        var el = document.getElementById("eyebrow") || document.querySelector(".stasis-badge");
-        if (!el || getComputedStyle(el).display === "none" || el.offsetParent === null) {
-          el = document.getElementById("mainTitle") || document.getElementById("topRec");
-        }
-        armTapEl(el, 5, 2500, done);
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector("[data-find='wip']"),
+        document.querySelector(".foot-beta"),
+      ]);
     },
-    {
-      id: "title_hold",
-      hint: "제목 길게",
-      arm: function (done) {
-        armHoldEl(document.getElementById("mainTitle"), 2800, done);
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector("[data-find='branch']"),
+        document.querySelector(".foot-micro:not(.foot-beta)"),
+      ]);
     },
-    {
-      id: "beta_hold",
-      hint: "푸터 beta 길게",
-      arm: function (done) {
-        var el =
-          document.querySelector("[data-find='wip']") ||
-          document.querySelector(".foot-beta");
-        armHoldEl(el, 2000, done);
-      },
+    function () {
+      return document.getElementById("fakeUrlBar");
     },
-    {
-      id: "version_spam",
-      hint: "버전 숫자 5번",
-      arm: function (done) {
-        var el =
-          document.querySelector("[data-find='branch']") ||
-          document.querySelector(".foot-micro:not(.foot-beta)");
-        armTapEl(el, 5, 3200, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("planFree"),
+        document.querySelector("[data-fake='2']"),
+      ]);
     },
-    {
-      id: "top_hold",
-      hint: "맨 위 스크롤 유지",
-      arm: function (done) {
-        var hold = 0;
-        var last = 0;
-        setInterval(function () {
-          if (!phase3Ready() || busy()) {
-            hold = 0;
-            last = 0;
-            return;
-          }
-          var el = document.documentElement;
-          var max = el.scrollHeight - el.clientHeight;
-          var r = max <= 0 ? 0 : el.scrollTop / max;
-          var now = Date.now();
-          var thr = missionRevealed ? 0.1 : 0.06;
-          var need = missionRevealed ? 2500 : 3500;
-          if (r <= thr) {
-            if (!last) last = now;
-            hold += now - last;
-            last = now;
-            if (hold >= need) {
-              hold = 0;
-              done();
-            }
-          } else {
-            last = 0;
-            hold = 0;
-          }
-        }, 200);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("planTeam"),
+        document.querySelector("[data-fake='3']"),
+      ]);
     },
-    {
-      id: "type_escape",
-      hint: "키보드 escape",
-      arm: function (done) {
-        var buf = "";
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if (e.key.length !== 1 || !/[a-zA-Z]/.test(e.key)) return;
-          buf = (buf + e.key.toLowerCase()).slice(-10);
-          if (buf.indexOf("escape") !== -1) {
-            buf = "";
-            done();
-          }
-        });
-        // 모바일: Free 카드 8연타
-        var free =
-          document.getElementById("planFree") ||
-          document.querySelector("[data-fake='2']");
-        armTapEl(free, 8, 3500, done);
-      },
+    function () {
+      return document.getElementById("mainTitle");
     },
-    {
-      id: "arrow_sigil",
-      hint: "↑↑↓↓ 화살표",
-      arm: function (done) {
-        var need = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown"];
-        var seq = [];
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if (need.indexOf(e.key) === -1) {
-            seq = [];
-            return;
-          }
-          seq.push(e.key);
-          if (seq.length > need.length) seq.shift();
-          if (seq.length === need.length) {
-            var ok = true;
-            for (var i = 0; i < need.length; i++) {
-              if (seq[i] !== need[i]) ok = false;
-            }
-            if (ok) {
-              seq = [];
-              done();
-            }
-          }
-        });
-        // 터치/클릭 대체: Free → Free → Team → Team (데스크톱 힌트 후에도 가능)
-        var seqM = [];
-        var needM = ["2", "2", "3", "3"];
-        document.querySelectorAll("[data-fake]").forEach(function (btn) {
-          markHot(btn, "mobile-trig-alt");
-          btn.addEventListener("click", function () {
-            if (!phase3Ready() || busy()) return;
-            var id = btn.getAttribute("data-fake");
-            if (id !== "2" && id !== "3") return;
-            seqM.push(id);
-            if (seqM.length > 4) seqM.shift();
-            if (
-              seqM.length === 4 &&
-              seqM[0] === needM[0] &&
-              seqM[1] === needM[1] &&
-              seqM[2] === needM[2] &&
-              seqM[3] === needM[3]
-            ) {
-              seqM = [];
-              done();
-            }
-          });
-        });
-      },
+    function () {
+      return firstInteractable([
+        document.querySelector("[data-find='features']"),
+        document.getElementById("h2log"),
+      ]);
     },
-    {
-      id: "space_ritual",
-      hint: "스페이스 12번",
-      arm: function (done) {
-        var n = 0;
-        var t = null;
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if (e.code !== "Space" && e.key !== " ") return;
-          try {
-            e.preventDefault();
-          } catch (err) {}
-          n++;
-          clearTimeout(t);
-          t = setTimeout(function () {
-            n = 0;
-          }, missionRevealed ? 6000 : 4500);
-          var need = missionRevealed ? 8 : 12;
-          if (n >= need) {
-            n = 0;
-            done();
-          }
-        });
-        // 클릭 대체 (모바일·데스크톱)
-        armTapEl(document.getElementById("mainTitle"), isMobileHaunt() ? 12 : 8, 5000, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("cardWarn"),
+        document.querySelector(".stasis-quote"),
+      ]);
     },
-    {
-      id: "features_hold",
-      hint: "Features 라벨 길게",
-      arm: function (done) {
-        var el =
-          document.querySelector("[data-find='features']") ||
-          document.getElementById("h2log");
-        armHoldEl(el, 2000, done);
-      },
+    function () {
+      return firstInteractable([
+        document.getElementById("cardWarn"),
+        document.querySelector(".stasis-quote"),
+        document.getElementById("mainTitle"),
+      ]);
     },
-    {
-      id: "quote_double",
-      hint: "다크 배너 더블클릭",
-      arm: function (done) {
-        var el =
-          document.getElementById("cardWarn") ||
-          document.querySelector(".stasis-quote");
-        if (!el) return;
-        markHot(el, "mobile-trig-alt");
-        var last = 0;
-        var dblMs = isMobileHaunt() ? 700 : 500;
-        el.addEventListener("click", function () {
-          if (!phase3Ready() || busy()) return;
-          var now = Date.now();
-          if (now - last < dblMs) {
-            last = 0;
-            done();
-          } else last = now;
-        });
-      },
+    function () {
+      return document.getElementById("clock");
     },
-    {
-      id: "select_all_curse",
-      hint: "전체 선택 (Ctrl+A)",
-      arm: function (done) {
-        document.addEventListener("keydown", function (e) {
-          if (!phase3Ready() || busy()) return;
-          if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
-            done();
-          }
-        });
-        var quote =
-          document.getElementById("cardWarn") ||
-          document.querySelector(".stasis-quote") ||
-          document.getElementById("mainTitle");
-        armHoldEl(quote, 2000, done);
-      },
+    function () {
+      return document.getElementById("topRec");
     },
-    {
-      id: "long_idle",
-      hint: "오래 가만히 (무입력)",
-      arm: function (done) {
-        var last = Date.now();
-        function bump() {
-          last = Date.now();
-        }
-        ["mousemove", "keydown", "scroll", "touchstart", "click"].forEach(function (ev) {
-          window.addEventListener(ev, bump, { passive: true });
-        });
-        setInterval(function () {
-          if (!phase3Ready() || busy()) {
-            last = Date.now();
-            return;
-          }
-          // 힌트 전 25초 / 힌트 후 15초
-          var need = missionRevealed ? 15000 : 25000;
-          if (Date.now() - last >= need) {
-            last = Date.now() + 999999;
-            done();
-          }
-        }, 1000);
-      },
+    function () {
+      return document.getElementById("navCta");
     },
   ];
 
-  var USED_KEY = "haunt_p3_climax_used";
-  var CURRENT_KEY = "haunt_p3_climax_trigger";
-  var ENTERED_AT_KEY = "haunt_p3_entered_at";
+  var state = {
+    timer: null,
+    activeEl: null,
+    running: false,
+    flashCount: 0,
+    lastIdx: -1,
+  };
 
-  function readUsed() {
+  var reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function glowMs() {
+    if (reduced) return isMobileHaunt() ? 1800 : 900;
+    if (isMobileHaunt()) return 1000 + Math.random() * 1000; // 1~2s
+    return 400 + Math.random() * 600; // 0.4~1s
+  }
+
+  function gapMs() {
+    if (reduced) return 2800 + Math.random() * 2000;
+    if (isMobileHaunt()) return 1400 + Math.random() * 2200;
+    return 900 + Math.random() * 2200;
+  }
+
+  function blocked() {
+    return !phase3Ready() || busy();
+  }
+
+  function markHot(el) {
+    if (!el) return null;
+    el.style.pointerEvents = "auto";
+    el.style.cursor = "pointer";
     try {
-      var raw = localStorage.getItem(USED_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
+      el.setAttribute("tabindex", "0");
+    } catch (e0) {}
+    return el;
+  }
+
+  function candidates() {
+    var list = [];
+    for (var i = 0; i < RESOLVERS.length; i++) {
+      var el = RESOLVERS[i]();
+      if (el) list.push(el);
+    }
+    return list;
+  }
+
+  function clearFlash() {
+    if (state.activeEl) {
+      state.activeEl.classList.remove(
+        "p2-trig-hot",
+        "p3-trig-hot",
+        "find-flash",
+        "find-flash-hit"
+      );
+      state.activeEl = null;
     }
   }
 
-  function writeUsed(arr) {
-    try {
-      localStorage.setItem(USED_KEY, JSON.stringify(arr));
-    } catch (e) {}
+  function armFlash(el, idx) {
+    clearFlash();
+    if (!el || blocked()) return;
+    markHot(el);
+    el.classList.add("p2-trig-hot", "p3-trig-hot", "find-flash");
+    state.activeEl = el;
+    state.flashCount++;
+    state.lastIdx = idx;
+    var ms = glowMs();
+    state.timer = setTimeout(function () {
+      clearFlash();
+      scheduleNext(gapMs());
+    }, ms);
   }
 
-  function markUsed(id) {
-    var used = readUsed();
-    if (used.indexOf(id) === -1) {
-      used.push(id);
-      writeUsed(used);
+  function pickAndFlash() {
+    if (blocked()) {
+      stop();
+      return;
     }
-    return used;
-  }
-
-  function filterMobilePool(list) {
-    if (!isMobileHaunt()) return list.slice();
-    return list.filter(function (t) {
-      return !DESKTOP_ONLY_IDS[t.id];
-    });
-  }
-
-  function unusedPool() {
-    var used = readUsed();
-    var base = filterMobilePool(TRIGGERS);
-    var pool = base.filter(function (t) {
-      return used.indexOf(t.id) === -1;
-    });
+    var pool = candidates();
     if (!pool.length) {
-      writeUsed([]);
-      return filterMobilePool(TRIGGERS);
+      scheduleNext(2000);
+      return;
     }
-    return pool;
+    var idx = (Math.random() * pool.length) | 0;
+    if (pool.length > 1 && idx === state.lastIdx) {
+      idx = (idx + 1) % pool.length;
+    }
+    armFlash(pool[idx], idx);
   }
 
-  function pickTrigger() {
-    try {
-      try {
-        sessionStorage.removeItem(CURRENT_KEY);
-      } catch (e0) {}
-
-      var forced = /[?&]p3t=([a-z0-9_]+)/.exec(location.search || "");
-      if (forced) {
-        for (var i = 0; i < TRIGGERS.length; i++) {
-          if (TRIGGERS[i].id === forced[1]) {
-            markUsed(forced[1]);
-            try {
-              sessionStorage.setItem(CURRENT_KEY, forced[1]);
-            } catch (e1) {}
-            return TRIGGERS[i];
-          }
-        }
-      }
-
-      var pool = unusedPool();
-      var pick = pool[(Math.random() * pool.length) | 0];
-      markUsed(pick.id);
-      try {
-        sessionStorage.setItem(CURRENT_KEY, pick.id);
-      } catch (e2) {}
-      return pick;
-    } catch (e) {
-      var fb = filterMobilePool(TRIGGERS);
-      return fb[(Math.random() * fb.length) | 0];
-    }
+  function scheduleNext(ms) {
+    if (state.timer) clearTimeout(state.timer);
+    if (blocked()) return;
+    state.timer = setTimeout(pickAndFlash, Math.max(80, ms | 0));
   }
 
-  var active = pickTrigger();
   var fired = false;
-  window.__hauntPhase3Trigger = active.id;
-  document.body.setAttribute("data-p3-climax-trigger", active.id);
-
-  var MISSION = {
-    logo_hold: "왼쪽 위 ‘Stasis’ 로고를 길게 누르세요.",
-    type_stasis: "키보드로 stasis 입력. (또는 로고 연타)",
-    type_wakeagain: "키보드로 wakeagain 입력. (또는 Get started 연타)",
-    cta_hold: "‘Get started’ 버튼을 길게 누르세요.",
-    pro_spam: "‘Pro’ 요금 카드를 일곱 번 클릭하세요.",
-    docs_triple: "상단 내비 ‘Docs’를 세 번 클릭하세요.",
-    pricing_hold: "상단 내비 ‘Pricing’을 길게 누르세요.",
-    monitor_quad:
-      "아래로 스크롤 → Features 옆(오른쪽) 어두운 카드 ‘Live preview / UI section’(3페이즈에선 OVER)을 네 번 클릭하세요.",
-    badge_mash: "상태 뱃지(또는 큰 제목)를 다섯 번 클릭하세요.",
-    title_hold: "큰 제목을 길게 누르세요.",
-    beta_hold: "맨 아래 푸터 beta를 길게 누르세요.",
-    version_spam: "맨 아래 푸터 버전 숫자를 다섯 번 클릭하세요.",
-    top_hold: "맨 위로 스크롤한 뒤 2~3초 머무르세요.",
-    type_escape: "키보드로 escape 입력. (또는 Free 카드 연타)",
-    arrow_sigil: "화살표 ↑↑↓↓ 또는 Free→Free→Team→Team.",
-    space_ritual: "스페이스를 여러 번 (힌트 후 8회). 또는 제목 연타.",
-    features_hold: "Features 쪽 제목을 길게 누르세요.",
-    quote_double: "어두운 인용 배너를 더블클릭하세요.",
-    select_all_curse: "Ctrl+A 전체 선택. (또는 어두운 배너 길게)",
-    long_idle: "손 떼고 가만히. (힌트 후 약 15초)",
-  };
-  var MISSION_MOBILE = {
-    type_stasis: "왼쪽 위 로고를 여섯 번 탭하세요.",
-    type_wakeagain: "Get started를 여섯 번 탭하세요.",
-    type_escape: "Free 요금 카드를 여덟 번 탭하세요.",
-    arrow_sigil: "Free → Free → Team → Team 순서.",
-    space_ritual: "큰 제목을 열두 번 탭하세요.",
-    select_all_curse: "어두운 인용 배너를 길게 누르세요.",
-    badge_mash: "큰 제목을 빠르게 다섯 번 탭하세요.",
-    quote_double: "어두운 인용 배너를 두 번 탭하세요.",
-    long_idle: "손 떼고 가만히. 힌트 후 약 15초.",
-    monitor_quad:
-      "아래로 스크롤 → Features 옆 어두운 Live preview 카드(OVER)를 네 번 탭하세요.",
-  };
-  if (isMobileHaunt() && MISSION_MOBILE[active.id]) {
-    active.mission = MISSION_MOBILE[active.id];
-  } else {
-    active.mission = MISSION[active.id] || active.hint || "마지막 조건을 찾아라.";
-  }
 
   function onDone() {
     if (fired || busy()) return;
     if (!phase3Ready()) return;
     fired = true;
-    hideMissionAids();
-    hideP3Hint(true);
+    stop();
     if (window.console && /[?&]debug=1/.test(location.search || "")) {
-      console.log("[p3→climax] trigger fired:", active.id);
+      console.log("[p3→climax] flash trigger clicked");
     }
-    // 클라이맥스 직전 플래시
     document.body.classList.add("phase3-climax-arm");
     setTimeout(function () {
       document.body.classList.remove("phase3-climax-arm");
@@ -696,108 +292,87 @@
     }, 280);
   }
 
-  try {
-    active.arm(onDone);
-  } catch (e) {
-    if (window.console) console.warn("[p3] arm failed", active.id, e);
-  }
-
-  // ----- 3페이즈 미션 힌트 UI: 전부 비활성 -----
-  var p3Toast = document.getElementById("p3HintToast");
-  var p3Chip = document.getElementById("p3MissionChip");
-  var HINT_MS = 0;
-  if (p3Toast) {
-    p3Toast.hidden = true;
-    p3Toast.setAttribute("aria-hidden", "true");
-  }
-  if (p3Chip) {
-    p3Chip.hidden = true;
-    p3Chip.setAttribute("aria-hidden", "true");
-  }
-
-  function getEnteredAt() {
+  function onPointer(ev) {
+    if (blocked() || fired) return;
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var el = t.closest(".find-flash");
+    if (!el || el !== state.activeEl) return;
+    ev.preventDefault();
+    ev.stopPropagation();
     try {
-      var v = sessionStorage.getItem(ENTERED_AT_KEY);
-      if (v) return parseInt(v, 10) || 0;
-    } catch (e) {}
-    return 0;
+      var a = window.__hauntAudio;
+      if (a) {
+        if (a.unlock) a.unlock();
+        if (a.playSfx) a.playSfx("glitch", { vol: 0.65, minGapMs: 400 });
+      }
+    } catch (e0) {}
+    onDone();
   }
 
-  function setEnteredAt(ts) {
-    try {
-      sessionStorage.setItem(ENTERED_AT_KEY, String(ts || Date.now()));
-    } catch (e) {}
+  function start() {
+    if (state.running || blocked() || fired) return;
+    state.running = true;
+    scheduleNext(600 + Math.random() * 900);
   }
 
-  function showP3Hint() {
-    /* no-op */
+  function stop() {
+    state.running = false;
+    if (state.timer) clearTimeout(state.timer);
+    state.timer = null;
+    clearFlash();
   }
-  function hideP3Hint() {
-    if (p3Toast) p3Toast.hidden = true;
-    if (p3Chip) p3Chip.hidden = true;
-    document.body.classList.remove("p3-hint-visible");
-  }
-  function scheduleHintFromEntry() {
-    /* no-op */
-  }
-  function showLayerToast() {
-    /* no-op: dwell/layer toasts removed */
-    var el = document.getElementById("p3LayerToast");
-    if (el) {
-      el.classList.remove("is-on");
-      el.setAttribute("aria-hidden", "true");
+
+  function watchPhase3() {
+    if (fired || blocked()) {
+      stop();
+    } else if (!state.running) {
+      start();
     }
   }
 
+  document.addEventListener("click", onPointer, true);
+  document.addEventListener("pointerup", onPointer, true);
+
   function onPhase3Enter() {
-    if (!getEnteredAt()) setEnteredAt(Date.now());
     document.body.classList.add("phase-3-active");
     document.body.setAttribute("data-game-phase", "3");
     var p2ChipEl = document.getElementById("p2MissionChip");
     if (p2ChipEl) p2ChipEl.hidden = true;
     var p2ToastEl = document.getElementById("p2HintToast");
     if (p2ToastEl) p2ToastEl.hidden = true;
-    hideP3Hint();
+    var p3ToastEl = document.getElementById("p3HintToast");
+    if (p3ToastEl) p3ToastEl.hidden = true;
+    var p3ChipEl = document.getElementById("p3MissionChip");
+    if (p3ChipEl) p3ChipEl.hidden = true;
+    watchPhase3();
   }
 
-  document.addEventListener("haunt-phase3", function () {
-    onPhase3Enter();
-  });
+  document.addEventListener("haunt-phase3", onPhase3Enter);
 
   // 이미 phase3 복구된 로드
   if (phase3Ready()) {
     setTimeout(onPhase3Enter, 400);
   }
 
-  // 늦게 진입하는 경우 폴링
-  setInterval(function () {
-    if (phase3Ready() && !getEnteredAt()) {
-      onPhase3Enter();
-    }
-  }, 1500);
-
-  // 공개 빌드: 관리자 프리패스 / p3fire / 단축키 제거
+  // 늦게 진입하는 경우/이벤트 놓친 경우 대비 폴링
+  setInterval(watchPhase3, 2000);
 
   if (window.console && /[?&]debug=1/.test(location.search || "")) {
-    console.log(
-      "[p3-climax] trigger:",
-      active.id,
-      "—",
-      active.hint,
-      "| hint after",
-      HINT_MS / 1000 + "s in phase3",
-      "| used",
-      readUsed().length + "/" + TRIGGERS.length
-    );
+    console.log("[p3-climax] flash-cycle trigger armed, pool size", RESOLVERS.length);
   }
 
   window.__hauntPhase3 = {
-    id: active.id,
-    hint: active.hint,
-    mission: active.mission,
     ready: phase3Ready,
-    hintMs: HINT_MS,
-    showHint: showP3Hint,
+    status: function () {
+      return {
+        running: state.running,
+        fired: fired,
+        flashCount: state.flashCount,
+        poolSize: candidates().length,
+      };
+    },
+    flashNow: pickAndFlash,
     fire: function () {
       if (!phase3Ready()) {
         window.__hauntPhase3Active = true;
@@ -805,23 +380,6 @@
       }
       fired = false;
       onDone();
-    },
-    all: TRIGGERS.map(function (t) {
-      return { id: t.id, hint: t.hint, mission: MISSION[t.id] || t.hint };
-    }),
-    used: function () {
-      return readUsed().slice();
-    },
-    remaining: function () {
-      return unusedPool().map(function (t) {
-        return t.id;
-      });
-    },
-    resetUsed: function () {
-      writeUsed([]);
-      try {
-        sessionStorage.removeItem(CURRENT_KEY);
-      } catch (e) {}
     },
   };
 })();
