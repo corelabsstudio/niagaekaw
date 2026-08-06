@@ -1,0 +1,806 @@
+{
+  "base": "http://127.0.0.1:4196",
+  "startedAt": "2026-07-30T01:50:13.205Z",
+  "assets": [
+    {
+      "path": "assets/horror/ghost_weak_phase2.png",
+      "ok": true,
+      "size": 1123084
+    },
+    {
+      "path": "assets/horror/ghost_medium_phase3.png",
+      "ok": true,
+      "size": 1347445
+    },
+    {
+      "path": "assets/horror/ghost_strong_climax.png",
+      "ok": true,
+      "size": 1512688
+    },
+    {
+      "path": "assets/audio/bgm_phase3_climax.mp3",
+      "ok": true,
+      "size": 985964
+    },
+    {
+      "path": "assets/audio/bgm_phase2_eerie.mp3",
+      "ok": true,
+      "size": 653948
+    },
+    {
+      "path": "assets/audio/sfx_wail_cry.mp3",
+      "ok": true,
+      "size": 116684
+    },
+    {
+      "path": "assets/audio/sfx_sob_whimper.mp3",
+      "ok": true,
+      "size": 67964
+    },
+    {
+      "path": "assets/audio/sfx_evil_laugh.mp3",
+      "ok": true,
+      "size": 110636
+    },
+    {
+      "path": "assets/audio/sfx_glitch_stinger.mp3",
+      "ok": true,
+      "size": 22316
+    },
+    {
+      "path": "assets/audio/sfx_whisper_texture.mp3",
+      "ok": true,
+      "size": 119948
+    },
+    {
+      "path": "assets/faces/face-1.jpg",
+      "ok": true,
+      "size": 48236
+    },
+    {
+      "path": "assets/faces/face-5.jpg",
+      "ok": true,
+      "size": 18129
+    },
+    {
+      "path": "assets/faces/face-9.jpg",
+      "ok": true,
+      "size": 40278
+    },
+    {
+      "path": "assets/diary-photos/photo-01.jpg",
+      "ok": true,
+      "size": 270460
+    },
+    {
+      "path": "assets/diary-photos/photo-16.jpg",
+      "ok": true,
+      "size": 370677
+    },
+    {
+      "path": "climax-sequence.js",
+      "ok": true,
+      "size": 31111
+    },
+    {
+      "path": "climax-triggers.js",
+      "ok": true,
+      "size": 49350
+    },
+    {
+      "path": "phase3-triggers.js",
+      "ok": true,
+      "size": 31199
+    },
+    {
+      "path": "diary.js",
+      "ok": true,
+      "size": 51387
+    },
+    {
+      "path": "haunt-audio.js",
+      "ok": true,
+      "size": 65465
+    },
+    {
+      "path": "styles.css",
+      "ok": true,
+      "size": 265676
+    }
+  ],
+  "apis": {
+    "presence": true,
+    "audio": true,
+    "diaryStories": true,
+    "diaryOpen": true,
+    "climaxSeq": true,
+    "climaxTrig": true,
+    "phase3": true,
+    "summon": true,
+    "stage": 0,
+    "anomalies": true,
+    "phase1": true,
+    "haunt": true,
+    "ghostWeak": true,
+    "ghostMed": true,
+    "ghostStrong": true,
+    "ghostTrail": true,
+    "escBtn": true,
+    "p3Bgm": true,
+    "diary": true
+  },
+  "p1": [
+    {
+      "id": "logo",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "title",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "nav",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "freehold",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "type",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "fakeurl",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "console",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    },
+    {
+      "id": "footer",
+      "ok": true,
+      "detail": "ok",
+      "err": []
+    }
+  ],
+  "p2": [
+    {
+      "id": "hold_free",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "triple_logo",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "type_kill",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "id": "deep_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "team_spam",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "id": "fakeurl_double",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "copy_curse",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "wait_triple",
+      "ok": false,
+      "detail": "no phase3",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "beta_quad",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "id": "version_triple",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "title_mash",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "id": "scroll_bounce",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "plan_sequence",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "type_process",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "id": "path_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "badge_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "feat_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "quote_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "hit_pulse",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "idle_haunt",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 (File not found)",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    }
+  ],
+  "p3": [
+    {
+      "id": "logo_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "type_stasis",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "type_wakeagain",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "cta_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "pro_spam",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "docs_triple",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "pricing_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "monitor_quad",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "badge_mash",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "title_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "beta_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "version_spam",
+      "ok": false,
+      "detail": "no climax",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "top_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "type_escape",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "arrow_sigil",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "space_ritual",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "features_hold",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "quote_double",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    },
+    {
+      "id": "select_all_curse",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ]
+    },
+    {
+      "id": "long_idle",
+      "ok": true,
+      "detail": "ok",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    }
+  ],
+  "climax": {
+    "ok": true,
+    "a0": {
+      "running": true,
+      "act": "a",
+      "phase": 1,
+      "status": "screen saver · idle",
+      "weak": "http://127.0.0.1:4196/assets/horror/ghost_weak_phase2.png",
+      "strong": "http://127.0.0.1:4196/assets/horror/ghost_strong_climax.png"
+    },
+    "stillA": true,
+    "ui": {
+      "exitHint": true,
+      "fail": true,
+      "console": true,
+      "esc": true,
+      "trail": true,
+      "scan": true
+    },
+    "actB1": {
+      "act": "b1",
+      "phase": 2,
+      "elapsed": 16946.10000000149
+    },
+    "failVisible": true,
+    "stillRunB1": true,
+    "escLine": "esc is not defined",
+    "stillRunB2": true,
+    "actC": "c",
+    "strongOn": true,
+    "actD": "d",
+    "ended": true,
+    "pageErrors": [],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()",
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "reqFails": [
+      "http://127.0.0.1:4196/assets/audio/bgm_phase3_climax.mp3"
+    ]
+  },
+  "mobile": {
+    "ok": true,
+    "tid": "hold_free",
+    "detail": "hold_free mobile ok",
+    "pageErrors": [],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()",
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "reqFails": []
+  },
+  "loadErrors": {
+    "ok": true,
+    "apis": {
+      "presence": true,
+      "audio": true,
+      "diaryStories": true,
+      "diaryOpen": true,
+      "climaxSeq": true,
+      "climaxTrig": true,
+      "phase3": true,
+      "summon": true,
+      "stage": 0,
+      "anomalies": true,
+      "phase1": true,
+      "haunt": true,
+      "ghostWeak": true,
+      "ghostMed": true,
+      "ghostStrong": true,
+      "ghostTrail": true,
+      "escBtn": true,
+      "p3Bgm": true,
+      "diary": true
+    },
+    "pageErrors": [],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "reqFails": []
+  },
+  "summary": {
+    "assets": "21/21",
+    "p1": "8/8",
+    "p2": "19/20",
+    "p3": "19/20",
+    "climax": true,
+    "mobile": true,
+    "loadPageErrors": [],
+    "loadConsole": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ]
+  },
+  "httpAssets": [
+    {
+      "path": "assets/horror/ghost_weak_phase2.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/horror/ghost_medium_phase3.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/horror/ghost_strong_climax.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/bgm_phase3_climax.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/bgm_phase2_eerie.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/sfx_wail_cry.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/sfx_sob_whimper.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/sfx_evil_laugh.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/sfx_glitch_stinger.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/audio/sfx_whisper_texture.mp3",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/faces/face-1.jpg",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/faces/face-5.jpg",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/faces/face-9.jpg",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/diary-photos/photo-01.jpg",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "assets/diary-photos/photo-16.jpg",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "climax-sequence.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "climax-triggers.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "phase3-triggers.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "diary.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "haunt-audio.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "styles.css",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "fails": [
+    "P2 wait_triple",
+    "P3 version_spam"
+  ],
+  "finishedAt": "2026-07-30T01:53:05.851Z"
+}

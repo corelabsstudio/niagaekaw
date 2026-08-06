@@ -16,8 +16,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Starting cursed-haunt on port %PORT% ...
-start "cursed-haunt-server" /min python -m http.server %PORT%
+echo Starting cursed-haunt on port %PORT% (no-cache) ...
+start "cursed-haunt-server" /min python "%~dp0scripts\serve_nocache.py" %PORT%
 ping -n 2 127.0.0.1 >nul
 
 :OPEN

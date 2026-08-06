@@ -1,0 +1,6 @@
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/seg_0_hook.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/seg_1_doubt.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/seg_2_fear.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/seg_3_deep.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/seg_4_scare.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-curiosity/black.mp4'

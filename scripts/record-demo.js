@@ -126,15 +126,46 @@ async function clickAt(page, x, y) {
   await sleep(200);
 }
 
-async function clickAdmin(page, action) {
-  const sel = '[data-admin="' + action + '"]';
-  await page.waitForSelector(sel, { timeout: 15000 });
-  const box = await page.locator(sel).boundingBox();
-  if (box) {
-    await clickAt(page, box.x + box.width / 2, box.y + box.height / 2);
-  } else {
-    await page.click(sel);
-  }
+/** 공개 빌드에 ADMIN UI 없음 → 내부 훅으로 단계 진행 */
+async function forcePhase(page, which) {
+  await page.evaluate(function (which) {
+    window.__hauntDiaryDiscovered = true;
+    try {
+      if (typeof window.__hauntSetStage === "function") {
+        if (which === "p2") window.__hauntSetStage(2);
+        else window.__hauntSetStage(3);
+      }
+      if (typeof window.__hauntSetMood === "function") {
+        window.__hauntSetMood(which === "p2" ? 3 : 4);
+      }
+      if (typeof window.__hauntSetP2Decay === "function" && which !== "p2") {
+        window.__hauntSetP2Decay(4);
+      }
+    } catch (e) {}
+    document.body.classList.add("phase-2-active");
+    if (which === "p3" || which === "climax") {
+      if (typeof window.__hauntEnterPhase3 === "function") {
+        window.__hauntEnterPhase3();
+      } else {
+        window.__hauntPhase3Active = true;
+        document.body.classList.add("phase-3-active");
+        try {
+          sessionStorage.setItem("haunt_phase3", "1");
+          document.dispatchEvent(
+            new CustomEvent("haunt-phase3", { detail: { from: "demo" } })
+          );
+        } catch (e2) {}
+      }
+    }
+    if (which === "climax") {
+      setTimeout(function () {
+        if (typeof window.__hauntSummon === "function") window.__hauntSummon();
+        else if (window.__hauntClimax && window.__hauntClimax.summon)
+          window.__hauntClimax.summon();
+      }, 400);
+    }
+  }, which);
+  await sleep(which === "climax" ? 600 : 900);
 }
 
 async function main() {
@@ -167,14 +198,9 @@ async function main() {
   const page = await context.newPage();
 
   try {
-    await page.goto("http://127.0.0.1:" + PORT + "/?admin=1&hintfast=1", {
+    await page.goto("http://127.0.0.1:" + PORT + "/?hintfast=1", {
       waitUntil: "domcontentloaded",
       timeout: 30000,
-    });
-    await injectCursor(page);
-    // 재주입 (navigation 후)
-    await page.evaluate(function () {
-      /* cursor already via evaluate after load */
     });
     await injectCursor(page);
 
@@ -199,9 +225,9 @@ async function main() {
     await moveCursor(page, 700, 420, 12);
     await sleep(800);
 
-    // 2페이즈 진입 (관리자)
-    await clickAdmin(page, "p2");
-    await sleep(1200);
+    // 2페이즈 진입 (내부 훅)
+    await forcePhase(page, "p2");
+    await sleep(1000);
     await moveCursor(page, 300, 200, 14);
     await sleep(600);
     await page.mouse.wheel(0, 400);
@@ -212,8 +238,8 @@ async function main() {
     await sleep(1200);
 
     // 3페이즈
-    await clickAdmin(page, "p3");
-    await sleep(1500);
+    await forcePhase(page, "p3");
+    await sleep(1200);
     await moveCursor(page, 640, 300, 16);
     await sleep(1200);
     await page.mouse.wheel(0, 300);
@@ -221,8 +247,8 @@ async function main() {
     await moveCursor(page, 200, 400, 14);
     await sleep(1000);
 
-    // 클라이맥스
-    await clickAdmin(page, "climax");
+    // 클라이맥스 (쇼츠 클리프행어용 원본 — 풀 시퀀스 녹화)
+    await forcePhase(page, "climax");
     await sleep(28000);
     await sleep(3500);
   } catch (err) {

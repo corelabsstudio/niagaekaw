@@ -1,0 +1,4 @@
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-cliff/seg_0_intro.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-cliff/seg_1_doubt.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-cliff/seg_2_rise.mp4'
+file 'C:/Users/hysoo/projects/niagaekaw-site/.demo-shorts-cliff/black.mp4'
